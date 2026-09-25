@@ -1,0 +1,17 @@
+{
+  "name": "TREVASXXI — Painel de Decisão",
+  "short_name": "TREVASXXI",
+  "description": "Painel de apoio à decisão para o jogo TREVASXXI — Advisor, Plano de Campanha, Calculadoras de Batalha e Cerco, Balanço de Recursos.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#1a1410",
+  "theme_color": "#2a2119",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
