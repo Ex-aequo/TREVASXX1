@@ -5,27 +5,31 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>TREVASXXI — Painel de Decisão</title>
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#2a2119">
+<meta name="theme-color" content="#1b1e27">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>
 :root{
-  --bg:#1a1410; --bg2:#221b15; --panel:#2a2119; --panel2:#332a1f;
-  --gold:#d4a94a; --gold-dim:#8a7040; --text:#ecd9b8; --text-dim:#b8a583;
-  --red:#c0503f; --green:#5a8f5a; --border:#4a3d2a;
-  --sand:#c9a876;
-  font-family: Georgia, 'Times New Roman', serif;
+  /* Base "sala de mapas" — tinta fria, independente de raça */
+  --bg:#14161c; --bg2:#1b1e27; --panel:#1e222c; --panel2:#262b38;
+  --text:#e6e2d3; --text-dim:#9b9686; --border:#333849;
+  --red:#c0503f; --green:#5a8f5a;
+  /* Acento — sobrescrito em runtime por raça (applyRaceAccent), estes são só o ponto de partida */
+  --gold:#c7ac74; --gold-dim:#8a7a52; --sand:#c7ac74;
+  --font-display: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+  --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-family: var(--font-body);
 }
 @media (prefers-color-scheme: light){
   :root:not([data-theme="dark"]){
-    --bg:#f3ead9; --bg2:#ece0c8; --panel:#fff8ec; --panel2:#f5ead4;
-    --gold:#8a6a1f; --gold-dim:#a68a4a; --text:#3a2e1c; --text-dim:#6b5a3e;
-    --border:#d8c4a0;
+    --bg:#e8e6dd; --bg2:#ded9c9; --panel:#f5f3ea; --panel2:#ede8d9;
+    --text:#252017; --text-dim:#5c5647; --border:#cfc9b6;
+    --gold:#8a6a1f; --gold-dim:#a68a4a; --sand:#8a6a1f;
   }
 }
 :root[data-theme="dark"]{
-  --bg:#1a1410; --bg2:#221b15; --panel:#2a2119; --panel2:#332a1f;
-  --gold:#d4a94a; --text:#ecd9b8; --text-dim:#b8a583; --border:#4a3d2a;
+  --bg:#14161c; --bg2:#1b1e27; --panel:#1e222c; --panel2:#262b38;
+  --text:#e6e2d3; --text-dim:#9b9686; --border:#333849;
 }
 *{box-sizing:border-box;}
 html,body{margin:0;padding:0;background:var(--bg);color:var(--text);}
@@ -35,23 +39,24 @@ body{
   min-height:100%;
   font-size:15px;
   line-height:1.5;
+  font-family: var(--font-body);
 }
-h1,h2,h3{font-family:Georgia,serif;color:var(--gold);letter-spacing:.02em;margin:0 0 8px;}
+h1,h2,h3{font-family:var(--font-display);color:var(--gold);letter-spacing:.01em;margin:0 0 8px;font-weight:600;}
 h1{font-size:1.4rem;}
-h2{font-size:1.05rem;border-bottom:1px solid var(--border);padding-bottom:6px;margin-top:0;}
-h3{font-size:.92rem;color:var(--sand,var(--gold));margin-bottom:4px;}
+h2{font-size:1.05rem;border-bottom:1px solid var(--border);padding-bottom:6px;margin-top:0;font-weight:600;}
+h3{font-size:.92rem;color:var(--sand,var(--gold));margin-bottom:4px;font-weight:600;}
 .wrap{max-width:1400px;margin:0 auto;padding:14px 22px 60px;}
 @media(min-width:1000px){ .grid.cols3{grid-template-columns:repeat(4,1fr);} }
-.advisor-card{border:1px solid var(--gold-dim);border-radius:10px;padding:14px;margin-bottom:12px;background:linear-gradient(135deg,var(--panel),var(--panel2));position:relative;}
-.advisor-rank{position:absolute;top:-12px;left:14px;background:var(--gold-dim);color:#221b15;font-weight:bold;font-size:.85rem;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid var(--bg);}
+.advisor-card{border:1px solid var(--border);border-left:3px solid var(--gold-dim);border-radius:6px;padding:14px;margin-bottom:12px;background:var(--panel);position:relative;}
+.advisor-rank{position:absolute;top:-12px;left:14px;background:var(--gold-dim);color:var(--bg);font-weight:bold;font-size:.85rem;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid var(--bg);font-family:var(--font-display);}
 .advisor-rank.r1{background:var(--gold);}
-.advisor-title{margin:4px 0 6px 26px;font-size:1rem;color:var(--gold);}
+.advisor-title{margin:4px 0 6px 26px;font-size:1rem;color:var(--gold);font-family:var(--font-display);font-weight:600;}
 .advisor-meta{display:flex;gap:14px;flex-wrap:wrap;margin:8px 0;font-size:.78rem;}
-.advisor-meta span{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:3px 8px;}
+.advisor-meta span{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:3px 8px;}
 .advisor-body{font-size:.85rem;color:var(--text-dim);}
 header{
   display:flex;align-items:center;justify-content:space-between;gap:10px;
-  padding:12px 14px;background:linear-gradient(180deg,var(--panel2),var(--panel));
+  padding:12px 14px;background:var(--bg2);
   border-bottom:2px solid var(--gold-dim);position:sticky;top:0;z-index:20;
   padding-top:calc(12px + env(safe-area-inset-top,0px));
 }
@@ -61,23 +66,23 @@ header .title small{color:var(--text-dim);font-size:.72rem;}
 nav{display:flex;gap:4px;overflow-x:auto;padding:8px 10px;background:var(--bg2);border-bottom:1px solid var(--border);position:sticky;top:56px;z-index:19;-webkit-overflow-scrolling:touch;}
 nav button{
   flex:0 0 auto;background:transparent;border:1px solid var(--border);color:var(--text-dim);
-  padding:7px 12px;border-radius:6px;font-size:.82rem;cursor:pointer;font-family:inherit;white-space:nowrap;
+  padding:7px 12px;border-radius:6px;font-size:.82rem;cursor:pointer;font-family:var(--font-body);white-space:nowrap;
 }
 nav button.active{background:var(--panel2);color:var(--gold);border-color:var(--gold-dim);}
 section.tab{display:none;padding:14px 0;}
 section.tab.active{display:block;}
-.card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px;}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:12px;}
 .grid{display:grid;gap:10px;}
 .grid.cols2{grid-template-columns:1fr 1fr;}
 .grid.cols3{grid-template-columns:repeat(3,1fr);}
 @media(max-width:640px){.grid.cols3{grid-template-columns:repeat(2,1fr);} .grid.cols2{grid-template-columns:1fr;}}
-.stat{background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center;}
-.stat .v{font-size:1.25rem;color:var(--gold);font-weight:bold;}
-.stat .l{font-size:.68rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.05em;}
+.stat{background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:10px;text-align:center;}
+.stat .v{font-size:1.25rem;color:var(--gold);font-weight:bold;font-family:var(--font-display);}
+.stat .l{font-size:.72rem;color:var(--text-dim);}
 table{width:100%;border-collapse:collapse;font-size:.82rem;}
 th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);}
-th{color:var(--gold);font-weight:normal;font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;}
-tr:hover td{background:rgba(212,169,74,0.06);}
+th{color:var(--text-dim);font-weight:600;font-size:.74rem;}
+tr:hover td{background:rgba(255,255,255,0.035);}
 .tbl-wrap{overflow-x:auto;}
 .pill{display:inline-block;padding:1px 7px;border-radius:20px;font-size:.68rem;border:1px solid var(--border);color:var(--text-dim);}
 .pill.terr-plains{border-color:#8a9a4a;color:#c4d17f;}
@@ -89,18 +94,18 @@ tr:hover td{background:rgba(212,169,74,0.06);}
 .pill.terr-swamp{border-color:#5a8a6a;color:#8fc4a4;}
 input,select{background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:6px 8px;border-radius:6px;font-family:inherit;font-size:.85rem;}
 input[type=number]{width:80px;}
-button.act{background:var(--gold-dim);color:#221b15;border:none;padding:6px 12px;border-radius:6px;font-size:.8rem;cursor:pointer;font-weight:bold;}
+button.act{background:var(--gold-dim);color:#16140f;border:none;padding:6px 12px;border-radius:6px;font-size:.8rem;cursor:pointer;font-weight:600;}
 button.act:hover{background:var(--gold);}
 button.act.secondary{background:transparent;border:1px solid var(--gold-dim);color:var(--gold);}
 .muted{color:var(--text-dim);font-size:.8rem;}
 .warn{color:#e08a5a;}
 .good{color:#8fc47f;}
 .bad{color:#d47f7f;}
-.recommend{border-left:3px solid var(--gold-dim);padding:8px 10px;margin:6px 0;background:var(--panel2);border-radius:0 8px 8px 0;font-size:.85rem;}
+.recommend{border-left:3px solid var(--gold-dim);padding:8px 10px;margin:6px 0;background:var(--panel2);border-radius:0 6px 6px 0;font-size:.85rem;}
 .recommend b{color:var(--gold);}
 .flexrow{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
 .up{position:relative;}
-.upbox{border:2px dashed var(--border);border-radius:10px;padding:18px;text-align:center;cursor:pointer;color:var(--text-dim);font-size:.85rem;}
+.upbox{border:2px dashed var(--border);border-radius:8px;padding:18px;text-align:center;cursor:pointer;color:var(--text-dim);font-size:.85rem;}
 .upbox:hover{border-color:var(--gold-dim);}
 .small{font-size:.75rem;color:var(--text-dim);}
 .footer-note{margin-top:20px;padding-top:12px;border-top:1px solid var(--border);font-size:.72rem;color:var(--text-dim);}
@@ -806,7 +811,7 @@ let STATE = null;
 // APP_VERSION: sobe isto (e o CACHE_NAME correspondente em sw.js) sempre que publicares uma versão nova no GitHub.
 // É o que aparece no canto superior direito da app — se não mudar depois de um deploy, o browser ainda está
 // a servir a cache antiga do service worker.
-const APP_VERSION = 'v1.1 · 2026-09-25';
+const APP_VERSION = 'v1.2 · 2026-09-25';
 document.getElementById('appVersionBadge').textContent = APP_VERSION.split(' · ')[0];
 document.getElementById('appVersionBadge').title = 'Versão do painel: '+APP_VERSION;
 
@@ -963,7 +968,7 @@ function renderPersonalitySelector(){
   document.getElementById('personalityPills').innerHTML = Object.entries(PERSONALITY_DEFS).map(([id,p])=>{
     const active = sel.includes(id);
     const disabled = !active && p.disabledFor && p.disabledFor(STATE);
-    return `<span class="pill personality-pill" data-pid="${id}" title="${p.desc}" style="cursor:pointer;padding:5px 10px;font-size:.78rem;${active?'border-color:var(--gold);color:var(--gold);background:rgba(212,169,74,0.1);':''}${disabled?'opacity:.4;':''}">${p.emoji} ${p.label}</span>`;
+    return `<span class="pill personality-pill" data-pid="${id}" title="${p.desc}" style="cursor:pointer;padding:5px 10px;font-size:.78rem;${active?'border-color:var(--gold);color:var(--gold);background:rgba(255,255,255,0.07);':''}${disabled?'opacity:.4;':''}">${p.emoji} ${p.label}</span>`;
   }).join('');
   document.querySelectorAll('.personality-pill').forEach(el=>{
     el.addEventListener('click', ()=>{
@@ -1004,7 +1009,26 @@ function renderDiff(){
 }
 
 const RACE_EMOJI={Imperial:'🏛',Barbarian:'🪓',Elf:'🌿',Dwarf:'⛏',Orc:'👹',Aesir:'🛡',Nomad:'🏜'};
+// Acento visual por raça — a base "sala de mapas" fica sempre neutra; só isto muda.
+const RACE_ACCENT={
+  Nomad:     {gold:'#d4a94a', dim:'#9c7a35'}, // areia dourada
+  Elf:       {gold:'#7ab56f', dim:'#4a7a48'}, // verde-floresta
+  Dwarf:     {gold:'#c9884a', dim:'#93602f'}, // cobre de forja
+  Aesir:     {gold:'#6fa8c9', dim:'#4a7a93'}, // azul-fiorde
+  Orc:       {gold:'#b2503a', dim:'#7a3526'}, // vermelho-musgo
+  Imperial:  {gold:'#c9a13c', dim:'#93732a'}, // ouro real
+  Barbarian: {gold:'#c9622e', dim:'#93481f'}, // ferrugem
+};
+function applyRaceAccent(){
+  const a = RACE_ACCENT[STATE.race] || {gold:'#c7ac74', dim:'#8a7a52'}; // neutro, sem raça carregada
+  const root = document.documentElement.style;
+  root.setProperty('--gold', a.gold);
+  root.setProperty('--gold-dim', a.dim);
+  root.setProperty('--sand', a.gold);
+}
+
 function renderHeader(){
+  applyRaceAccent();
   if(!STATE.kingdom_id){
     document.getElementById('kingdomTitle').textContent = '🏰 TREVASXXI';
     document.getElementById('kingdomSubtitle').textContent = 'Painel de Decisão · nenhum relatório carregado';
@@ -1337,7 +1361,7 @@ function renderImpostos(){
     const pen = taxPenaltyPct(STATE.opinion);
     const net = Math.max(0, raw-floor(raw*pen/100));
     const opDelta = taxOpinionDelta(rate);
-    const cls = rate===STATE.taxRate?'style="background:rgba(212,169,74,0.1);"':'';
+    const cls = rate===STATE.taxRate?'style="background:rgba(255,255,255,0.07);"':'';
     rows += `<tr ${cls}><td>${rate}%</td><td>${fmt(raw)}g</td><td>${pen}%</td><td>${fmt(net)}g</td><td class="${opDelta>=0?'good':'bad'}">${opDelta>=0?'+':''}${opDelta}</td></tr>`;
   }
   tbody.innerHTML = rows;
