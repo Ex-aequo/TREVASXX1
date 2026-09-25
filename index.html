@@ -429,7 +429,7 @@ button.act.secondary{background:transparent;border:1px solid var(--gold-dim);col
 <section class="tab" id="tab-cerco">
   <div class="card">
     <h2>🏰 Calculadora de Cerco</h2>
-    <p class="small">Aplica as fórmulas exatas do manual (§5.8.1–5.8.3). Um cerco exige DUAS condições em simultâneo — corpos suficientes para fechar o anel e Poder de Guerra suficiente para dominar a milícia — e ambas usam o WP <b>bruto</b> do teu exército, sem escala de terreno (§3.5.1).</p>
+    <p class="small">Aplica as fórmulas exatas do manual (§5.8.1–5.8.3, atualizado 2026-09-21). Um cerco exige DUAS condições em simultâneo — corpos suficientes para fechar o anel e Poder de Guerra (já multiplicado pelo ESTADO) suficiente para dominar a milícia.</p>
   </div>
 
   <div class="card">
@@ -437,9 +437,10 @@ button.act.secondary{background:transparent;border:1px solid var(--gold-dim);col
     <div class="flexrow">
       <label class="small">População do assentamento <input type="number" id="siegeTargetPop" value="2000" min="1" style="width:100px;"></label>
       <label class="small">Tipo <select id="siegeTargetType">
-        <option value="common">Construção comum (cai &gt;3 — 4 turnos)</option>
-        <option value="seat">Assento de Recrutamento (cai &gt;4 — 5 turnos)</option>
+        <option value="common">Construção comum (cai &gt;4 — 5 turnos)</option>
+        <option value="seat">Assento de Recrutamento (cai &gt;5 — 6 turnos)</option>
       </select></label>
+      <label class="small">ESTADO do teu exército % <input type="number" id="siegeStatus" value="100" min="10" max="100" style="width:70px;"></label>
     </div>
   </div>
 
@@ -499,7 +500,8 @@ button.act.secondary{background:transparent;border:1px solid var(--gold-dim);col
     <ul class="small">
       <li><b>Comida</b> — cada soldado a pé come 1/turno; montado come 2/turno (1 se fores Nómada — bónus racial, §2.10.4).</li>
       <li><b>Ouro e Ferro</b> — manutenção contínua por unidade (`upkeep`), diferente do custo único de recrutamento.</li>
-      <li><b>Madeira, Pedra e Cavalos</b> — sem consumo recorrente neste jogo; só custos únicos (construção, recrutamento). Qualquer stock destes é excedente por definição, disponível para vender.</li>
+      <li><b>Madeira e Pedra</b> — sem produção nem consumo recorrentes; só custos únicos (construção, recrutamento). Qualquer stock destes é excedente por definição, disponível para vender.</li>
+      <li><b>Cavalos</b> — criação própria (§6.12): 1–3%/turno do rebanho atual (arredondado para cima), só com 2 ou mais cavalos (par reprodutor); sem consumo recorrente, só custo único ao recrutar cavalaria.</li>
     </ul>
   </div>
 </section>
@@ -807,17 +809,21 @@ const TERRAIN_LABEL={plains:'Planícies',desert:'Deserto',forest:'Floresta',moun
 
 // Escala de cavalaria por terreno de batalha (§3.5.1) — aplica-se só à fração montada de cada lado
 const CAV_TERRAIN_SCALE={plains:1.20,hills:0.90,forest:0.70,swamp:0.60,mountain:0.70,desert:0.85,sea:1.0};
-const SITE_LABEL={farm:'Quinta',mine:'Mina',port:'Porto',lumbermill:'Serraria',quarry:'Pedreira'};
+const SITE_LABEL={farm:'Quinta',mine:'Mina',port:'Porto',lumbermill:'Serraria',quarry:'Pedreira',forge:'Forja'};
+const SITE_LABEL_BUILDABLE_KEYS=['farm','mine','port','lumbermill','quarry']; // Forja fica de fora — só o GM a coloca, nunca por ordem do jogador (§3.6.4)
 const SITE_TERRAIN_ELIGIBLE={
   farm:['plains'], mine:['mountain','hills','desert','plains','forest'],
   port:['plains'], lumbermill:['forest'], quarry:['plains','hills','mountain']
 };
 // Porto: Orc e Anão nunca podem construir; Elfo pode também em floresta costeira (exceção única, §3.6.3)
-function siteEligible(type, terrain, race){
+function siteEligible(type, terrain, race, constructionRace){
   if(type==='port'){
     if(race==='Orc'||race==='Dwarf') return false;
-    const terrains = race==='Elf' ? ['plains','forest'] : ['plains'];
-    return terrains.includes(terrain);
+    if(terrain==='forest'){
+      // Elfo pode construir porto em floresta, mas só sob uma construção Élfica (2026-09-24)
+      return race==='Elf' && constructionRace==='Elf';
+    }
+    return terrain==='plains';
   }
   return SITE_TERRAIN_ELIGIBLE[type].includes(terrain);
 }
@@ -828,7 +834,7 @@ let STATE = null;
 // APP_VERSION: sobe isto (e o CACHE_NAME correspondente em sw.js) sempre que publicares uma versão nova no GitHub.
 // É o que aparece no canto superior direito da app — se não mudar depois de um deploy, o browser ainda está
 // a servir a cache antiga do service worker.
-const APP_VERSION = 'v1.10 · 2026-09-25';
+const APP_VERSION = 'v2.1 · 2026-09-25';
 document.getElementById('appVersionBadge').textContent = APP_VERSION.split(' · ')[0];
 document.getElementById('appVersionBadge').title = 'Versão do painel: '+APP_VERSION;
 
@@ -962,6 +968,24 @@ function portYield(pop,lv){
   const foodMax = floor(pop*r.max);
   return {gold, foodMin:0, foodMax};
 }
+// Escalões de portos (§3.6.3, novo): ranqueados por ouro bruto, 1º-5º pagam 100%, 6º-10º 90%, 11º-15º 80%... -10%/5 postos, ouro e comida por igual
+function portBracketMultiplier(rank){ return Math.max(0, 1 - 0.1*Math.floor((rank-1)/5)); }
+// Devolve {"col,row": multiplicador} para todos os portos já existentes num array de hexágonos
+function getPortBracketMap(hexes){
+  const ports = hexes.filter(h=>h.site&&h.site.type==='port').map(h=>{
+    const lv=h.site.size||1;
+    return {key:`${h.col},${h.row}`, rawGold:portYield(h.population,lv).gold};
+  }).sort((a,b)=>b.rawGold-a.rawGold);
+  const map={};
+  ports.forEach((p,i)=>{ map[p.key]=portBracketMultiplier(i+1); });
+  return map;
+}
+// Para pré-visualizar um porto NOVO ainda por construir: onde ficaria no ranking se o construísses já
+function hypotheticalPortBracket(hexes, newRawGold){
+  const existingGolds = hexes.filter(h=>h.site&&h.site.type==='port').map(h=>portYield(h.population,h.site.size||1).gold);
+  const rank = existingGolds.filter(g=>g>newRawGold).length + 1;
+  return portBracketMultiplier(rank);
+}
 function mineYield(pop,lv){ return PROD_MINE_BASE[lv] + floor(pop*lv/PROD_MINE_DIVISOR); }
 function lumberYield(pop,lv){ return Math.max(1, floor(pop*PROD_LUMBERMILL_MULT[lv])); }
 function quarryYield(pop,lv,terrain){
@@ -1079,6 +1103,7 @@ function renderVisaoGeral(){
   let goldTotal=0, foodMin=0, foodMax=0, ironTotal=0, woodTotal=0, stoneTotal=0;
   const rows=[];
   const pop = totalPop();
+  const portBracketMap = getPortBracketMap(STATE.hexes);
   const taxRate = STATE.taxRate;
   const rawTax = floor(pop*taxRate/100);
   const pen = taxPenaltyPct(STATE.opinion);
@@ -1092,7 +1117,7 @@ function renderVisaoGeral(){
     if(h.site){
       const lv = h.site.size||1;
       if(h.site.type==='farm'){ const y=farmYield(h.population,lv); foodMin+=y.min; foodMax+=y.max; }
-      if(h.site.type==='port'){ const y=portYield(h.population,lv); goldTotal+=y.gold; foodMin+=0; foodMax+=y.foodMax; }
+      if(h.site.type==='port'){ const y=portYield(h.population,lv); const mult=portBracketMap[`${h.col},${h.row}`]||1; goldTotal+=floor(y.gold*mult); foodMin+=0; foodMax+=floor(y.foodMax*mult); }
       if(h.site.type==='mine'){ const y=mineYield(h.population,lv); ironTotal+=y; }
       if(h.site.type==='lumbermill'){ const y=lumberYield(h.population,lv); woodTotal+=y; }
       if(h.site.type==='quarry'){ const y=quarryYield(h.population,lv,h.terrain); stoneTotal+=y; }
@@ -1182,7 +1207,7 @@ function renderConstrucao(){
   siteHexSel.innerHTML = buildable.map(h=>`<option value="${h.col},${h.row}">(${h.col},${h.row}) ${TERRAIN_LABEL[h.terrain]} — pop ${fmt(h.population)} ${h.site?'· já tem '+SITE_LABEL[h.site.type]:''}</option>`).join('');
   const siteTypeSel = document.getElementById('siteType');
   const canPort = !(STATE.race==='Orc'||STATE.race==='Dwarf');
-  siteTypeSel.innerHTML = Object.keys(SITE_LABEL).filter(k=>k!=='port'||canPort).map(k=>`<option value="${k}">${SITE_LABEL[k]}</option>`).join('');
+  siteTypeSel.innerHTML = SITE_LABEL_BUILDABLE_KEYS.filter(k=>k!=='port'||canPort).map(k=>`<option value="${k}">${SITE_LABEL[k]}</option>`).join('');
 
   document.getElementById('siteCalcBtn').onclick = ()=>{
     const el = document.getElementById('siteResult');
@@ -1190,8 +1215,8 @@ function renderConstrucao(){
     const [col,row] = siteHexSel.value.split(',').map(Number);
     const h = STATE.hexes.find(x=>x.col==col&&x.row==row);
     const type = siteTypeSel.value;
-    if(!siteEligible(type, h.terrain, STATE.race)){
-      const why = (type==='port' && (STATE.race==='Orc'||STATE.race==='Dwarf')) ? `Reinos ${RACE_LABEL_PT[STATE.race]} nunca podem construir portos.` : `${SITE_LABEL[type]} não pode ser construída em ${TERRAIN_LABEL[h.terrain]}.`;
+    if(!siteEligible(type, h.terrain, STATE.race, h.construction&&h.construction.race)){
+      const why = (type==='port' && (STATE.race==='Orc'||STATE.race==='Dwarf')) ? `Reinos ${RACE_LABEL_PT[STATE.race]} nunca podem construir portos.` : (type==='port' && h.terrain==='forest' && STATE.race==='Elf') ? `Este hexágono de floresta não tem uma construção Élfica — só floresta sob construção FLF pode ter porto (regra desde 2026-09-24).` : `${SITE_LABEL[type]} não pode ser construída em ${TERRAIN_LABEL[h.terrain]}.`;
       el.innerHTML = `<p class="bad">✗ ${why}</p>`; return;
     }
     if(h.site){ el.innerHTML = `<p class="bad">✗ Este hexágono já tem um local (${SITE_LABEL[h.site.type]}). Só um local por hexágono.</p>`; return; }
@@ -1203,7 +1228,7 @@ function renderConstrucao(){
     } else {
       html += `, 100% de sucesso.</p>`;
       if(type==='farm'){ const y=farmYield(h.population,1); html+=`<p class="muted">Rendimento Nv.1: ${y.min}–${y.max} comida/turno (garantido ≥${y.min}).</p>`; }
-      if(type==='port'){ const y=portYield(h.population,1); html+=`<p class="muted">Rendimento Nv.1: ${y.gold}g garantido + 0–${y.foodMax} comida/turno.</p><p class="warn small">⚠ Confirma que este hexágono está adjacente ao mar — a ferramenta não verifica isso automaticamente.${h.terrain==='forest'?' (Exceção élfica: porto em floresta costeira.)':''}</p>`; }
+      if(type==='port'){ const y=portYield(h.population,1); const mult=hypotheticalPortBracket(STATE.hexes,y.gold); const bracketNote = mult<1 ? ` <span class="warn">(entraria no escalão de ${Math.round(mult*100)}% — já tens portos maiores; §3.6.3)</span>` : ''; html+=`<p class="muted">Rendimento Nv.1: ${fmt(floor(y.gold*mult))}g garantido${mult<1?` (${y.gold}g antes do escalão)`:''} + 0–${fmt(floor(y.foodMax*mult))} comida/turno.${bracketNote}</p><p class="warn small">⚠ Confirma que este hexágono está adjacente ao mar — a ferramenta não verifica isso automaticamente.${h.terrain==='forest'?' (Exceção élfica: porto em floresta costeira, só sob construção Élfica.)':''}</p>`; }
       if(type==='lumbermill'){ html+=`<p class="muted">Rendimento Nv.1: ${lumberYield(h.population,1)} madeira/turno.</p>`; }
       if(type==='quarry'){ html+=`<p class="muted">Rendimento Nv.1: ${quarryYield(h.population,1,h.terrain)} pedra/turno.</p>`; }
     }
@@ -1456,12 +1481,13 @@ function simulateCampaign(nTurns){
     const pen = taxPenaltyPct(opinion);
     const netTax = Math.max(0, rawTax-floor(rawTax*pen/100));
     let farmFood=0, terrainFood=0, portGold=0, mineIron=0, lumberWood=0, quarryStone=0;
+    const portBracketMap = getPortBracketMap(hexes);
     hexes.forEach(h=>{
       if(h.terrain==='plains' && h.construction && !h.site) terrainFood+=1;
       if(h.site){
         const lv=h.site.size||1;
         if(h.site.type==='farm') farmFood += farmYield(h.population,lv).min;
-        if(h.site.type==='port') portGold += portYield(h.population,lv).gold;
+        if(h.site.type==='port'){ const mult=portBracketMap[`${h.col},${h.row}`]||1; portGold += floor(portYield(h.population,lv).gold*mult); }
         if(h.site.type==='mine') mineIron += mineYield(h.population,lv);
         if(h.site.type==='lumbermill') lumberWood += lumberYield(h.population,lv);
         if(h.site.type==='quarry') quarryStone += quarryYield(h.population,lv,h.terrain);
@@ -1487,7 +1513,7 @@ function simulateCampaign(nTurns){
       if(type==='port' && !canPort) continue;
       const cost = SITE_COSTS[type];
       if(resources.gold<cost) continue;
-      const candidate = hexes.find(h=>h.construction && !h.site && h.population>0 && siteEligible(type,h.terrain,STATE.race) && (type!=='port'||h._seaAdjacentHint));
+      const candidate = hexes.find(h=>h.construction && !h.site && h.population>0 && siteEligible(type,h.terrain,STATE.race,h.construction.race) && (type!=='port'||h._seaAdjacentHint));
       if(candidate){
         resources.gold-=cost; candidate.site={type,size:1}; buildsThisTurn++;
         actions.push(`Construir ${SITE_LABEL[type]} em (${candidate.col},${candidate.row}) — −${fmt(cost)}g`);
@@ -1706,10 +1732,11 @@ function buildAdvisorCandidates(){
   const rawTax = floor(pop*taxRate/100);
   const netTax = Math.max(0, rawTax-floor(rawTax*pen/100));
   let portGoldTotal=0, farmFoodMin=0, portFoodMax0=0, mineIronTotal=0, lumberWoodTotal=0, quarryStoneTotal=0;
+  const advisorPortBracketMap = getPortBracketMap(STATE.hexes);
   STATE.hexes.forEach(h=>{
     if(!h.site) return;
     const lv=h.site.size||1;
-    if(h.site.type==='port'){ const y=portYield(h.population,lv); portGoldTotal+=y.gold; }
+    if(h.site.type==='port'){ const y=portYield(h.population,lv); const mult=advisorPortBracketMap[`${h.col},${h.row}`]||1; portGoldTotal+=floor(y.gold*mult); }
     if(h.site.type==='farm'){ const y=farmYield(h.population,lv); farmFoodMin+=y.min; }
     if(h.site.type==='mine'){ mineIronTotal += mineYield(h.population,lv); }
     if(h.site.type==='lumbermill'){ lumberWoodTotal += lumberYield(h.population,lv); }
@@ -1748,8 +1775,8 @@ function buildAdvisorCandidates(){
   const homeBonus = RACE_HOME_BONUS[STATE.race] || {};
   STATE.hexes.forEach(h=>{
     if(!h.construction || h.site || h.population<=0) return;
-    Object.keys(SITE_LABEL).forEach(type=>{
-      if(!siteEligible(type, h.terrain, STATE.race)) return;
+    SITE_LABEL_BUILDABLE_KEYS.forEach(type=>{
+      if(!siteEligible(type, h.terrain, STATE.race, h.construction.race)) return;
       if(type==='port' && !h._seaAdjacentHint) return;
       if(type==='mine'){
         const chance = C_MINE_FIND_CHANCE[h.terrain];
@@ -1770,7 +1797,7 @@ function buildAdvisorCandidates(){
       }
       let gv, valueLabel, detail;
       if(type==='farm'){ const y=farmYield(h.population,1); gv=y.min*sellPrice('food'); valueLabel=`${y.min}–${y.max} comida/turno (garantido ≥${y.min})`; detail='100% de sucesso — a fórmula mais fiável de rendimento por ouro gasto no jogo.'; }
-      if(type==='port'){ const y=portYield(h.population,1); gv=goldEquiv({gold:y.gold,food:y.foodMax/2}); valueLabel=`${fmt(y.gold)}g garantido + 0–${fmt(y.foodMax)} comida/turno`; detail=`100% de sucesso. Ouro é fixo; a comida do porto é lançada de novo a cada turno.${h.terrain==='forest'?' (Exceção élfica: porto em floresta costeira.)':''}`; }
+      if(type==='port'){ const y=portYield(h.population,1); const mult=hypotheticalPortBracket(STATE.hexes,y.gold); const adjGold=floor(y.gold*mult), adjFoodMax=floor(y.foodMax*mult); gv=goldEquiv({gold:adjGold,food:adjFoodMax/2}); valueLabel=`${fmt(adjGold)}g garantido + 0–${fmt(adjFoodMax)} comida/turno${mult<1?` (escalão ${Math.round(mult*100)}%)`:''}`; detail=`100% de sucesso. Ouro é fixo; a comida do porto é lançada de novo a cada turno.${mult<1?` Este seria o teu porto nº${STATE.hexes.filter(hh=>hh.site&&hh.site.type==='port').length+1} — os portos maiores que já tens empurram-no para o escalão de ${Math.round(mult*100)}% (§3.6.3).`:''}${h.terrain==='forest'?' (Exceção élfica: porto em floresta costeira, só sob construção Élfica.)':''}`; }
       if(type==='lumbermill'){ const y=lumberYield(h.population,1); gv=y*sellPrice('wood'); valueLabel=`${fmt(y)} madeira/turno (determinístico)`; detail='100% de sucesso — madeira determinística, essencial para tropas, navios e muralhas.'; }
       if(type==='quarry'){ const y=quarryYield(h.population,1,h.terrain); gv=y*sellPrice('stone'); valueLabel=`${fmt(y)} pedra/turno (determinístico)`; detail='100% de sucesso — pedra para melhorias e reparações de muralha.'; }
       cands.push({
@@ -2065,8 +2092,9 @@ function computeBattle(){
   const ownTerrainMult = (ownHome.terrain===terrain) ? ownHome.mult : 1.0;
   const enemyTerrainMult = (enemyHome.terrain===terrain) ? enemyHome.mult : 1.0;
 
-  const ownCavScale = (STATE.race==='Nomad' && terrain==='desert') ? 1.0 : (CAV_TERRAIN_SCALE[terrain]||1.0);
-  const enemyCavScale = (enemyRace==='Nomad' && terrain==='desert') ? 1.0 : (CAV_TERRAIN_SCALE[terrain]||1.0);
+  // Isenções de terreno para a cavalaria (§3.5.1): Nómada no deserto, Warg Rider (Orc) na floresta
+  const ownCavScale = ((STATE.race==='Nomad' && terrain==='desert') || (STATE.race==='Orc' && terrain==='forest')) ? 1.0 : (CAV_TERRAIN_SCALE[terrain]||1.0);
+  const enemyCavScale = ((enemyRace==='Nomad' && terrain==='desert') || (enemyRace==='Orc' && terrain==='forest')) ? 1.0 : (CAV_TERRAIN_SCALE[terrain]||1.0);
   const ownEffWP = own.footWP + own.mountedWP*ownCavScale;
   const enemyEffWP = enemy.footWP + enemy.mountedWP*enemyCavScale;
 
@@ -2165,6 +2193,7 @@ function computeSiege(){
   const units = getUnits();
   const pop = parseInt(document.getElementById('siegeTargetPop').value)||0;
   const isSeat = document.getElementById('siegeTargetType').value==='seat';
+  const status = Math.max(0.1, (parseFloat(document.getElementById('siegeStatus').value)||100)/100);
   let totalWP=0, bodies=0, machineCount=0;
   document.querySelectorAll('.siegeQty').forEach(inp=>{
     const q=parseInt(inp.value)||0; if(!q) return;
@@ -2172,11 +2201,12 @@ function computeSiege(){
     totalWP += u.wp*q;
     if(u.wp<=10) machineCount+=q; else bodies += u.mounted ? q*2 : q;
   });
+  const effectiveWP = totalWP*status; // §5.8.1 (2026-09-21): armyWP × status > limiar — corpos NÃO escalam
 
   const reqBodies = floor(pop*0.3);
   const reqWP = floor(pop*0.05)*20;
   const bodiesOK = bodies>=reqBodies;
-  const wpOK = totalWP>reqWP;
+  const wpOK = effectiveWP>reqWP;
   const valid = bodiesOK && wpOK;
 
   document.getElementById('siegeResultCard').style.display='block';
@@ -2186,15 +2216,15 @@ function computeSiege(){
     el.innerHTML = `
       <div class="grid cols2">
         <div class="stat"><div class="v ${bodiesOK?'good':'bad'}">${fmt(bodies)} / ${fmt(reqBodies)}</div><div class="l">Corpos (≥30% da população)</div></div>
-        <div class="stat"><div class="v ${wpOK?'good':'bad'}">${fmt(totalWP)} / >${fmt(reqWP)}</div><div class="l">Poder de Guerra bruto</div></div>
+        <div class="stat"><div class="v ${wpOK?'good':'bad'}">${fmt(Math.round(effectiveWP))} / >${fmt(reqWP)}</div><div class="l">Poder de Guerra × ESTADO (${Math.round(status*100)}%)</div></div>
       </div>
-      <p class="bad" style="margin-top:10px;">✗ Cerco Falhado — força demasiado pequena. ${!bodiesOK?`Faltam ${fmt(reqBodies-bodies)} corpos (cavalaria conta a dobrar). `:''}${!wpOK?`Faltam ${fmt(reqWP-totalWP+1)} WP.`:''}</p>
+      <p class="bad" style="margin-top:10px;">✗ Cerco Falhado — força demasiado pequena. ${!bodiesOK?`Faltam ${fmt(reqBodies-bodies)} corpos (cavalaria conta a dobrar). `:''}${!wpOK?`Faltam ${fmt(reqWP-effectiveWP+1)} WP efetivo (sobe o ESTADO ou o WP bruto).`:''}</p>
       <p class="small muted">Podes sempre tentar um Assalto direto em vez de Cerco (§5.6) — qualquer tamanho de exército pode assaltar, mas uma força pequena perde contra muralha + milícia. Usa a Calculadora de Batalha para estimar esse cenário.</p>
     `;
     return;
   }
 
-  const threshold = isSeat ? 4 : 3;
+  const threshold = isSeat ? 5 : 4;
   const turnsToFall = threshold+1;
   const rows=[];
   for(let t=1;t<=turnsToFall;t++){
@@ -2343,12 +2373,13 @@ function renderBalanco(){
   const pen = taxPenaltyPct(STATE.opinion);
   const netTax = Math.max(0, rawTax-floor(rawTax*pen/100));
   let farmFood=0, terrainFood=0, portGold=0, mineIron=0, lumberWood=0, quarryStone=0;
+  const balancoPortBracketMap = getPortBracketMap(STATE.hexes);
   STATE.hexes.forEach(h=>{
     if(h.terrain==='plains' && h.construction && !h.site) terrainFood+=1;
     if(h.site){
       const lv=h.site.size||1;
       if(h.site.type==='farm') farmFood += farmYield(h.population,lv).min;
-      if(h.site.type==='port') portGold += portYield(h.population,lv).gold;
+      if(h.site.type==='port'){ const mult=balancoPortBracketMap[`${h.col},${h.row}`]||1; portGold += floor(portYield(h.population,lv).gold*mult); }
       if(h.site.type==='mine') mineIron += mineYield(h.population,lv);
       if(h.site.type==='lumbermill') lumberWood += lumberYield(h.population,lv);
       if(h.site.type==='quarry') quarryStone += quarryYield(h.population,lv,h.terrain);
@@ -2372,13 +2403,17 @@ function renderBalanco(){
     });
   });
 
+  // Criação de Cavalos (§6.12, novo): ganho = arred.cima(cavalos × 1–3%), precisa de ≥2 (par reprodutor), mínimo 1/turno com 2+
+  const curHorses = STATE.resources.horses||0;
+  const horseProd = curHorses>=2 ? Math.max(1, Math.ceil(curHorses*0.02)) : 0; // usa a taxa média (2%) como estimativa — a real é 1–3%, sorteada por turno
+
   const rows = [
     {key:'gold',   label:'💰 Ouro',   prod:goldProd, cons:goldCons, note:'Imposto + porto + bónus, menos manutenção do exército'},
     {key:'food',   label:'🌾 Comida', prod:foodProd, cons:foodCons, note:'Quintas + planícies nuas, menos consumo do exército'},
     {key:'iron',   label:'⚙ Ferro',  prod:mineIron, cons:ironCons, note:'Minas, menos manutenção de unidades que consomem ferro'},
     {key:'wood',   label:'🪵 Madeira',prod:lumberWood, cons:0, note:'Sem consumo recorrente — só custos únicos de construção/recrutamento'},
     {key:'stone',  label:'🪨 Pedra',  prod:quarryStone, cons:0, note:'Sem consumo recorrente — só custos únicos de construção'},
-    {key:'horses', label:'🐴 Cavalos',prod:0, cons:0, note:'Sem produção nem consumo recorrentes neste jogo — só mercado/recrutamento'},
+    {key:'horses', label:'🐴 Cavalos',prod:horseProd, cons:0, note: curHorses>=2 ? 'Criação (§6.12): 1–3%/turno do rebanho atual, arredondado para cima — mostrado com a taxa média (2%); o valor real varia turno a turno' : 'Precisas de pelo menos 2 cavalos (par reprodutor) para haver criação'},
   ];
 
   document.querySelector('#balanceTable tbody').innerHTML = rows.map(r=>{
