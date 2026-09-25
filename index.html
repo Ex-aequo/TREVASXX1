@@ -139,8 +139,8 @@ button.act.secondary{background:transparent;border:1px solid var(--gold-dim);col
   <button data-tab="cerco">🏰 Calculadora de Cerco</button>
   <button data-tab="alvos">🎯 Registo de Alvos</button>
   <button data-tab="balanco">⚖ Balanço</button>
-  <button data-tab="ordens">📝 Ficheiro das Ordens</button>
   <button data-tab="carregar">📥 Ficheiro de Turno</button>
+  <button data-tab="ordens">📝 Ficheiro das Ordens</button>
 </nav>
 
 <div class="wrap">
@@ -828,7 +828,7 @@ let STATE = null;
 // APP_VERSION: sobe isto (e o CACHE_NAME correspondente em sw.js) sempre que publicares uma versão nova no GitHub.
 // É o que aparece no canto superior direito da app — se não mudar depois de um deploy, o browser ainda está
 // a servir a cache antiga do service worker.
-const APP_VERSION = 'v1.7 · 2026-09-25';
+const APP_VERSION = 'v1.9 · 2026-09-25';
 document.getElementById('appVersionBadge').textContent = APP_VERSION.split(' · ')[0];
 document.getElementById('appVersionBadge').title = 'Versão do painel: '+APP_VERSION;
 
@@ -2478,7 +2478,8 @@ function describeOrder(o, unitIdx){
       return {cat:'Construção', icon:'🚚', text:`Mover acampamento para (${o.col},${o.row})`, cost:orderGoldCost(o)};
     case 'assign_character': {
       const a = (o.assignment||'none').toLowerCase();
-      return {cat:'Personagens', icon:'👤', text:`${o.char_name}: atribuição → ${a==='none'?'nenhuma':o.assignment}`, cost:0, assignment:a};
+      const roleMapPT = {treasury:'Tesoureiro', farms:'Mestre de Quintas', ports:'Mestre dos Portos', mines:'Mestre de Minas', lumbermills:'Mestre das Serrarias', quarries:'Mestre das Pedreiras', none:'nenhuma'};
+      return {cat:'Personagens', icon:'👤', text:`${o.char_name}: atribuição → ${roleMapPT[a]||o.assignment}`, cost:0, assignment:a};
     }
     case 'hire_character':
       return {cat:'Personagens', icon:'🎖', text:`Contratar ${o.name} para a corte`, cost:1000, costApprox:true};
@@ -2563,6 +2564,21 @@ function processOrdersFile(raw){
   const orders = ordersRaw.filter(o=>o.type); // ignora ruído sem type
   const described = orders.map(o=>describeOrder(o,unitIdx));
 
+  // Reconstrói o teto de recrutamento (5% da população INICIAL do hexágono, não desce ao recrutar)
+  // — só é possível quando o relatório desse turno está carregado, para sabermos a população.
+  const recruitCapUsed = {}; // "col,row" -> soldados já contabilizados neste ficheiro, por ordem
+  orders.forEach((o,idx)=>{
+    if(o.type!=='recruit_unit' || !o.hex) return;
+    const hexKey = `${o.hex.col},${o.hex.row}`;
+    const hexData = STATE.hexes.find(h=>h.col===o.hex.col && h.row===o.hex.row);
+    if(!hexData){ described[idx].capNote = null; return; }
+    const cap = Math.max(1, floor(hexData.population*0.05));
+    const usedBefore = recruitCapUsed[hexKey]||0;
+    const usedAfter = usedBefore + (o.qty||0);
+    recruitCapUsed[hexKey] = usedAfter;
+    described[idx].capNote = `teto (${o.hex.col},${o.hex.row}): ${fmt(usedAfter)}/${fmt(cap)} usado, ${fmt(Math.max(0,cap-usedAfter))} por usar este turno`;
+  });
+
   // Totais
   const goldSpent = described.reduce((s,d)=>s+(d.cost||0),0);
   const byCat = {};
@@ -2575,18 +2591,10 @@ function processOrdersFile(raw){
     <div class="stat"><div class="v">${Object.keys(byCat).length}</div><div class="l">Categorias diferentes</div></div>
   `;
 
-  // Se houver eventLog (rascunho local), usa-o como registo principal — é gerado pelo próprio
-  // player_page e inclui contexto que o painel não consegue recalcular sozinho (tetos de
-  // recrutamento consumidos, população exata, etc.). Filtra só ao turno atual.
-  const events = (raw.eventLog||[]).filter(e=> turnNum==null || e.turn===turnNum);
+  // Regista sempre com a tradução estruturada em português (describeOrder), nunca com o eventLog
+  // bruto do player_page — esse vem em inglês e ficava inconsistente com o resto do painel.
   let logHtml = '<div class="card"><h3>Registo de Ordens deste Turno</h3>';
-  if(events.length){
-    logHtml += '<p class="small muted">Direto do teu player_page — inclui contexto que o painel não recalcula sozinho.</p><ul class="small" style="margin-top:6px;">';
-    events.forEach(e=>{
-      logHtml += `<li>${e.icon||'•'} <b>${e.title}</b>${e.desc?'<br><span class="muted">'+e.desc+'</span>':''}${e.effect?'<br><span class="muted small">'+e.effect+'</span>':''}</li>`;
-    });
-    logHtml += '</ul>';
-  } else if(described.length){
+  if(described.length){
     const cats = ['Construção','Recrutamento','Personagens','Exércitos','Frotas','Impostos','Diplomacia','Outros'];
     cats.forEach(cat=>{
       const items = described.filter(d=>d.cat===cat);
@@ -2594,7 +2602,7 @@ function processOrdersFile(raw){
       logHtml += `<h4 style="margin-top:10px;color:var(--sand);font-family:var(--font-display);font-size:.88rem;">${cat}</h4><ul class="small" style="margin-top:4px;">`;
       items.forEach(d=>{
         const costStr = d.costText || (d.cost?`${fmt(d.cost)}g`:'');
-        logHtml += `<li>${d.icon} ${d.text}${costStr?` — ${d.costApprox?'~':''}${costStr}`:''}</li>`;
+        logHtml += `<li>${d.icon} ${d.text}${costStr?` — ${d.costApprox?'~':''}${costStr}`:''}${d.capNote?`<br><span class="muted small">${d.capNote}</span>`:''}</li>`;
       });
       logHtml += '</ul>';
     });
