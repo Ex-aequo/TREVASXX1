@@ -139,8 +139,8 @@ button.act.secondary{background:transparent;border:1px solid var(--gold-dim);col
   <button data-tab="cerco">🏰 Calculadora de Cerco</button>
   <button data-tab="alvos">🎯 Registo de Alvos</button>
   <button data-tab="balanco">⚖ Balanço</button>
-  <button data-tab="ordens">📝 Ordens Enviadas</button>
-  <button data-tab="carregar">Carregar Relatório</button>
+  <button data-tab="ordens">📝 Ficheiro das Ordens</button>
+  <button data-tab="carregar">📥 Ficheiro de Turno</button>
 </nav>
 
 <div class="wrap">
@@ -157,9 +157,9 @@ button.act.secondary{background:transparent;border:1px solid var(--gold-dim);col
   </div>
   <div class="card" id="welcomeCard" style="display:none;">
     <h2>👋 Bem-vindo ao Painel TREVASXXI</h2>
-    <p>Esta ferramenta ainda não tem nenhum relatório carregado. Vai ao separador <b>Carregar Relatório</b> e sobe o teu ficheiro <code>.json</code> — funciona com qualquer raça, é só o teu relatório mais recente do jogo.</p>
+    <p>Esta ferramenta ainda não tem nenhum relatório carregado. Vai ao separador <b>Ficheiro de Turno</b> e sobe o teu ficheiro <code>.json</code> — funciona com qualquer raça, é só o teu relatório mais recente do jogo.</p>
     <p class="small muted">Nada do que carregares sai deste browser: fica guardado só neste dispositivo, mesmo que outras pessoas usem o mesmo link.</p>
-    <button class="act" id="welcomeGoBtn">Ir para Carregar Relatório</button>
+    <button class="act" id="welcomeGoBtn">Ir para Ficheiro de Turno</button>
   </div>
   <div class="card" id="diffCard" style="display:none;">
     <h2>🔍 O Que Mudou Desde o Último Relatório</h2>
@@ -507,7 +507,7 @@ button.act.secondary{background:transparent;border:1px solid var(--gold-dim);col
 <!-- ORDENS ENVIADAS -->
 <section class="tab" id="tab-ordens">
   <div class="card">
-    <h2>📝 Ordens Enviadas</h2>
+    <h2>📝 Ficheiro das Ordens</h2>
     <p class="small">Carrega o ficheiro de ordens que exportas do <code>player_page</code> antes de o enviares ao GM (não o relatório — o ficheiro de <b>ordens</b>, o que tu produzes). O painel traduz cada ordem para português e risca sozinho os marcos do Plano de Campanha que já cumpriste este turno.</p>
     <div class="upbox" id="ordersDropZone">📂 Clica para escolher o ficheiro de ordens (.json)<br><span class="small">ou arrasta o ficheiro para aqui</span></div>
     <input type="file" id="ordersFileInput" accept=".json" style="display:none;">
@@ -523,7 +523,7 @@ button.act.secondary{background:transparent;border:1px solid var(--gold-dim);col
 <!-- CARREGAR -->
 <section class="tab" id="tab-carregar">
   <div class="card">
-    <h2>Carregar um novo relatório de turno</h2>
+    <h2>📥 Ficheiro de Turno</h2>
     <p class="small">Esta ferramenta vem pré-carregada com o teu relatório da Jogada 0. Quando receberes o próximo relatório do GM, carrega o ficheiro .json aqui para atualizar todos os cálculos.</p>
     <div class="upbox" id="dropZone">📂 Clica para escolher o ficheiro do relatório (.json)<br><span class="small">ou arrasta o ficheiro para aqui</span></div>
     <input type="file" id="fileInput" accept=".json" style="display:none;">
@@ -828,7 +828,7 @@ let STATE = null;
 // APP_VERSION: sobe isto (e o CACHE_NAME correspondente em sw.js) sempre que publicares uma versão nova no GitHub.
 // É o que aparece no canto superior direito da app — se não mudar depois de um deploy, o browser ainda está
 // a servir a cache antiga do service worker.
-const APP_VERSION = 'v1.6 · 2026-09-25';
+const APP_VERSION = 'v1.7 · 2026-09-25';
 document.getElementById('appVersionBadge').textContent = APP_VERSION.split(' · ')[0];
 document.getElementById('appVersionBadge').title = 'Versão do painel: '+APP_VERSION;
 
@@ -1153,7 +1153,7 @@ function renderTerritorio(){
   const seat = STATE.hexes.find(h=>h.musterSeatOf===STATE.kingdom_id) || STATE.hexes.find(h=>h.musterSeatOf);
   const introEl = document.getElementById('territorioIntro');
   if(!STATE.hexes.length){
-    introEl.textContent = 'Sem hexágonos carregados ainda — vai a "Carregar Relatório".';
+    introEl.textContent = 'Sem hexágonos carregados ainda — vai a "Ficheiro de Turno".';
   } else if(seat){
     introEl.innerHTML = `${STATE.hexes.length} hexágono(s) — assento de recrutamento em <b>(${seat.col},${seat.row})</b>${seat.construction?` — construção Nv.${seat.construction.level} (${seat.construction.race})`:''}.`;
   } else {
