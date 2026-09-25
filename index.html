@@ -207,7 +207,7 @@ button.act.secondary{background:transparent;border:1px solid var(--gold-dim);col
 <section class="tab" id="tab-territorio">
   <div class="card">
     <h2>Hexágonos do Reino</h2>
-    <p class="small">22 hexágonos — capital do exército em <b>Fortaleza portuária (14,31)</b> (musterSeatOf), assento de recrutamento.</p>
+    <p class="small" id="territorioIntro">—</p>
     <div class="tbl-wrap"><table id="hexTable">
       <thead><tr><th>Hex</th><th>Terreno</th><th>Pop.</th><th>Nv.</th><th>Muro</th><th>Local</th><th>Nota</th></tr></thead>
       <tbody></tbody>
@@ -811,7 +811,7 @@ let STATE = null;
 // APP_VERSION: sobe isto (e o CACHE_NAME correspondente em sw.js) sempre que publicares uma versão nova no GitHub.
 // É o que aparece no canto superior direito da app — se não mudar depois de um deploy, o browser ainda está
 // a servir a cache antiga do service worker.
-const APP_VERSION = 'v1.3 · 2026-09-25';
+const APP_VERSION = 'v1.4 · 2026-09-25';
 document.getElementById('appVersionBadge').textContent = APP_VERSION.split(' · ')[0];
 document.getElementById('appVersionBadge').title = 'Versão do painel: '+APP_VERSION;
 
@@ -1115,8 +1115,12 @@ function renderVisaoGeral(){
   if(taxRate>5 && STATE.opinion<=50){
     recs.push(`<div class="recommend warn"><b>Atenção:</b> taxa de imposto (${taxRate}%) acima de 5% com Opinião ${STATE.opinion} — já estás a perder ${pen}% do imposto bruto em penalização, e a opinião vai continuar a cair (${taxOpinionDelta(taxRate)}/turno).</div>`);
   }
-  if(!STATE.armies || STATE.armies.length===0){
-    recs.push(`<div class="recommend"><b>Sem exércitos.</b> No teu primeiro turno vale a pena recrutar pelo menos um punhado de Rajjala/Naffatun no teu assento de recrutamento (14,31) — são baratos e dão alguma defesa imediata. Vê o separador Recrutamento.</div>`);
+  if(STATE.hexes.length && (!STATE.armies || STATE.armies.length===0)){
+    const seat = STATE.hexes.find(h=>h.musterSeatOf===STATE.kingdom_id) || STATE.hexes.find(h=>h.musterSeatOf);
+    const cheapUnits = getUnits().filter(u=>u.wp>10).slice().sort((a,b)=>(b.wp/(b.cost.gold||1))-(a.wp/(a.cost.gold||1))).slice(0,2).map(u=>u.name).join('/');
+    if(seat && cheapUnits){
+      recs.push(`<div class="recommend"><b>Sem exércitos.</b> No teu primeiro turno vale a pena recrutar pelo menos um punhado de ${cheapUnits} no teu assento de recrutamento (${seat.col},${seat.row}) — são baratos e dão alguma defesa imediata. Vê o separador Recrutamento.</div>`);
+    }
   }
   document.getElementById('recommendations').innerHTML = recs.join('') || '<p class="muted">Sem recomendações específicas neste momento.</p>';
 }
@@ -1129,6 +1133,15 @@ function isAdjacentSea(h){
 
 /* ============================== RENDER: TERRITÓRIO ============================== */
 function renderTerritorio(){
+  const seat = STATE.hexes.find(h=>h.musterSeatOf===STATE.kingdom_id) || STATE.hexes.find(h=>h.musterSeatOf);
+  const introEl = document.getElementById('territorioIntro');
+  if(!STATE.hexes.length){
+    introEl.textContent = 'Sem hexágonos carregados ainda — vai a "Carregar Relatório".';
+  } else if(seat){
+    introEl.innerHTML = `${STATE.hexes.length} hexágono(s) — assento de recrutamento em <b>(${seat.col},${seat.row})</b>${seat.construction?` — construção Nv.${seat.construction.level} (${seat.construction.race})`:''}.`;
+  } else {
+    introEl.textContent = `${STATE.hexes.length} hexágono(s) — sem assento de recrutamento identificado neste relatório.`;
+  }
   const tbody = document.querySelector('#hexTable tbody');
   tbody.innerHTML = STATE.hexes.map(h=>{
     const c = h.construction;
