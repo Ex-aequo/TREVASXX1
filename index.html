@@ -117,6 +117,7 @@ button.act.secondary{background:transparent;border:1px solid var(--gold-dim);col
     <small id="kingdomSubtitle">Painel de Decisão TREVASXXI</small>
   </div>
   <div class="badge" id="turnBadge">Turno —</div>
+  <span class="badge" id="appVersionBadge" title="Versão do painel — confirma que o browser não está a servir uma cópia antiga da cache" style="opacity:.6;font-size:.65rem;">v—</span>
 </header>
 
 <nav id="tabnav">
@@ -801,6 +802,13 @@ function siteEligible(type, terrain, race){
 
 /* ============================== ESTADO (carregado do relatório) ============================== */
 let STATE = null;
+
+// APP_VERSION: sobe isto (e o CACHE_NAME correspondente em sw.js) sempre que publicares uma versão nova no GitHub.
+// É o que aparece no canto superior direito da app — se não mudar depois de um deploy, o browser ainda está
+// a servir a cache antiga do service worker.
+const APP_VERSION = 'v1.1 · 2026-09-25';
+document.getElementById('appVersionBadge').textContent = APP_VERSION.split(' · ')[0];
+document.getElementById('appVersionBadge').title = 'Versão do painel: '+APP_VERSION;
 
 const SEED = {"kingdom_id": null, "kingdom_name": "", "race": "", "resources": {"food": 0, "gold": 0, "iron": 0, "horses": 0, "wood": 0, "stone": 0}, "opinion": 0, "taxRate": 0, "characters": [], "candidate_pool": [], "market_prices": {"food": 8, "iron": 12, "horses": 20, "wood": 5, "stone": 7}, "hexes": [], "turn": 0, "armies": [], "fleets": [], "events": [], "diplomacy": {}, "map_kingdoms": [], "vassal_of": null, "vassals": []};
 
