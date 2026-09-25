@@ -828,7 +828,7 @@ let STATE = null;
 // APP_VERSION: sobe isto (e o CACHE_NAME correspondente em sw.js) sempre que publicares uma versão nova no GitHub.
 // É o que aparece no canto superior direito da app — se não mudar depois de um deploy, o browser ainda está
 // a servir a cache antiga do service worker.
-const APP_VERSION = 'v1.9 · 2026-09-25';
+const APP_VERSION = 'v1.10 · 2026-09-25';
 document.getElementById('appVersionBadge').textContent = APP_VERSION.split(' · ')[0];
 document.getElementById('appVersionBadge').title = 'Versão do painel: '+APP_VERSION;
 
@@ -1398,15 +1398,15 @@ function renderImpostos(){
 }
 
 /* ============================== RENDER: PLANO DE CAMPANHA ============================== */
-function planStorageKey(){ return 'trevasxxi_plan_'+(STATE.kingdom_id||'default'); }
-function loadPlanChecks(){
-  try{ return JSON.parse(localStorage.getItem(planStorageKey())||'{}'); }catch(e){ return {}; }
+function planStorageKey(kid){ return 'trevasxxi_plan_'+(kid||STATE.kingdom_id||'default'); }
+function loadPlanChecks(kid){
+  try{ return JSON.parse(localStorage.getItem(planStorageKey(kid))||'{}'); }catch(e){ return {}; }
 }
-function savePlanCheck(id, val){
+function savePlanCheck(id, val, kid){
   try{
-    const data = loadPlanChecks();
+    const data = loadPlanChecks(kid);
     data[id]=val;
-    localStorage.setItem(planStorageKey(), JSON.stringify(data));
+    localStorage.setItem(planStorageKey(kid), JSON.stringify(data));
   }catch(e){ /* localStorage indisponível — segue sem gravar */ }
 }
 function loadPlanNotes(){
@@ -2424,17 +2424,17 @@ function renderBalanco(){
 
 /* ============================== ORDENS ENVIADAS ============================== */
 const SITE_LABEL_ORDERS = SITE_LABEL; // reutiliza o mapa já existente (farm/mine/port/lumbermill/quarry)
-function foundingsCounterKey(){ return 'trevasxxi_foundings_'+(STATE.kingdom_id||'default'); }
-function loadFoundingsCount(){ try{ return parseInt(localStorage.getItem(foundingsCounterKey())||'0'); }catch(e){ return 0; } }
-function bumpFoundingsCount(turn){
+function foundingsCounterKey(kid){ return 'trevasxxi_foundings_'+(kid||STATE.kingdom_id||'default'); }
+function loadFoundingsCount(kid){ try{ return parseInt(localStorage.getItem(foundingsCounterKey(kid))||'0'); }catch(e){ return 0; } }
+function bumpFoundingsCount(turn, kid){
   try{
-    const key = foundingsCounterKey();
+    const key = foundingsCounterKey(kid);
     const seenKey = key+'_turns';
     const seenTurns = JSON.parse(localStorage.getItem(seenKey)||'[]');
     if(seenTurns.includes(turn)) return; // já contado este turno (reimport), não duplica
     seenTurns.push(turn);
     localStorage.setItem(seenKey, JSON.stringify(seenTurns));
-    localStorage.setItem(key, String(loadFoundingsCount()+1));
+    localStorage.setItem(key, String(loadFoundingsCount(kid)+1));
   }catch(e){}
 }
 
@@ -2613,7 +2613,11 @@ function processOrdersFile(raw){
   document.getElementById('ordersLogCard').innerHTML = logHtml;
 
   // --- Ligação automática ao Plano de Campanha ---
-  const check = (id)=>savePlanCheck(id, true);
+  // Usa sempre o kingdom_id do PRÓPRIO ficheiro de ordens, não o do relatório atualmente carregado —
+  // assim os marcos ficam gravados no sítio certo mesmo que o relatório deste reino ainda não
+  // tenha sido carregado nesta sessão (e apareçam assim que for).
+  const kidForPlan = (raw.kingdom && raw.kingdom.id) || STATE.kingdom_id || 'default';
+  const check = (id)=>savePlanCheck(id, true, kidForPlan);
   if(described.some(d=>d.cat==='Construção' && /Quinta/.test(d.text))) check('f1_farm');
   if(described.some(d=>d.cat==='Construção' && /Serraria/.test(d.text))) check('f1_lumber');
   if(described.some(d=>d.assignment==='treasury')) check('f1_treasurer');
@@ -2622,10 +2626,13 @@ function processOrdersFile(raw){
   if(described.some(d=>d.isSpy)) check('f3_spy');
   if(described.some(d=>d.isFounding)){
     check('f1_found1');
-    bumpFoundingsCount(turnNum);
-    if(loadFoundingsCount()>=2) check('f2_found2');
+    bumpFoundingsCount(turnNum, kidForPlan);
+    if(loadFoundingsCount(kidForPlan)>=2) check('f2_found2');
   }
-  renderPlano(); // refresca os marcos imediatamente
+  if(kidForPlan!==STATE.kingdom_id){
+    document.getElementById('ordersLoadStatus').innerHTML += `<br><span class="warn small">⚠ O relatório deste reino ainda não está carregado nesta sessão — os marcos do Plano de Campanha ficaram guardados e vão aparecer riscados assim que carregares o relatório correspondente.</span>`;
+  }
+  renderPlano(); // refresca os marcos imediatamente (mostra já, se o reino coincidir)
 }
 
 function render(){
