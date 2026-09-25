@@ -139,6 +139,7 @@ button.act.secondary{background:transparent;border:1px solid var(--gold-dim);col
   <button data-tab="cerco">🏰 Calculadora de Cerco</button>
   <button data-tab="alvos">🎯 Registo de Alvos</button>
   <button data-tab="balanco">⚖ Balanço</button>
+  <button data-tab="ordens">📝 Ordens Enviadas</button>
   <button data-tab="carregar">Carregar Relatório</button>
 </nav>
 
@@ -503,6 +504,22 @@ button.act.secondary{background:transparent;border:1px solid var(--gold-dim);col
   </div>
 </section>
 
+<!-- ORDENS ENVIADAS -->
+<section class="tab" id="tab-ordens">
+  <div class="card">
+    <h2>📝 Ordens Enviadas</h2>
+    <p class="small">Carrega o ficheiro de ordens que exportas do <code>player_page</code> antes de o enviares ao GM (não o relatório — o ficheiro de <b>ordens</b>, o que tu produzes). O painel traduz cada ordem para português e risca sozinho os marcos do Plano de Campanha que já cumpriste este turno.</p>
+    <div class="upbox" id="ordersDropZone">📂 Clica para escolher o ficheiro de ordens (.json)<br><span class="small">ou arrasta o ficheiro para aqui</span></div>
+    <input type="file" id="ordersFileInput" accept=".json" style="display:none;">
+    <div id="ordersLoadStatus" class="small" style="margin-top:8px;"></div>
+  </div>
+  <div class="card" id="ordersSummaryCard" style="display:none;">
+    <h3>Resumo deste turno</h3>
+    <div class="grid cols3" id="ordersSummaryStats"></div>
+  </div>
+  <div id="ordersLogCard"></div>
+</section>
+
 <!-- CARREGAR -->
 <section class="tab" id="tab-carregar">
   <div class="card">
@@ -811,7 +828,7 @@ let STATE = null;
 // APP_VERSION: sobe isto (e o CACHE_NAME correspondente em sw.js) sempre que publicares uma versão nova no GitHub.
 // É o que aparece no canto superior direito da app — se não mudar depois de um deploy, o browser ainda está
 // a servir a cache antiga do service worker.
-const APP_VERSION = 'v1.4 · 2026-09-25';
+const APP_VERSION = 'v1.6 · 2026-09-25';
 document.getElementById('appVersionBadge').textContent = APP_VERSION.split(' · ')[0];
 document.getElementById('appVersionBadge').title = 'Versão do painel: '+APP_VERSION;
 
@@ -2405,6 +2422,204 @@ function renderBalanco(){
   }
 }
 
+/* ============================== ORDENS ENVIADAS ============================== */
+const SITE_LABEL_ORDERS = SITE_LABEL; // reutiliza o mapa já existente (farm/mine/port/lumbermill/quarry)
+function foundingsCounterKey(){ return 'trevasxxi_foundings_'+(STATE.kingdom_id||'default'); }
+function loadFoundingsCount(){ try{ return parseInt(localStorage.getItem(foundingsCounterKey())||'0'); }catch(e){ return 0; } }
+function bumpFoundingsCount(turn){
+  try{
+    const key = foundingsCounterKey();
+    const seenKey = key+'_turns';
+    const seenTurns = JSON.parse(localStorage.getItem(seenKey)||'[]');
+    if(seenTurns.includes(turn)) return; // já contado este turno (reimport), não duplica
+    seenTurns.push(turn);
+    localStorage.setItem(seenKey, JSON.stringify(seenTurns));
+    localStorage.setItem(key, String(loadFoundingsCount()+1));
+  }catch(e){}
+}
+
+// Extrai o custo em ouro de uma ordem — alguns tipos guardam um número, recruit_unit guarda um objeto {gold,food,wood,horses,iron}
+function orderGoldCost(o){
+  if(o.cost==null) return 0;
+  if(typeof o.cost==='number') return o.cost;
+  if(typeof o.cost==='object') return o.cost.gold||0;
+  return 0;
+}
+function orderCostText(o){
+  if(o.cost==null) return '';
+  if(typeof o.cost==='number') return `${fmt(o.cost)}g`;
+  if(typeof o.cost==='object'){
+    return Object.entries(o.cost).filter(([k,v])=>v).map(([k,v])=>`${fmt(v)}${k[0]}`).join(' ');
+  }
+  return '';
+}
+
+function describeOrder(o, unitIdx){
+  switch(o.type){
+    case 'create_army':
+      return {cat:'Exércitos', icon:'🏳', text:`Criar Exército ${o.army_num}${o.label?` "${o.label}"`:''}`, cost:0};
+    case 'recruit_unit': {
+      const u = unitIdx[o.unit_id];
+      return {cat:'Recrutamento', icon:'⚔', text:`Recrutar ${fmt(o.qty)}× ${o.unit_name||o.unit_id} no Exército ${o.army_num}`, cost:orderGoldCost(o), costText:orderCostText(o)};
+    }
+    case 'build_site':
+      return {cat:'Construção', icon:'🏗', text:`Construir ${SITE_LABEL_ORDERS[o.site_type]||o.site_type} em (${o.col},${o.row})`, cost:orderGoldCost(o)};
+    case 'upgrade_site':
+      return {cat:'Construção', icon:'🏗', text:`Melhorar ${SITE_LABEL_ORDERS[o.site_type]||o.site_type} em (${o.col},${o.row}) para Nv.${o.to_level}`, cost:orderGoldCost(o)};
+    case 'raze_site':
+      return {cat:'Construção', icon:'💥', text:`Demolir local em (${o.col},${o.row})`, cost:orderGoldCost(o)};
+    case 'upgrade_construction':
+      return {cat:'Construção', icon:'🏛', text:`Melhorar construção em (${o.col},${o.row})`, cost:orderGoldCost(o)};
+    case 'repair_wall':
+      return {cat:'Construção', icon:'🧱', text:`Reparar muralha em (${o.col},${o.row})`, cost:orderGoldCost(o)};
+    case 'found_construction':
+      return {cat:'Construção', icon:'🏕', text:`Fundar novo assentamento (${o.family}) em (${o.col},${o.row})`, cost:0, isFounding:true};
+    case 'move_construction':
+      return {cat:'Construção', icon:'🚚', text:`Mover acampamento para (${o.col},${o.row})`, cost:orderGoldCost(o)};
+    case 'assign_character': {
+      const a = (o.assignment||'none').toLowerCase();
+      return {cat:'Personagens', icon:'👤', text:`${o.char_name}: atribuição → ${a==='none'?'nenhuma':o.assignment}`, cost:0, assignment:a};
+    }
+    case 'hire_character':
+      return {cat:'Personagens', icon:'🎖', text:`Contratar ${o.name} para a corte`, cost:1000, costApprox:true};
+    case 'dismiss_character':
+      return {cat:'Personagens', icon:'👋', text:`Dispensar personagem`, cost:0};
+    case 'hire_spy':
+      return {cat:'Diplomacia', icon:'🕵', text:`Enviar espião para (${o.col},${o.row})`, cost:orderGoldCost(o), isSpy:true};
+    case 'diplomacy':
+      return {cat:'Diplomacia', icon:'🤝', text:`Ação diplomática${o.target_name?': '+o.target_name:''}`, cost:0};
+    case 'become_vassal':
+      return {cat:'Diplomacia', icon:'🏳', text:`Tornar-se vassalo`, cost:0};
+    case 'leave_vassalage':
+      return {cat:'Diplomacia', icon:'🏳', text:`Deixar vassalagem`, cost:0};
+    case 'set_vassal_tribute':
+      return {cat:'Diplomacia', icon:'💰', text:`Ajustar tributo de vassalo`, cost:0};
+    case 'tax_change':
+      return {cat:'Impostos', icon:'📈', text:`Alterar taxa de imposto: ${o.from}% → ${o.to}%`, cost:0, isTax:true};
+    case 'move_army':
+      return {cat:'Exércitos', icon:'🚶', text:`Mover Exército ${o.army_num}: (${o.from?.col},${o.from?.row}) → (${o.to?.col},${o.to?.row})`, cost:0};
+    case 'set_army_stance':
+      return {cat:'Exércitos', icon:'🛡', text:`Exército ${o.army_num}: postura → ${o.stance}`, cost:0};
+    case 'split_army':
+      return {cat:'Exércitos', icon:'✂', text:`Dividir Exército ${o.from_army_num} → novo Exército ${o.new_army_num}`, cost:0};
+    case 'link_armies':
+      return {cat:'Exércitos', icon:'🔗', text:`Juntar exércitos`, cost:0};
+    case 'embark_army':
+      return {cat:'Exércitos', icon:'⛴', text:`Embarcar Exército ${o.army_num}`, cost:0};
+    case 'build_ship':
+      return {cat:'Frotas', icon:'⛵', text:`Construir navio`, cost:orderGoldCost(o)};
+    case 'create_fleet':
+      return {cat:'Frotas', icon:'⛵', text:`Criar frota`, cost:0};
+    case 'move_fleet':
+      return {cat:'Frotas', icon:'⛵', text:`Mover Frota ${o.fleet_num||''}`, cost:0};
+    case 'set_fleet_stance':
+      return {cat:'Frotas', icon:'⛵', text:`Frota: postura → ${o.stance}`, cost:0};
+    case 'send_resource':
+      return {cat:'Outros', icon:'📦', text:`Enviar recursos`, cost:0};
+    case 'transfer_hex':
+      return {cat:'Outros', icon:'🗺', text:`Transferir hexágono (${o.col},${o.row})`, cost:0};
+    default:
+      return {cat:'Outros', icon:'•', text:o.type, cost:orderGoldCost(o)};
+  }
+}
+
+function renderOrdersUploadHandlers(){
+  const dz = document.getElementById('ordersDropZone');
+  const fi = document.getElementById('ordersFileInput');
+  if(dz.dataset.bound) return;
+  dz.dataset.bound='1';
+  dz.addEventListener('click', ()=>fi.click());
+  dz.addEventListener('dragover', e=>{e.preventDefault(); dz.style.borderColor='var(--gold)';});
+  dz.addEventListener('dragleave', ()=>{dz.style.borderColor='var(--border)';});
+  dz.addEventListener('drop', e=>{ e.preventDefault(); dz.style.borderColor='var(--border)'; const f=e.dataTransfer.files[0]; if(f) handleOrdersFile(f); });
+  fi.addEventListener('change', e=>{ const f=e.target.files[0]; if(f) handleOrdersFile(f); });
+}
+
+function handleOrdersFile(f){
+  const reader = new FileReader();
+  reader.onload = ev=>{
+    try{
+      const raw = JSON.parse(ev.target.result);
+      const turnNum = raw.turn ?? raw._submittedTurn ?? '?';
+      const kingdomName = (raw.kingdom&&raw.kingdom.name)||'reino desconhecido';
+      const isDraft = !!raw._trevas_draft;
+      processOrdersFile(raw);
+      document.getElementById('ordersLoadStatus').innerHTML = `<span class="good">✓ ${isDraft?'Rascunho':'Ordens'} do Turno ${turnNum} carregado${isDraft?'':'as'} (${kingdomName}).</span>`;
+    }catch(err){
+      document.getElementById('ordersLoadStatus').innerHTML = '<span class="bad">✗ Não foi possível ler este ficheiro: '+err.message+'</span>';
+    }
+  };
+  reader.readAsText(f);
+}
+
+function processOrdersFile(raw){
+  if(raw.kingdom && STATE.kingdom_id && raw.kingdom.id!==STATE.kingdom_id){
+    document.getElementById('ordersLoadStatus').innerHTML = `<span class="warn">⚠ Este ficheiro de ordens é do reino "${raw.kingdom.name}", mas o relatório carregado é doutro reino. Os marcos do Plano de Campanha só se ajustam corretamente se forem do mesmo reino.</span>`;
+  }
+  const turnNum = raw.turn ?? raw._submittedTurn ?? null;
+  // Aceita tanto o rascunho local (_trevas_draft: turnOrders) como o ficheiro final exportado (orders)
+  const ordersRaw = raw.turnOrders || raw.orders || [];
+  const unitIdx = fullUnitIndex();
+  const orders = ordersRaw.filter(o=>o.type); // ignora ruído sem type
+  const described = orders.map(o=>describeOrder(o,unitIdx));
+
+  // Totais
+  const goldSpent = described.reduce((s,d)=>s+(d.cost||0),0);
+  const byCat = {};
+  described.forEach(d=>{ byCat[d.cat]=(byCat[d.cat]||0)+1; });
+
+  document.getElementById('ordersSummaryCard').style.display='block';
+  document.getElementById('ordersSummaryStats').innerHTML = `
+    <div class="stat"><div class="v">${orders.length}</div><div class="l">Ordens no total</div></div>
+    <div class="stat"><div class="v">${fmt(goldSpent)}g</div><div class="l">Ouro comprometido este turno</div></div>
+    <div class="stat"><div class="v">${Object.keys(byCat).length}</div><div class="l">Categorias diferentes</div></div>
+  `;
+
+  // Se houver eventLog (rascunho local), usa-o como registo principal — é gerado pelo próprio
+  // player_page e inclui contexto que o painel não consegue recalcular sozinho (tetos de
+  // recrutamento consumidos, população exata, etc.). Filtra só ao turno atual.
+  const events = (raw.eventLog||[]).filter(e=> turnNum==null || e.turn===turnNum);
+  let logHtml = '<div class="card"><h3>Registo de Ordens deste Turno</h3>';
+  if(events.length){
+    logHtml += '<p class="small muted">Direto do teu player_page — inclui contexto que o painel não recalcula sozinho.</p><ul class="small" style="margin-top:6px;">';
+    events.forEach(e=>{
+      logHtml += `<li>${e.icon||'•'} <b>${e.title}</b>${e.desc?'<br><span class="muted">'+e.desc+'</span>':''}${e.effect?'<br><span class="muted small">'+e.effect+'</span>':''}</li>`;
+    });
+    logHtml += '</ul>';
+  } else if(described.length){
+    const cats = ['Construção','Recrutamento','Personagens','Exércitos','Frotas','Impostos','Diplomacia','Outros'];
+    cats.forEach(cat=>{
+      const items = described.filter(d=>d.cat===cat);
+      if(!items.length) return;
+      logHtml += `<h4 style="margin-top:10px;color:var(--sand);font-family:var(--font-display);font-size:.88rem;">${cat}</h4><ul class="small" style="margin-top:4px;">`;
+      items.forEach(d=>{
+        const costStr = d.costText || (d.cost?`${fmt(d.cost)}g`:'');
+        logHtml += `<li>${d.icon} ${d.text}${costStr?` — ${d.costApprox?'~':''}${costStr}`:''}</li>`;
+      });
+      logHtml += '</ul>';
+    });
+  } else {
+    logHtml += '<p class="muted">Nenhuma ordem com ação neste ficheiro (turno em branco, ou só posturas/movimentos sem custo).</p>';
+  }
+  logHtml += '</div>';
+  document.getElementById('ordersLogCard').innerHTML = logHtml;
+
+  // --- Ligação automática ao Plano de Campanha ---
+  const check = (id)=>savePlanCheck(id, true);
+  if(described.some(d=>d.cat==='Construção' && /Quinta/.test(d.text))) check('f1_farm');
+  if(described.some(d=>d.cat==='Construção' && /Serraria/.test(d.text))) check('f1_lumber');
+  if(described.some(d=>d.assignment==='treasury')) check('f1_treasurer');
+  if(described.some(d=>d.isTax)) check('f1_tax');
+  if(described.some(d=>d.cat==='Recrutamento')) check('f1_garrison');
+  if(described.some(d=>d.isSpy)) check('f3_spy');
+  if(described.some(d=>d.isFounding)){
+    check('f1_found1');
+    bumpFoundingsCount(turnNum);
+    if(loadFoundingsCount()>=2) check('f2_found2');
+  }
+  renderPlano(); // refresca os marcos imediatamente
+}
+
 function render(){
   renderVisaoGeral();
   renderAdvisor();
@@ -2419,6 +2634,7 @@ function render(){
   renderCerco();
   renderAlvos();
   renderBalanco();
+  renderOrdersUploadHandlers();
 }
 
 /* ============================== TABS ============================== */
