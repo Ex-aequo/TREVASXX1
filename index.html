@@ -174,7 +174,7 @@ button.act.secondary{background:transparent;border:1px solid var(--gold-dim);col
   </div>
   <div class="card">
     <h2>Rendimento Projetado (Fase 1, este turno)</h2>
-    <p class="small">Ouro é determinístico. Comida/pedra/madeira mostram o piso garantido — a tua Página do Jogador nunca promete mais do que isto. O separador Produção do jogo mostra o intervalo completo.</p>
+    <p class="small">Ouro é determinístico. Comida/pedra/madeira mostram o valor garantido — a tua Página do Jogador nunca promete mais do que isto. O separador Produção do jogo mostra o intervalo completo.</p>
     <div class="tbl-wrap"><table>
       <thead><tr><th>Recurso</th><th>Garantido</th><th>Máximo possível</th><th>Fonte</th></tr></thead>
       <tbody id="incomeBody"></tbody>
@@ -318,7 +318,7 @@ button.act.secondary{background:transparent;border:1px solid var(--gold-dim);col
   <div id="planPhases"></div>
   <div class="card">
     <h2>📋 Recrutamento Concreto — Próximos 8 Turnos</h2>
-    <p class="small">Simulação turno-a-turno a partir do teu relatório mais recente: crescimento populacional (§2.9.1, 2%/turno médio), rendimento em piso garantido, manutenção de ouro/ferro das tropas já em pé, e <b>consumo de comida contínuo</b> (§2.10.4: 1/soldado a pé, 2/montado — 1 se Nómada) subtraído a cada turno antes de recrutar mais. O recrutamento é travado para nunca comprometer mais de 85% do rendimento de comida desse turno em manutenção — a folga fica para crescimento e imprevistos.</p>
+    <p class="small">Simulação turno-a-turno a partir do teu relatório mais recente: crescimento populacional (§2.9.1, 2%/turno médio), rendimento no valor garantido, manutenção de ouro/ferro das tropas já em pé, e <b>consumo de comida contínuo</b> (§2.10.4: 1/soldado a pé, 2/montado — 1 se Nómada) subtraído a cada turno antes de recrutar mais. O recrutamento é travado para nunca comprometer mais de 85% do rendimento de comida desse turno em manutenção — a folga fica para crescimento e imprevistos.</p>
     <div class="tbl-wrap"><table id="recruitPlanTable">
       <thead><tr><th>Turno</th><th>Ações de arranque</th><th>Recrutar</th><th>Exército acumulado</th><th>Ouro no fim</th><th>Comida no fim</th></tr></thead>
       <tbody></tbody>
@@ -480,7 +480,7 @@ button.act.secondary{background:transparent;border:1px solid var(--gold-dim);col
 <section class="tab" id="tab-balanco">
   <div class="card">
     <h2>⚖ Balanço — Produção vs. Consumo por Turno</h2>
-    <p class="small">Produção usa sempre o piso garantido (nunca o teto). Consumo é o que as tuas tropas em pé gastam continuamente, todos os turnos — separado do custo único de as recrutar. O objetivo: nunca ficar em défice, e ver que excedente tens disponível para vender no mercado.</p>
+    <p class="small">Produção usa sempre o valor garantido (nunca o máximo possível). Consumo é o que as tuas tropas em pé gastam continuamente, todos os turnos — separado do custo único de as recrutar. O objetivo: nunca ficar em défice, e ver que excedente tens disponível para vender no mercado.</p>
   </div>
   <div class="card" id="deficitAlert" style="display:none;"></div>
   <div class="card">
@@ -517,7 +517,7 @@ button.act.secondary{background:transparent;border:1px solid var(--gold-dim);col
     <ul class="small">
       <li>Calcula rendimentos, custos de construção/melhoria, recrutamento e cenários de imposto usando as fórmulas exatas do manual v586 e da Página do Jogador V248.</li>
       <li><b>Não</b> gera nem assina um ficheiro de ordens — continua a emitir as tuas ordens na Página do Jogador oficial. Esta ferramenta é só para decidir o que ordenar.</li>
-      <li>Os valores de produção variável (quintas, portos) mostram sempre o piso garantido e o teto possível — nunca uma previsão exata, porque o motor rola de novo a cada turno.</li>
+      <li>Os valores de produção variável (quintas, portos) mostram sempre o valor garantido e o máximo possível — nunca uma previsão exata, porque o motor rola de novo a cada turno.</li>
     </ul>
   </div>
 </section>
@@ -811,7 +811,7 @@ let STATE = null;
 // APP_VERSION: sobe isto (e o CACHE_NAME correspondente em sw.js) sempre que publicares uma versão nova no GitHub.
 // É o que aparece no canto superior direito da app — se não mudar depois de um deploy, o browser ainda está
 // a servir a cache antiga do service worker.
-const APP_VERSION = 'v1.2 · 2026-09-25';
+const APP_VERSION = 'v1.3 · 2026-09-25';
 document.getElementById('appVersionBadge').textContent = APP_VERSION.split(' · ')[0];
 document.getElementById('appVersionBadge').title = 'Versão do painel: '+APP_VERSION;
 
@@ -1082,7 +1082,7 @@ function renderVisaoGeral(){
     }
   });
 
-  rows.push(['🌾 Terreno + Quintas + Portos', fmt(foodMin)+' (piso)', fmt(foodMax)+' (teto)', 'Planícies sem local: +1 · Quintas e Portos rolam por turno']);
+  rows.push(['🌾 Terreno + Quintas + Portos', fmt(foodMin)+' (garantido)', fmt(foodMax)+' (máximo)', 'Planícies sem local: +1 · Quintas e Portos rolam por turno']);
   if(ironTotal) rows.push(['⚙ Minas', fmt(ironTotal)+'g equiv.', '—', 'Determinístico']);
   if(woodTotal) rows.push(['🪵 Serrarias', fmt(woodTotal), '—', 'Determinístico (mín. 1)']);
   if(stoneTotal) rows.push(['🪨 Pedreiras', fmt(stoneTotal), '—', 'Determinístico (mín. 1)']);
@@ -1420,7 +1420,7 @@ function simulateCampaign(nTurns){
       if(h.population<cap){ h.population = Math.min(cap, h.population + Math.max(1, Math.round(0.02*cap))); }
     });
 
-    // 2. Rendimento (usa sempre o piso garantido, nunca o teto) — locais construídos ATÉ ao turno anterior
+    // 2. Rendimento (usa sempre o valor garantido, nunca o máximo) — locais construídos ATÉ ao turno anterior
     const pop = hexes.reduce((s,h)=>s+(h.population||0),0);
     const rawTax = floor(pop*taxRate/100);
     const pen = taxPenaltyPct(opinion);
@@ -2307,7 +2307,7 @@ function fullUnitIndex(){
 function renderBalanco(){
   const unitIdx = fullUnitIndex();
 
-  // --- Produção (piso garantido) ---
+  // --- Produção (valor garantido) ---
   const pop = totalPop();
   const rawTax = floor(pop*STATE.taxRate/100);
   const pen = taxPenaltyPct(STATE.opinion);
