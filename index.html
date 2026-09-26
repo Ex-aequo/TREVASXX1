@@ -129,6 +129,7 @@ button.act.secondary{background:transparent;border:1px solid var(--gold-dim);col
   <button data-tab="visao" class="active">Visão Geral</button>
   <button data-tab="advisor">⭐ Advisor</button>
   <button data-tab="territorio">Território</button>
+  <button data-tab="mapa">🗺 Mapa</button>
   <button data-tab="construcao">Construção</button>
   <button data-tab="recrutamento">Recrutamento</button>
   <button data-tab="personagens">Personagens</button>
@@ -218,6 +219,48 @@ button.act.secondary{background:transparent;border:1px solid var(--gold-dim);col
       <thead><tr><th>Hex</th><th>Terreno</th><th>Pop.</th><th>Nv.</th><th>Muro</th><th>Local</th><th>Nota</th></tr></thead>
       <tbody></tbody>
     </table></div>
+  </div>
+</section>
+
+<!-- MAPA -->
+<section class="tab" id="tab-mapa">
+  <style>
+    @media(max-width:640px){
+      #tab-mapa .layout{flex-direction:column;}
+      #tab-mapa #mapaSidepanel{width:100%;flex:1 1 auto;position:static;}
+    }
+  </style>
+  <div class="card">
+    <h2>🗺 Mapa</h2>
+    <p class="small">O teu território e a fronteira que já viste — cor por terreno; a fronteira ganha um tom de aliança (guerra/paz/aliança) a partir do Registo de Alvos e da diplomacia do relatório. Clica num hexágono para veres os detalhes.</p>
+  </div>
+  <div id="mapaEmptyNote" class="card" style="display:none;"><p class="muted">Sem hexágonos visíveis ainda — carrega um relatório em "Ficheiro de Turno".</p></div>
+  <div id="mapaContent">
+  <div class="mobileWarn" id="mapaMobileWarn" style="display:none;background:#4a2a2a;border:1px solid #e87a7a;border-radius:8px;padding:8px 10px;font-size:.78rem;color:#ffb4b4;margin-bottom:10px;">⚠ Ecrã pequeno detetado — o zoom com dois dedos pode não se comportar tão bem aqui como no computador; usa o scroll normal e os botões +/− se precisares.</div>
+  <div class="layout" style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start;">
+    <div class="card" style="flex:1 1 480px;padding:8px;position:relative;">
+      <div style="position:absolute;top:14px;right:14px;display:flex;flex-direction:column;gap:4px;z-index:5;">
+        <button id="mapaZoomIn" type="button" class="act secondary" style="width:32px;height:32px;padding:0;">+</button>
+        <button id="mapaZoomOut" type="button" class="act secondary" style="width:32px;height:32px;padding:0;">−</button>
+        <button id="mapaZoomReset" type="button" class="act secondary" style="width:32px;height:32px;padding:0;font-size:.65rem;">1:1</button>
+      </div>
+      <div id="mapaViewport" style="overflow:auto;touch-action:none;border-radius:6px;max-height:70vh;">
+        <svg id="mapaSvg" style="transform-origin:0 0;"></svg>
+      </div>
+      <div class="legend" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;font-size:.7rem;color:var(--text-dim);">
+        <span><span style="width:10px;height:10px;border-radius:2px;display:inline-block;background:var(--gold);"></span> Teu</span>
+        <span><span style="width:10px;height:10px;border-radius:2px;display:inline-block;background:#e87a7a;opacity:.5;"></span> Guerra</span>
+        <span><span style="width:10px;height:10px;border-radius:2px;display:inline-block;background:#7ab5e8;opacity:.5;"></span> Aliado/Vassalo</span>
+        <span><span style="width:10px;height:10px;border-radius:2px;display:inline-block;background:#8a9a4a;opacity:.4;"></span> Paz/Desconhecido</span>
+        <span><span style="width:10px;height:10px;border-radius:2px;display:inline-block;background:#1c1f28;"></span> Escondido</span>
+        <span>★ assento</span><span>⚔ exército</span>
+      </div>
+    </div>
+    <div class="card" id="mapaSidepanel" style="width:250px;flex:0 0 250px;position:sticky;top:12px;">
+      <h3>Clica num hexágono</h3>
+      <p class="muted small">Os detalhes aparecem aqui.</p>
+    </div>
+  </div>
   </div>
 </section>
 
@@ -973,7 +1016,7 @@ let STATE = null;
 // APP_VERSION: sobe isto (e o CACHE_NAME correspondente em sw.js) sempre que publicares uma versão nova no GitHub.
 // É o que aparece no canto superior direito da app — se não mudar depois de um deploy, o browser ainda está
 // a servir a cache antiga do service worker.
-const APP_VERSION = 'v2.5 · 2026-09-25';
+const APP_VERSION = 'v2.6 · 2026-09-25';
 document.getElementById('appVersionBadge').textContent = APP_VERSION.split(' · ')[0];
 document.getElementById('appVersionBadge').title = 'Versão do painel: '+APP_VERSION;
 
@@ -985,19 +1028,22 @@ function loadState(raw){
   if(raw.map_state){
     const kid = raw.kingdom_id;
     const hexes = raw.map_state.hexes.filter(h=>h.kingdom===kid);
+    // Guardado à parte, só para o separador Mapa — nunca entra nos cálculos económicos/território,
+    // que continuam a usar só "hexes" (os teus). Hidden não traz informação nenhuma, não vale a pena guardar.
+    const mapHexes = raw.map_state.hexes.filter(h=>h.visibility==='full'||h.visibility==='border');
     s = {
       kingdom_id: kid, kingdom_name: raw.kingdom_name, race: raw.kingdom_race,
       resources: raw.kingdom_state.resources, opinion: raw.kingdom_state.opinion,
       taxRate: raw.kingdom_state.taxRate, characters: raw.kingdom_state.characters,
       candidate_pool: raw.kingdom_state.candidate_pool || [],
-      market_prices: raw.market_prices, hexes, turn: raw.turn,
+      market_prices: raw.market_prices, hexes, mapHexes, turn: raw.turn,
       armies: raw.kingdom_state.armies||[], fleets: raw.kingdom_state.fleets||[],
       events: raw.events||[], diplomacy: raw.kingdom_state.diplomacy||{},
       conquered_hexes: raw.conquered_hexes||[], lost_hexes: raw.lost_hexes||[],
       map_kingdoms: (raw.map_state.kingdoms||[]).map(k=>({id:k.id,name:k.name,race:k.race,pirate:k.pirate})),
       vassal_of: raw.kingdom_state.vassal_of||null, vassals: raw.kingdom_state.vassals||[],
     };
-  } else { s = raw; s.turn = s.turn ?? 0; s.events = s.events||[]; s.diplomacy = s.diplomacy||{}; s.map_kingdoms = s.map_kingdoms||[]; s.conquered_hexes = s.conquered_hexes||[]; s.lost_hexes = s.lost_hexes||[]; }
+  } else { s = raw; s.turn = s.turn ?? 0; s.events = s.events||[]; s.diplomacy = s.diplomacy||{}; s.map_kingdoms = s.map_kingdoms||[]; s.conquered_hexes = s.conquered_hexes||[]; s.lost_hexes = s.lost_hexes||[]; s.mapHexes = s.mapHexes||[]; }
   STATE = s;
   computeDiff();
   saveDetailedSnapshot();
@@ -3101,10 +3147,168 @@ function computeNavalBattle(){
   `;
 }
 
+/* ============================== MAPA ============================== */
+const MAP_TERRAIN_COLOR={plains:'#8a9a4a',desert:'#c9a04a',forest:'#4a8a5a',mountain:'#8a7a7a',hills:'#a08a5a',swamp:'#5a8a6a',sea:'#3a5a7a'};
+const MAP_SITE_EMOJI={farm:'🌾',mine:'⛏',port:'⚓',lumbermill:'🪵',quarry:'🪨',forge:'🔥'};
+const MAP_ALLEGIANCE_COLOR={war:'#e87a7a',alliance:'#7ab5e8',vassal:'#7ab5e8',peace:'#8a9a4a',unknown:'#6b6558'};
+function mapHexPx(col,row,size){ return {x:size*Math.sqrt(3)*(col+0.5*(row&1)), y:size*1.5*row}; }
+function mapHexPoints(cx,cy,size){
+  const pts=[];
+  for(let i=0;i<6;i++){ const ang=Math.PI/180*(60*i-30); pts.push(`${(cx+size*Math.cos(ang)).toFixed(1)},${(cy+size*Math.sin(ang)).toFixed(1)}`); }
+  return pts.join(' ');
+}
+function getKingdomInfo(kid){ return (STATE.map_kingdoms||[]).find(k=>k.id===kid); }
+
+function renderMapa(){
+  const mapHexes = STATE.mapHexes||[];
+  const emptyNote = document.getElementById('mapaEmptyNote');
+  const content = document.getElementById('mapaContent');
+  if(!STATE.kingdom_id || !mapHexes.length){
+    emptyNote.style.display='block'; content.style.display='none';
+    return;
+  }
+  emptyNote.style.display='none'; content.style.display='block';
+
+  if(window.innerWidth<480) document.getElementById('mapaMobileWarn').style.display='block';
+
+  const byKey = {}; mapHexes.forEach(h=>{ byKey[h.col+','+h.row]=h; });
+  const cmin=Math.min(...mapHexes.map(h=>h.col))-2, cmax=Math.max(...mapHexes.map(h=>h.col))+2;
+  const rmin=Math.min(...mapHexes.map(h=>h.row))-2, rmax=Math.max(...mapHexes.map(h=>h.row))+2;
+
+  // Marcadores de exército: os teus (reais, de STATE.armies + _hex) e os inimigos avistados em
+  // combates perdidos (STATE.lost_hexes cruzado com os eventos, mesma lógica do Registo de Batalhas)
+  const markers = {};
+  (STATE.armies||[]).forEach(a=>{
+    if(!a._hex) return;
+    const total = (a.units||[]).reduce((s,u)=>s+u.count,0);
+    markers[a._hex.col+','+a._hex.row] = {allegiance:'own', label:`Exército ${a.num} (teu)`, total, status:a.status};
+  });
+  const events = STATE.events||[];
+  (STATE.lost_hexes||[]).forEach(h=>{
+    const e = events.find(ev=>{
+      if(!/^Lost/.test(ev.title||'')) return false;
+      const m=(ev.title||'').match(/\(([\-\d]+),\s*([\-\d]+)\)/);
+      return m && parseInt(m[1])===h.col && parseInt(m[2])===h.row;
+    });
+    const attackerRace = e&&e.attackerRace;
+    const troopMatch = e&&e.effect ? e.effect.match(/Invading force:\s*(\d+)\s*troops?/i) : null;
+    const total = troopMatch ? parseInt(troopMatch[1]) : null;
+    markers[h.col+','+h.row] = {allegiance:'enemy', label:`${RACE_LABEL_PT[attackerRace]||attackerRace||'Inimigo'} avistado (Registo de Batalhas)`, total};
+  });
+
+  const targets = loadTargets();
+  const size=19;
+  const cellData=[];
+  const svgParts=[];
+  for(let r=rmin;r<=rmax;r++){
+    for(let c=cmin;c<=cmax;c++){
+      const h = byKey[c+','+r];
+      const vis = h ? h.visibility : 'hidden';
+      const p = mapHexPx(c,r,size);
+      const idx = cellData.length;
+      let fill='#1c1f28', stroke='#262a36', opacity='0.5';
+      if(vis==='full'){
+        fill = MAP_TERRAIN_COLOR[h.terrain]||'#555'; stroke='var(--gold)'; opacity='0.9';
+      } else if(vis==='border'){
+        fill = MAP_TERRAIN_COLOR[h.terrain]||'#555';
+        const rel = h.kingdom ? (STATE.diplomacy[h.kingdom]||'unknown') : null;
+        stroke = h.kingdom ? MAP_ALLEGIANCE_COLOR[rel] : '#4a4536';
+        opacity='0.4';
+      }
+      svgParts.push(`<polygon class="mapaHexcell" data-idx="${idx}" points="${mapHexPoints(p.x,p.y,size)}" fill="${fill}" fill-opacity="${opacity}" stroke="${stroke}" stroke-width="1.4" style="cursor:pointer;"/>`);
+      if(vis==='full'){
+        if(h.musterSeatOf) svgParts.push(`<text x="${p.x.toFixed(1)}" y="${(p.y-6).toFixed(1)}" text-anchor="middle" font-size="10" fill="#ffd966">★</text>`);
+        if(h.site) svgParts.push(`<text x="${(p.x-6).toFixed(1)}" y="${(p.y+4).toFixed(1)}" text-anchor="middle" font-size="9">${MAP_SITE_EMOJI[h.site.type]||''}</text>`);
+        if(h.population) svgParts.push(`<text x="${(p.x+5).toFixed(1)}" y="${(p.y+8).toFixed(1)}" text-anchor="middle" font-size="6.5" fill="#fff">${h.population>=1000?(Math.round(h.population/1000)+'k'):h.population}</text>`);
+      }
+      const marker = markers[c+','+r];
+      if(marker){
+        const color = MAP_ALLEGIANCE_COLOR[marker.allegiance==='own'?'alliance':'war'];
+        svgParts.push(`<circle cx="${p.x.toFixed(1)}" cy="${(p.y+3).toFixed(1)}" r="7" fill="${marker.allegiance==='own'?'var(--gold)':color}" stroke="#14161c" stroke-width="1.2"/>`);
+        svgParts.push(`<text x="${p.x.toFixed(1)}" y="${(p.y+6).toFixed(1)}" text-anchor="middle" font-size="8">⚔</text>`);
+      }
+      cellData.push({col:c,row:r,visibility:vis,terrain:h&&h.terrain,population:h&&h.population,construction:h&&h.construction,site:h&&h.site,musterSeatOf:!!(h&&h.musterSeatOf),kingdom:h&&h.kingdom,marker});
+    }
+  }
+  const xs=cellData.map((d,i)=>mapHexPx(d.col,d.row,size).x), ys=cellData.map((d,i)=>mapHexPx(d.col,d.row,size).y);
+  const minx=Math.min(...xs)-size*1.4, miny=Math.min(...ys)-size*1.4;
+  const w=Math.max(...xs)-Math.min(...xs)+size*2.8, h_total=Math.max(...ys)-Math.min(...ys)+size*2.8;
+  const svg = document.getElementById('mapaSvg');
+  svg.setAttribute('width', w.toFixed(0)); svg.setAttribute('height', h_total.toFixed(0));
+  svg.setAttribute('viewBox', `${minx.toFixed(0)} ${miny.toFixed(0)} ${w.toFixed(0)} ${h_total.toFixed(0)}`);
+  svg.innerHTML = svgParts.join('');
+
+  svg.onclick = (e)=>{
+    const el = e.target.closest('.mapaHexcell');
+    if(!el) return;
+    const d = cellData[parseInt(el.dataset.idx)];
+    const panel = document.getElementById('mapaSidepanel');
+    let html = `<h3>(${d.col},${d.row})</h3>`;
+    if(d.visibility==='hidden'){
+      html += '<p class="muted small">Hexágono por descobrir — sem informação no relatório.</p>';
+    } else {
+      html += `<div class="small" style="margin-bottom:3px;">Terreno: ${TERRAIN_LABEL[d.terrain]||d.terrain||'—'}</div>`;
+      if(d.visibility==='border'){
+        const ki = d.kingdom ? getKingdomInfo(d.kingdom) : null;
+        const rel = d.kingdom ? (STATE.diplomacy[d.kingdom]||'unknown') : null;
+        html += ki ? `<div class="small">Reino: ${ki.name} (${RACE_LABEL_PT[ki.race]||ki.race})</div>` : '<div class="small muted">Sem dono conhecido</div>';
+        if(d.kingdom) html += `<div class="small">Relação: ${DIPLO_LABEL[rel]||'Desconhecida'}</div>`;
+        html += '<p class="muted small">Só fronteira visível — sem população nem construção.</p>';
+        if(d.kingdom && targets[d.kingdom]){
+          const t = targets[d.kingdom];
+          html += `<div class="hr"></div><div class="small">${t.priority?'⭐ Prioritário<br>':''}${t.wpEstimate?'WP estimado: '+fmt(t.wpEstimate)+'<br>':''}${t.notes?'Notas: '+t.notes:''}</div>`;
+        } else if(d.kingdom){
+          html += `<p class="small muted">Sem notas no Registo de Alvos ainda.</p>`;
+        }
+      } else {
+        html += `<div class="small">População: ${d.population!=null?fmt(d.population):'—'}</div>`;
+        html += `<div class="small">Construção: ${d.construction?('Nv.'+d.construction.level+' ('+d.construction.race+')'):'—'}</div>`;
+        html += `<div class="small">Local: ${d.site?SITE_LABEL[d.site.type]+' Nv.'+d.site.size:'—'}</div>`;
+        if(d.musterSeatOf) html += '<div class="small">⭐ Assento de Recrutamento</div>';
+      }
+      if(d.marker){
+        html += `<div class="hr"></div><div class="small">⚔ ${d.marker.label}${d.marker.total?' — '+fmt(d.marker.total)+' soldados':''}${d.marker.status!=null?', ESTADO '+d.marker.status+'%':''}</div>`;
+      }
+    }
+    panel.innerHTML = html;
+  };
+
+  // Zoom: botões + roda do rato + pinça tátil (idempotente — reatribuído a cada render, não empilha)
+  let zoom = 1;
+  const viewport = document.getElementById('mapaViewport');
+  const applyZoom = ()=>{ svg.style.transform = `scale(${zoom})`; };
+  document.getElementById('mapaZoomIn').onclick = ()=>{ zoom=Math.min(3,zoom+0.25); applyZoom(); };
+  document.getElementById('mapaZoomOut').onclick = ()=>{ zoom=Math.max(0.4,zoom-0.25); applyZoom(); };
+  document.getElementById('mapaZoomReset').onclick = ()=>{ zoom=1; applyZoom(); };
+  viewport.onwheel = (e)=>{
+    if(!e.ctrlKey && Math.abs(e.deltaY)<2) return;
+    e.preventDefault();
+    zoom = Math.max(0.4, Math.min(3, zoom - e.deltaY*0.001));
+    applyZoom();
+  };
+  let pinchStartDist=null, pinchStartZoom=1;
+  viewport.ontouchstart = (e)=>{
+    if(e.touches.length===2){
+      const dx=e.touches[0].clientX-e.touches[1].clientX, dy=e.touches[0].clientY-e.touches[1].clientY;
+      pinchStartDist=Math.hypot(dx,dy); pinchStartZoom=zoom;
+    }
+  };
+  viewport.ontouchmove = (e)=>{
+    if(e.touches.length===2 && pinchStartDist){
+      e.preventDefault();
+      const dx=e.touches[0].clientX-e.touches[1].clientX, dy=e.touches[0].clientY-e.touches[1].clientY;
+      zoom = Math.max(0.4, Math.min(3, pinchStartZoom*(Math.hypot(dx,dy)/pinchStartDist)));
+      applyZoom();
+    }
+  };
+  viewport.ontouchend = (e)=>{ if(e.touches.length<2) pinchStartDist=null; };
+}
+
 function render(){
   renderVisaoGeral();
   renderAdvisor();
   renderTerritorio();
+  renderMapa();
   renderConstrucao();
   renderRecrutamento();
   renderPersonagens();
