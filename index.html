@@ -238,7 +238,7 @@ button.act.secondary{background:transparent;border:1px solid var(--gold-dim);col
   <div id="mapaContent">
   <div class="mobileWarn" id="mapaMobileWarn" style="display:none;background:#4a2a2a;border:1px solid #e87a7a;border-radius:8px;padding:8px 10px;font-size:.78rem;color:#ffb4b4;margin-bottom:10px;">⚠ Ecrã pequeno detetado — o zoom com dois dedos pode não se comportar tão bem aqui como no computador; usa o scroll normal e os botões +/− se precisares.</div>
   <div class="layout" style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start;">
-    <div class="card" style="flex:1 1 480px;padding:8px;position:relative;">
+    <div class="card" id="mapaMapcard" style="flex:4 1 500px;padding:8px;position:relative;">
       <div style="position:absolute;top:14px;right:14px;display:flex;flex-direction:column;gap:4px;z-index:5;">
         <button id="mapaZoomIn" type="button" class="act secondary" style="width:32px;height:32px;padding:0;">+</button>
         <button id="mapaZoomOut" type="button" class="act secondary" style="width:32px;height:32px;padding:0;">−</button>
@@ -257,7 +257,7 @@ button.act.secondary{background:transparent;border:1px solid var(--gold-dim);col
         <span>★ assento</span><span>⚔ exército</span>
       </div>
     </div>
-    <div class="card" id="mapaSidepanel" style="width:250px;flex:0 0 250px;position:sticky;top:12px;">
+    <div class="card" id="mapaSidepanel" style="width:220px;flex:0 0 220px;position:sticky;top:12px;">
       <h3>Clica num hexágono</h3>
       <p class="muted small">Os detalhes aparecem aqui.</p>
     </div>
@@ -1017,7 +1017,7 @@ let STATE = null;
 // APP_VERSION: sobe isto (e o CACHE_NAME correspondente em sw.js) sempre que publicares uma versão nova no GitHub.
 // É o que aparece no canto superior direito da app — se não mudar depois de um deploy, o browser ainda está
 // a servir a cache antiga do service worker.
-const APP_VERSION = 'v2.8 · 2026-09-25';
+const APP_VERSION = 'v2.9 · 2026-09-25';
 document.getElementById('appVersionBadge').textContent = APP_VERSION.split(' · ')[0];
 document.getElementById('appVersionBadge').title = 'Versão do painel: '+APP_VERSION;
 
@@ -3274,30 +3274,34 @@ function renderMapa(){
     panel.innerHTML = html;
   };
 
-  // Altura dinâmica: usa o espaço real que sobra no ecrã abaixo do mapa, em vez de uma percentagem fixa
+  // Altura dinâmica: usa o espaço real que sobra no ecrã abaixo do mapa, em vez de uma percentagem fixa.
+  // clientWidth/innerHeight só são fiáveis quando o separador está mesmo visível (display:block) —
+  // por isso isto é também chamado outra vez pelo clique no separador "Mapa", com um pequeno atraso.
   const viewport = document.getElementById('mapaViewport');
   function fitViewportHeight(){
     const top = viewport.getBoundingClientRect().top;
-    const available = window.innerHeight - top - 90; // margem para legenda + respiro no fundo
+    const available = window.innerHeight - top - 70; // margem para legenda + respiro no fundo
     viewport.style.maxHeight = Math.max(240, available) + 'px';
   }
   fitViewportHeight();
 
   // Zoom "Ajustar" — cabe o território + fronteira inteiros na janela, sem scroll
   function computeFitZoom(){
-    const availW = viewport.clientWidth || 400;
+    const availW = document.getElementById('mapaMapcard').clientWidth - 20 || 400; // -20: respiro interno do cartão
     const availH = parseFloat(viewport.style.maxHeight) || 400;
-    return Math.max(0.15, Math.min(3, Math.min(availW/w, availH/h_total)*0.96));
+    return Math.max(0.15, Math.min(4, Math.min(availW/w, availH/h_total)*0.98));
   }
 
   // Zoom: botões + roda do rato + pinça tátil (idempotente — reatribuído a cada render, não empilha)
   let zoom = computeFitZoom(); // arranca já ajustado à janela, em vez de sempre a 1:1
   const applyZoom = ()=>{ svg.style.transform = `scale(${zoom})`; };
   applyZoom();
+  function refit(){ fitViewportHeight(); zoom = computeFitZoom(); applyZoom(); }
+  window.MapaView = { refit }; // acessível ao separador de navegação, para reajustar quando a aba fica mesmo visível
   document.getElementById('mapaZoomIn').onclick = ()=>{ zoom=Math.min(3,zoom+0.25); applyZoom(); };
   document.getElementById('mapaZoomOut').onclick = ()=>{ zoom=Math.max(0.15,zoom-0.25); applyZoom(); };
   document.getElementById('mapaZoomReset').onclick = ()=>{ zoom=1; applyZoom(); };
-  document.getElementById('mapaZoomFit').onclick = ()=>{ fitViewportHeight(); zoom=computeFitZoom(); applyZoom(); };
+  document.getElementById('mapaZoomFit').onclick = refit;
   viewport.onwheel = (e)=>{
     if(!e.ctrlKey && Math.abs(e.deltaY)<2) return;
     e.preventDefault();
@@ -3360,6 +3364,9 @@ document.getElementById('tabnav').addEventListener('click', e=>{
   btn.classList.add('active');
   document.querySelectorAll('section.tab').forEach(s=>s.classList.remove('active'));
   document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
+  // O Mapa só sabe o espaço real que tem depois de ficar mesmo visível (display:block) —
+  // reajusta a seguir a esse momento, não no carregamento de dados (que pode acontecer com a aba escondida).
+  if(btn.dataset.tab==='mapa' && window.MapaView) requestAnimationFrame(()=>requestAnimationFrame(window.MapaView.refit));
 });
 
 /* ============================== UPLOAD ============================== */
