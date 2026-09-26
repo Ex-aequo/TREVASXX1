@@ -1017,7 +1017,7 @@ let STATE = null;
 // APP_VERSION: sobe isto (e o CACHE_NAME correspondente em sw.js) sempre que publicares uma versão nova no GitHub.
 // É o que aparece no canto superior direito da app — se não mudar depois de um deploy, o browser ainda está
 // a servir a cache antiga do service worker.
-const APP_VERSION = 'v2.10 · 2026-09-25';
+const APP_VERSION = 'v2.11 · 2026-09-25';
 document.getElementById('appVersionBadge').textContent = APP_VERSION.split(' · ')[0];
 document.getElementById('appVersionBadge').title = 'Versão do painel: '+APP_VERSION;
 
@@ -1930,7 +1930,9 @@ function renderPlano(){
     const isCurrent = phase.id===curPhase;
     const rows = phase.milestones.map(m=>{
       const autoVal = m.auto ? !!m.auto(STATE) : null;
-      const checked = m.auto ? autoVal : !!checks[m.id];
+      // Um marco "auto" fica ✅ se o relatório confirmar OU se já tiver sido marcado a partir de um
+      // ficheiro de ordens (as tuas ordens de um turno só se confirmam no relatório do turno seguinte).
+      const checked = m.auto ? (autoVal || !!checks[m.id]) : !!checks[m.id];
       const icon = checked ? '✅' : '⬜';
       const interactive = m.auto ? '' : `data-mid="${m.id}" class="planCheckbox" style="cursor:pointer;"`;
       const autoTag = m.auto ? '<span class="pill" style="margin-left:6px;">auto</span>' : '';
