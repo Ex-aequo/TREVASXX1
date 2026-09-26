@@ -45,7 +45,8 @@ h1,h2,h3{font-family:var(--font-display);color:var(--gold);letter-spacing:.01em;
 h1{font-size:1.4rem;}
 h2{font-size:1.05rem;border-bottom:1px solid var(--border);padding-bottom:6px;margin-top:0;font-weight:600;}
 h3{font-size:.92rem;color:var(--sand,var(--gold));margin-bottom:4px;font-weight:600;}
-.wrap{max-width:1400px;margin:0 auto;padding:14px 22px 60px;}
+.wrap{flex:1;min-width:0;padding:14px 22px 60px;}
+.app{display:flex;min-height:100vh;}
 @media(min-width:1000px){ .grid.cols3{grid-template-columns:repeat(4,1fr);} }
 .advisor-card{border:1px solid var(--border);border-left:3px solid var(--gold-dim);border-radius:6px;padding:14px;margin-bottom:12px;background:var(--panel);position:relative;}
 .advisor-rank{position:absolute;top:-12px;left:14px;background:var(--gold-dim);color:var(--bg);font-weight:bold;font-size:.85rem;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid var(--bg);font-family:var(--font-display);}
@@ -54,21 +55,43 @@ h3{font-size:.92rem;color:var(--sand,var(--gold));margin-bottom:4px;font-weight:
 .advisor-meta{display:flex;gap:14px;flex-wrap:wrap;margin:8px 0;font-size:.78rem;}
 .advisor-meta span{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:3px 8px;}
 .advisor-body{font-size:.85rem;color:var(--text-dim);}
-header{
-  display:flex;align-items:center;justify-content:space-between;gap:10px;
-  padding:12px 14px;background:var(--bg2);
-  border-bottom:2px solid var(--gold-dim);position:sticky;top:0;z-index:20;
-  padding-top:calc(12px + env(safe-area-inset-top,0px));
-}
-header .title{display:flex;flex-direction:column;}
-header .title small{color:var(--text-dim);font-size:.72rem;}
+.sidebar-header{padding:2px 8px 12px;}
+.sidebar-header h1{margin:0;font-size:1.1rem;}
+.sidebar-header small{color:var(--text-dim);font-size:.7rem;display:block;margin-top:2px;}
+.sidebar-header .badges{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;}
 .badge{font-size:.7rem;padding:3px 8px;border:1px solid var(--gold-dim);border-radius:20px;color:var(--gold);white-space:nowrap;}
-nav{display:flex;gap:4px;overflow-x:auto;padding:8px 10px;background:var(--bg2);border-bottom:1px solid var(--border);position:sticky;top:56px;z-index:19;-webkit-overflow-scrolling:touch;}
-nav button{
-  flex:0 0 auto;background:transparent;border:1px solid var(--border);color:var(--text-dim);
-  padding:7px 12px;border-radius:6px;font-size:.82rem;cursor:pointer;font-family:var(--font-body);white-space:nowrap;
+nav{
+  display:flex;flex-direction:column;gap:3px;padding:14px 10px;
+  background:var(--bg2);border-right:1px solid var(--border);
+  width:230px;flex:0 0 230px;position:sticky;top:0;height:100vh;overflow-y:auto;
+  padding-top:calc(14px + env(safe-area-inset-top,0px));
+  -webkit-overflow-scrolling:touch;
 }
+nav button{
+  flex:0 0 auto;background:transparent;border:1px solid transparent;color:var(--text-dim);
+  padding:8px 10px;border-radius:6px;font-size:.83rem;cursor:pointer;font-family:var(--font-body);
+  white-space:nowrap;text-align:left;display:flex;align-items:center;gap:7px;
+}
+nav button:hover{background:var(--panel2);}
 nav button.active{background:var(--panel2);color:var(--gold);border-color:var(--gold-dim);}
+nav button.primary{background:rgba(212,169,74,0.1);border-color:var(--gold-dim);color:var(--gold);font-weight:600;}
+nav button.primary .stepnum{
+  background:var(--gold-dim);color:var(--bg);width:18px;height:18px;border-radius:50%;
+  display:inline-flex;align-items:center;justify-content:center;font-size:.68rem;flex:0 0 18px;font-weight:700;
+}
+nav .navdivider{height:1px;background:var(--border);margin:8px 4px;}
+nav .navsection{font-size:.66rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.05em;padding:4px 10px 2px;}
+@media(max-width:860px){
+  .app{flex-direction:column;}
+  nav{
+    width:100%;flex:0 0 auto;height:auto;flex-direction:row;position:sticky;top:0;z-index:20;
+    overflow-x:auto;overflow-y:hidden;border-right:none;border-bottom:1px solid var(--border);
+  }
+  .sidebar-header{display:none;}
+  nav button{white-space:nowrap;border-color:var(--border);}
+  nav .navdivider{width:1px;height:26px;margin:0 4px;}
+  nav .navsection{display:none;}
+}
 section.tab{display:none;padding:14px 0;}
 section.tab.active{display:block;}
 .card{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:12px;}
@@ -116,16 +139,20 @@ button.act.secondary{background:transparent;border:1px solid var(--gold-dim);col
 </style>
 </head>
 <body>
-<header>
-  <div class="title">
-    <h1 style="margin:0;" id="kingdomTitle">🏜 —</h1>
-    <small id="kingdomSubtitle">Painel de Decisão TREVASXXI</small>
-  </div>
-  <div class="badge" id="turnBadge">Turno —</div>
-  <span class="badge" id="appVersionBadge" title="Versão do painel — confirma que o browser não está a servir uma cópia antiga da cache" style="opacity:.6;font-size:.65rem;">v—</span>
-</header>
-
+<div class="app">
 <nav id="tabnav">
+  <div class="sidebar-header">
+    <h1 id="kingdomTitle">🏜 —</h1>
+    <small id="kingdomSubtitle">Painel de Decisão TREVASXXI</small>
+    <div class="badges">
+      <span class="badge" id="turnBadge">Turno —</span>
+      <span class="badge" id="appVersionBadge" title="Versão do painel — confirma que o browser não está a servir uma cópia antiga da cache" style="opacity:.6;font-size:.65rem;">v—</span>
+    </div>
+  </div>
+  <button class="primary" data-tab="carregar"><span class="stepnum">1</span> 📥 Carregar Relatório</button>
+  <button class="primary" data-tab="ordens"><span class="stepnum">2</span> 📝 Carregar Ordens</button>
+  <div class="navdivider"></div>
+  <div class="navsection">Painel</div>
   <button data-tab="visao" class="active">Visão Geral</button>
   <button data-tab="advisor">⭐ Advisor</button>
   <button data-tab="territorio">Território</button>
@@ -136,13 +163,14 @@ button.act.secondary{background:transparent;border:1px solid var(--gold-dim);col
   <button data-tab="impostos">Impostos</button>
   <button data-tab="plano">🗺 Plano de Campanha</button>
   <button data-tab="historico">📈 Histórico</button>
+  <div class="navdivider"></div>
+  <div class="navsection">Calculadoras</div>
   <button data-tab="batalha">⚔ Calculadora de Batalha</button>
   <button data-tab="naval">⚓ Batalha Naval</button>
   <button data-tab="cerco">🏰 Calculadora de Cerco</button>
+  <div class="navdivider"></div>
   <button data-tab="alvos">🎯 Registo de Alvos</button>
   <button data-tab="balanco">⚖ Balanço</button>
-  <button data-tab="carregar">📥 Ficheiro de Turno</button>
-  <button data-tab="ordens">📝 Ficheiro das Ordens</button>
 </nav>
 
 <div class="wrap">
@@ -159,9 +187,9 @@ button.act.secondary{background:transparent;border:1px solid var(--gold-dim);col
   </div>
   <div class="card" id="welcomeCard" style="display:none;">
     <h2>👋 Bem-vindo ao Painel TREVASXXI</h2>
-    <p>Esta ferramenta ainda não tem nenhum relatório carregado. Vai ao separador <b>Ficheiro de Turno</b> e sobe o teu ficheiro <code>.json</code> — funciona com qualquer raça, é só o teu relatório mais recente do jogo.</p>
+    <p>Esta ferramenta ainda não tem nenhum relatório carregado. Vai ao separador <b>Carregar Relatório</b> e sobe o teu ficheiro <code>.json</code> — funciona com qualquer raça, é só o teu relatório mais recente do jogo.</p>
     <p class="small muted">Nada do que carregares sai deste browser: fica guardado só neste dispositivo, mesmo que outras pessoas usem o mesmo link.</p>
-    <button class="act" id="welcomeGoBtn">Ir para Ficheiro de Turno</button>
+    <button class="act" id="welcomeGoBtn">Ir para Carregar Relatório</button>
   </div>
   <div class="card" id="battleLogCard" style="display:none;">
     <h2>⚔ Batalhas Neste Turno</h2>
@@ -228,7 +256,7 @@ button.act.secondary{background:transparent;border:1px solid var(--gold-dim);col
     <h2>🗺 Mapa</h2>
     <p class="small">O teu território e a fronteira que já viste — cor por terreno; a fronteira ganha um tom de aliança (guerra/paz/aliança) a partir do Registo de Alvos e da diplomacia do relatório. Clica num hexágono para veres os detalhes.</p>
   </div>
-  <div id="mapaEmptyNote" class="card" style="display:none;"><p class="muted">Sem hexágonos visíveis ainda — carrega um relatório em "Ficheiro de Turno".</p></div>
+  <div id="mapaEmptyNote" class="card" style="display:none;"><p class="muted">Sem hexágonos visíveis ainda — carrega um relatório em "Carregar Relatório".</p></div>
   <div id="mapaContent">
   <div class="mobileWarn" id="mapaMobileWarn" style="display:none;background:#4a2a2a;border:1px solid #e87a7a;border-radius:8px;padding:8px 10px;font-size:.78rem;color:#ffb4b4;margin-bottom:10px;">⚠ Ecrã pequeno detetado — o zoom com dois dedos pode não se comportar tão bem aqui como no computador; usa o scroll normal e os botões +/− se precisares.</div>
   <div class="layout" style="display:flex;flex-direction:column;gap:12px;">
@@ -655,7 +683,7 @@ button.act.secondary{background:transparent;border:1px solid var(--gold-dim);col
 <!-- ORDENS ENVIADAS -->
 <section class="tab" id="tab-ordens">
   <div class="card">
-    <h2>📝 Ficheiro das Ordens</h2>
+    <h2>📝 Carregar Ordens</h2>
     <p class="small">Carrega o ficheiro de ordens que exportas do <code>player_page</code> antes de o enviares ao GM (não o relatório — o ficheiro de <b>ordens</b>, o que tu produzes). O painel traduz cada ordem para português e risca sozinho os marcos do Plano de Campanha que já cumpriste este turno.</p>
     <div class="upbox" id="ordersDropZone">📂 Clica para escolher o ficheiro de ordens (.json)<br><span class="small">ou arrasta o ficheiro para aqui</span></div>
     <input type="file" id="ordersFileInput" accept=".json" style="display:none;">
@@ -671,7 +699,7 @@ button.act.secondary{background:transparent;border:1px solid var(--gold-dim);col
 <!-- CARREGAR -->
 <section class="tab" id="tab-carregar">
   <div class="card">
-    <h2>📥 Ficheiro de Turno</h2>
+    <h2>📥 Carregar Relatório</h2>
     <p class="small">Esta ferramenta vem pré-carregada com o teu relatório da Jogada 0. Quando receberes o próximo relatório do GM, carrega o ficheiro .json aqui para atualizar todos os cálculos.</p>
     <div class="upbox" id="dropZone">📂 Clica para escolher o ficheiro do relatório (.json)<br><span class="small">ou arrasta o ficheiro para aqui</span></div>
     <input type="file" id="fileInput" accept=".json" style="display:none;">
@@ -687,6 +715,7 @@ button.act.secondary{background:transparent;border:1px solid var(--gold-dim);col
   </div>
 </section>
 
+</div>
 </div>
 
 <script>
@@ -1011,7 +1040,7 @@ let STATE = null;
 // APP_VERSION: sobe isto (e o CACHE_NAME correspondente em sw.js) sempre que publicares uma versão nova no GitHub.
 // É o que aparece no canto superior direito da app — se não mudar depois de um deploy, o browser ainda está
 // a servir a cache antiga do service worker.
-const APP_VERSION = 'v2.12 · 2026-09-25';
+const APP_VERSION = 'v3.0 · 2026-09-25';
 document.getElementById('appVersionBadge').textContent = APP_VERSION.split(' · ')[0];
 document.getElementById('appVersionBadge').title = 'Versão do painel: '+APP_VERSION;
 
@@ -1416,7 +1445,7 @@ function renderTerritorio(){
   const seat = STATE.hexes.find(h=>h.musterSeatOf===STATE.kingdom_id) || STATE.hexes.find(h=>h.musterSeatOf);
   const introEl = document.getElementById('territorioIntro');
   if(!STATE.hexes.length){
-    introEl.textContent = 'Sem hexágonos carregados ainda — vai a "Ficheiro de Turno".';
+    introEl.textContent = 'Sem hexágonos carregados ainda — vai a "Carregar Relatório".';
   } else if(seat){
     introEl.innerHTML = `${STATE.hexes.length} hexágono(s) — assento de recrutamento em <b>(${seat.col},${seat.row})</b>${seat.construction?` — construção Nv.${seat.construction.level} (${seat.construction.race})`:''}.`;
   } else {
