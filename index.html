@@ -1017,7 +1017,7 @@ let STATE = null;
 // APP_VERSION: sobe isto (e o CACHE_NAME correspondente em sw.js) sempre que publicares uma versão nova no GitHub.
 // É o que aparece no canto superior direito da app — se não mudar depois de um deploy, o browser ainda está
 // a servir a cache antiga do service worker.
-const APP_VERSION = 'v2.9 · 2026-09-25';
+const APP_VERSION = 'v2.10 · 2026-09-25';
 document.getElementById('appVersionBadge').textContent = APP_VERSION.split(' · ')[0];
 document.getElementById('appVersionBadge').title = 'Versão do painel: '+APP_VERSION;
 
@@ -1636,10 +1636,12 @@ function renderPersonagens(){
     </div>
   `).join('') || '<p class="muted">Sem personagens na corte.</p>';
 
-  document.getElementById('candList').innerHTML = (STATE.candidate_pool||[]).map(c=>`
+  const candidates = STATE.candidate_pool||[];
+  const candSuggestions = suggestAssignmentsJoint(candidates);
+  document.getElementById('candList').innerHTML = candidates.map((c,i)=>`
     <div class="recommend">
       <b>${c.portrait||'🧔'}</b> Militar ${c.military} · Economia ${c.economics} · Gestão ${c.management} · Política ${c.politics}
-      ${suggestAssignment(c)}
+      ${candSuggestions[i]}
     </div>
   `).join('') || '<p class="muted">Sem candidatos.</p>';
 }
@@ -1648,6 +1650,32 @@ function suggestAssignment(c){
   const best = Object.entries(stats).sort((a,b)=>b[1]-a[1])[0];
   const map = {Militar:'Comandante de Exército', Economia:'Tesoureiro', Gestão:'Mestre de Quintas/Minas/Portos/etc.', Política:'Mestre dos Espiões'};
   return `<br><span class="muted">Sugestão: ${map[best[0]]} (melhor estatística: ${best[0]} ${best[1]})</span>`;
+}
+// Sugestão CONJUNTA para os candidatos: cada cargo só é sugerido a um deles — quem tiver o valor absoluto
+// mais alto nessa estatística entre todos os candidatos, não simplesmente quem tem essa estatística como a sua própria mais alta.
+function suggestAssignmentsJoint(candidates){
+  const roleMap = {Militar:'Comandante de Exército', Economia:'Tesoureiro', Gestão:'Mestre de Quintas/Minas/Portos/etc.', Política:'Mestre dos Espiões'};
+  const entries = [];
+  candidates.forEach((c,ci)=>{
+    const stats = {Militar:c.military, Economia:c.economics, Gestão:c.management, Política:c.politics};
+    Object.entries(stats).forEach(([stat,val])=>entries.push({ci,stat,val}));
+  });
+  entries.sort((a,b)=>b.val-a.val);
+  const assignedCand=new Set(), assignedRole=new Set();
+  const result = new Array(candidates.length).fill(null);
+  entries.forEach(e=>{
+    if(assignedCand.has(e.ci) || assignedRole.has(e.stat)) return;
+    assignedCand.add(e.ci); assignedRole.add(e.stat);
+    result[e.ci] = {stat:e.stat, val:e.val};
+  });
+  // Mais candidatos do que cargos (só há 4): os que sobram ficam com a própria melhor estatística, mesmo repetida
+  candidates.forEach((c,ci)=>{
+    if(result[ci]) return;
+    const stats = {Militar:c.military, Economia:c.economics, Gestão:c.management, Política:c.politics};
+    const best = Object.entries(stats).sort((a,b)=>b[1]-a[1])[0];
+    result[ci] = {stat:best[0], val:best[1]};
+  });
+  return result.map(r=>`<br><span class="muted">Sugestão: ${roleMap[r.stat]} (melhor estatística: ${r.stat} ${r.val})</span>`);
 }
 
 /* ============================== RENDER: IMPOSTOS ============================== */
