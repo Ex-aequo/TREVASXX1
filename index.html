@@ -224,12 +224,6 @@ button.act.secondary{background:transparent;border:1px solid var(--gold-dim);col
 
 <!-- MAPA -->
 <section class="tab" id="tab-mapa">
-  <style>
-    @media(max-width:640px){
-      #tab-mapa .layout{flex-direction:column;}
-      #tab-mapa #mapaSidepanel{width:100%;flex:1 1 auto;position:static;}
-    }
-  </style>
   <div class="card">
     <h2>🗺 Mapa</h2>
     <p class="small">O teu território e a fronteira que já viste — cor por terreno; a fronteira ganha um tom de aliança (guerra/paz/aliança) a partir do Registo de Alvos e da diplomacia do relatório. Clica num hexágono para veres os detalhes.</p>
@@ -237,15 +231,15 @@ button.act.secondary{background:transparent;border:1px solid var(--gold-dim);col
   <div id="mapaEmptyNote" class="card" style="display:none;"><p class="muted">Sem hexágonos visíveis ainda — carrega um relatório em "Ficheiro de Turno".</p></div>
   <div id="mapaContent">
   <div class="mobileWarn" id="mapaMobileWarn" style="display:none;background:#4a2a2a;border:1px solid #e87a7a;border-radius:8px;padding:8px 10px;font-size:.78rem;color:#ffb4b4;margin-bottom:10px;">⚠ Ecrã pequeno detetado — o zoom com dois dedos pode não se comportar tão bem aqui como no computador; usa o scroll normal e os botões +/− se precisares.</div>
-  <div class="layout" style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start;">
-    <div class="card" id="mapaMapcard" style="flex:4 1 500px;padding:8px;position:relative;">
+  <div class="layout" style="display:flex;flex-direction:column;gap:12px;">
+    <div class="card" id="mapaMapcard" style="width:100%;padding:8px;position:relative;">
       <div style="position:absolute;top:14px;right:14px;display:flex;flex-direction:column;gap:4px;z-index:5;">
         <button id="mapaZoomIn" type="button" class="act secondary" style="width:32px;height:32px;padding:0;">+</button>
         <button id="mapaZoomOut" type="button" class="act secondary" style="width:32px;height:32px;padding:0;">−</button>
         <button id="mapaZoomReset" type="button" class="act secondary" style="width:32px;height:32px;padding:0;font-size:.65rem;">1:1</button>
         <button id="mapaZoomFit" type="button" class="act secondary" style="width:32px;height:32px;padding:0;font-size:.9rem;" title="Ajustar à janela">⤢</button>
       </div>
-      <div id="mapaViewport" style="overflow:auto;touch-action:none;border-radius:6px;">
+      <div id="mapaViewport" style="overflow:auto;touch-action:none;border-radius:6px;background:rgba(255,255,255,0.015);">
         <svg id="mapaSvg" style="transform-origin:0 0;"></svg>
       </div>
       <div class="legend" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;font-size:.7rem;color:var(--text-dim);">
@@ -257,7 +251,7 @@ button.act.secondary{background:transparent;border:1px solid var(--gold-dim);col
         <span>★ assento</span><span>⚔ exército</span>
       </div>
     </div>
-    <div class="card" id="mapaSidepanel" style="width:220px;flex:0 0 220px;position:sticky;top:12px;">
+    <div class="card" id="mapaSidepanel" style="width:100%;">
       <h3>Clica num hexágono</h3>
       <p class="muted small">Os detalhes aparecem aqui.</p>
     </div>
@@ -1017,7 +1011,7 @@ let STATE = null;
 // APP_VERSION: sobe isto (e o CACHE_NAME correspondente em sw.js) sempre que publicares uma versão nova no GitHub.
 // É o que aparece no canto superior direito da app — se não mudar depois de um deploy, o browser ainda está
 // a servir a cache antiga do service worker.
-const APP_VERSION = 'v2.11 · 2026-09-25';
+const APP_VERSION = 'v2.12 · 2026-09-25';
 document.getElementById('appVersionBadge').textContent = APP_VERSION.split(' · ')[0];
 document.getElementById('appVersionBadge').title = 'Versão do painel: '+APP_VERSION;
 
@@ -3305,20 +3299,21 @@ function renderMapa(){
   };
 
   // Altura dinâmica: usa o espaço real que sobra no ecrã abaixo do mapa, em vez de uma percentagem fixa.
+  // "height" (não "max-height") força o painel a preencher esse espaço, não só a não o ultrapassar.
   // clientWidth/innerHeight só são fiáveis quando o separador está mesmo visível (display:block) —
   // por isso isto é também chamado outra vez pelo clique no separador "Mapa", com um pequeno atraso.
   const viewport = document.getElementById('mapaViewport');
   function fitViewportHeight(){
     const top = viewport.getBoundingClientRect().top;
-    const available = window.innerHeight - top - 70; // margem para legenda + respiro no fundo
-    viewport.style.maxHeight = Math.max(240, available) + 'px';
+    const available = window.innerHeight - top - 90; // margem para legenda + respiro no fundo
+    viewport.style.height = Math.max(360, available) + 'px';
   }
   fitViewportHeight();
 
   // Zoom "Ajustar" — cabe o território + fronteira inteiros na janela, sem scroll
   function computeFitZoom(){
-    const availW = document.getElementById('mapaMapcard').clientWidth - 20 || 400; // -20: respiro interno do cartão
-    const availH = parseFloat(viewport.style.maxHeight) || 400;
+    const availW = viewport.clientWidth - 4 || 400;
+    const availH = viewport.clientHeight - 4 || 400;
     return Math.max(0.15, Math.min(4, Math.min(availW/w, availH/h_total)*0.98));
   }
 
@@ -3363,7 +3358,7 @@ function renderMapa(){
       const vp = document.getElementById('mapaViewport');
       if(!vp) return;
       const top = vp.getBoundingClientRect().top;
-      vp.style.maxHeight = Math.max(240, window.innerHeight-top-90) + 'px';
+      vp.style.height = Math.max(360, window.innerHeight-top-90) + 'px';
     });
   }
 }
