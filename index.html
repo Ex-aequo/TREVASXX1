@@ -159,6 +159,7 @@ button.act.secondary{background:transparent;border:1px solid var(--gold-dim);col
   <button data-tab="mapa">🗺 Mapa</button>
   <button data-tab="construcao">Construção</button>
   <button data-tab="recrutamento">Recrutamento</button>
+  <button data-tab="exercitos">⚔ Exércitos</button>
   <button data-tab="personagens">Personagens</button>
   <button data-tab="impostos">Impostos</button>
   <button data-tab="plano">🗺 Plano de Campanha</button>
@@ -341,6 +342,30 @@ button.act.secondary{background:transparent;border:1px solid var(--gold-dim);col
   <div class="card">
     <h3 id="raceNotesTitle">Notas de raça</h3>
     <ul class="small" id="raceNotesList"></ul>
+  </div>
+</section>
+
+<!-- EXÉRCITOS -->
+<section class="tab" id="tab-exercitos">
+  <div class="card">
+    <h2>⚔ Estado dos Exércitos</h2>
+    <p class="small">Composição, localização e estado de todos os exércitos do relatório mais recente — dados diretos de <code>kingdom_state.armies</code>, sem nada inventado.</p>
+  </div>
+  <div id="exercitosEmptyNote" class="card" style="display:none;"><p class="muted">Sem exércitos no relatório carregado.</p></div>
+  <div id="exercitosList"></div>
+  <div class="card">
+    <h3>Legenda</h3>
+    <table>
+      <tbody>
+        <tr><td style="white-space:nowrap;"><b>WP individual</b></td><td class="small">Pontos de Guerra de <i>uma</i> unidade desse tipo — o valor fixo do elenco da raça.</td></tr>
+        <tr><td style="white-space:nowrap;"><b>WP total (unidade)</b></td><td class="small">WP individual × quantidade dessa unidade no exército.</td></tr>
+        <tr><td style="white-space:nowrap;"><b>WP total (exército)</b></td><td class="small">Soma do WP de todas as unidades do exército — o que entra na Calculadora de Batalha/Cerco.</td></tr>
+        <tr><td style="white-space:nowrap;"><b>G-EQ médio</b></td><td class="small">Preço de combate médio, ponderado pela quantidade (ouro + ferro×16 + cavalos×20 + madeira×5 — a comida nunca conta). Determina o Fator de Morte (§5.5.4).</td></tr>
+        <tr><td style="white-space:nowrap;"><b>Fator de morte</b></td><td class="small">Quanto mais baixo, menos baixas a unidade sofre em combate — piso de 0,30 a partir de G-EQ ≈770.</td></tr>
+        <tr><td style="white-space:nowrap;"><b>ESTADO</b></td><td class="small">Multiplica diretamente o WP em combate (§5.10.1) — um exército a 50% luta como se tivesse metade do WP. Recupera +33/turno ao descansar sem marchar.</td></tr>
+        <tr><td style="white-space:nowrap;"><b>Corpo</b></td><td class="small">Contagem usada no teste de Cerco (§5.8.1) — 1 por soldado a pé, 2 por soldado montado.</td></tr>
+      </tbody>
+    </table>
   </div>
 </section>
 
@@ -1040,7 +1065,7 @@ let STATE = null;
 // APP_VERSION: sobe isto (e o CACHE_NAME correspondente em sw.js) sempre que publicares uma versão nova no GitHub.
 // É o que aparece no canto superior direito da app — se não mudar depois de um deploy, o browser ainda está
 // a servir a cache antiga do service worker.
-const APP_VERSION = 'v3.0 · 2026-09-25';
+const APP_VERSION = 'v3.1 · 2026-09-25';
 document.getElementById('appVersionBadge').textContent = APP_VERSION.split(' · ')[0];
 document.getElementById('appVersionBadge').title = 'Versão do painel: '+APP_VERSION;
 
@@ -3392,6 +3417,69 @@ function renderMapa(){
   }
 }
 
+function renderExercitos(){
+  const armies = STATE.armies||[];
+  const emptyNote = document.getElementById('exercitosEmptyNote');
+  const listEl = document.getElementById('exercitosList');
+  if(!armies.length){
+    emptyNote.style.display = STATE.kingdom_id ? 'block' : 'none';
+    listEl.innerHTML='';
+    return;
+  }
+  emptyNote.style.display='none';
+  const unitIdx = fullUnitIndex();
+  const seat = STATE.hexes.find(h=>h.musterSeatOf===STATE.kingdom_id) || STATE.hexes.find(h=>h.musterSeatOf);
+  function deathFactorLocal(g){ return Math.max(0.3, Math.min(1.0, 1.0-g/1100)); }
+
+  listEl.innerHTML = armies.map(a=>{
+    const hex = a._hex || (a.location==='capital' && seat ? {col:seat.col,row:seat.row} : null);
+    const hexData = hex ? STATE.hexes.find(h=>h.col===hex.col&&h.row===hex.row) : null;
+    const status = a.status ?? 100;
+    const statusClass = status>=80?'good':(status>=50?'warn':'bad');
+    let totalWP=0, totalCount=0, gEqWeighted=0;
+    const rows = (a.units||[]).map(u=>{
+      const def = unitIdx[u.unitId];
+      const wp = def ? def.wp : (u.xp_wp||0);
+      const wpTotal = wp*u.count;
+      totalWP += wpTotal; totalCount += u.count;
+      if(def) gEqWeighted += goldEqCostFull(def.cost)*u.count;
+      return `<tr><td>${def?def.name:u.unitId}${def&&def.mounted?' 🐎':''}</td><td>${fmt(u.count)}</td><td>${fmt(wp)}</td><td>${fmt(wpTotal)}</td></tr>`;
+    }).join('');
+    const avgGEq = totalCount>0 ? gEqWeighted/totalCount : 0;
+    const df = deathFactorLocal(avgGEq);
+    const siegeInfo = hexData && hexData.besieged_by ? `<p class="bad small">⚠ Este hexágono está a ser sitiado (progresso: ${hexData.siege_progress||0}).</p>` : '';
+    const locLabel = a.location==='capital' ? 'Assento de Recrutamento' : (a.location==='field'?'Campo':a.location||'—');
+    return `<div class="card">
+      <div class="flexrow" style="justify-content:space-between;">
+        <h3 style="margin:0;">Exército ${a.num}${a.label?` "${a.label}"`:''}</h3>
+        <button type="button" class="act secondary useArmyInBattle" data-num="${a.num}">Usar na Calculadora de Batalha</button>
+      </div>
+      <div class="advisor-meta" style="margin-top:6px;">
+        <span>${locLabel}${hexData?` (${hexData.col},${hexData.row})`:''}</span>
+        <span class="${statusClass}">ESTADO ${status}%</span>
+        <span>${fmt(totalCount)} soldados</span>
+        <span>WP total: ${fmt(totalWP)}</span>
+      </div>
+      ${siegeInfo}
+      <div class="tbl-wrap" style="margin-top:8px;"><table>
+        <thead><tr><th>Unidade</th><th>Qtd.</th><th>WP individual</th><th>WP total</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table></div>
+      <p class="small muted" style="margin-top:6px;">G-EQ médio: ${fmt(avgGEq)} · Fator de morte: ${df.toFixed(2)}</p>
+    </div>`;
+  }).join('');
+
+  document.querySelectorAll('.useArmyInBattle').forEach(btn=>{
+    btn.onclick = ()=>{
+      const a = armies.find(x=>String(x.num)===btn.dataset.num);
+      if(!a) return;
+      prefillStacksFromRoster('own', a.units, STATE.race, UNIT_ROSTER_BY_RACE);
+      document.getElementById('ownStatus').value = a.status ?? 100;
+      document.querySelector('#tabnav button[data-tab="batalha"]').click();
+    };
+  });
+}
+
 function render(){
   renderVisaoGeral();
   renderAdvisor();
@@ -3399,6 +3487,7 @@ function render(){
   renderMapa();
   renderConstrucao();
   renderRecrutamento();
+  renderExercitos();
   renderPersonagens();
   renderImpostos();
   renderPlano();
