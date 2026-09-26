@@ -364,6 +364,7 @@ button.act.secondary{background:transparent;border:1px solid var(--gold-dim);col
         <tr><td style="white-space:nowrap;"><b>Fator de morte</b></td><td class="small">Quanto mais baixo, menos baixas a unidade sofre em combate — piso de 0,30 a partir de G-EQ ≈770.</td></tr>
         <tr><td style="white-space:nowrap;"><b>ESTADO</b></td><td class="small">Multiplica diretamente o WP em combate (§5.10.1) — um exército a 50% luta como se tivesse metade do WP. Recupera +33/turno ao descansar sem marchar.</td></tr>
         <tr><td style="white-space:nowrap;"><b>Corpo</b></td><td class="small">Contagem usada no teste de Cerco (§5.8.1) — 1 por soldado a pé, 2 por soldado montado.</td></tr>
+        <tr><td style="white-space:nowrap;"><b>Por confirmar</b></td><td class="small">Vem do ficheiro de ordens, não do relatório — o relatório de turno mostra sempre o estado <i>antes</i> das ordens serem processadas pelo GM, por isso só se confirma no relatório do turno seguinte.</td></tr>
       </tbody>
     </table>
   </div>
@@ -1065,7 +1066,7 @@ let STATE = null;
 // APP_VERSION: sobe isto (e o CACHE_NAME correspondente em sw.js) sempre que publicares uma versão nova no GitHub.
 // É o que aparece no canto superior direito da app — se não mudar depois de um deploy, o browser ainda está
 // a servir a cache antiga do service worker.
-const APP_VERSION = 'v3.1 · 2026-09-25';
+const APP_VERSION = 'v3.2 · 2026-09-25';
 document.getElementById('appVersionBadge').textContent = APP_VERSION.split(' · ')[0];
 document.getElementById('appVersionBadge').title = 'Versão do painel: '+APP_VERSION;
 
@@ -1092,7 +1093,7 @@ function loadState(raw){
       map_kingdoms: (raw.map_state.kingdoms||[]).map(k=>({id:k.id,name:k.name,race:k.race,pirate:k.pirate})),
       vassal_of: raw.kingdom_state.vassal_of||null, vassals: raw.kingdom_state.vassals||[],
     };
-  } else { s = raw; s.turn = s.turn ?? 0; s.events = s.events||[]; s.diplomacy = s.diplomacy||{}; s.map_kingdoms = s.map_kingdoms||[]; s.conquered_hexes = s.conquered_hexes||[]; s.lost_hexes = s.lost_hexes||[]; s.mapHexes = s.mapHexes||[]; }
+  } else { s = raw; s.turn = s.turn ?? 0; s.events = s.events||[]; s.diplomacy = s.diplomacy||{}; s.map_kingdoms = s.map_kingdoms||[]; s.conquered_hexes = s.conquered_hexes||[]; s.lost_hexes = s.lost_hexes||[]; s.mapHexes = s.mapHexes||[]; s.lastOrders = s.lastOrders||null; }
   STATE = s;
   computeDiff();
   saveDetailedSnapshot();
@@ -3076,7 +3077,26 @@ function processOrdersFile(raw){
   if(kidForPlan!==STATE.kingdom_id){
     document.getElementById('ordersLoadStatus').innerHTML += `<br><span class="warn small">⚠ O relatório deste reino ainda não está carregado nesta sessão — os marcos do Plano de Campanha ficaram guardados e vão aparecer riscados assim que carregares o relatório correspondente.</span>`;
   }
+
+  // --- Informação de exércitos extraída das ordens, para o separador Exércitos separar "já tinha" de
+  // "recrutado este turno" e mostrar movimentos/posturas/divisões que o relatório ainda não confirma.
+  const byArmy = {};
+  const ensureArmy = (num)=>{ if(!byArmy[num]) byArmy[num]={num, label:null, created:false, recruits:[], moves:[], stanceChanges:[], splitsOut:[], embarks:0}; return byArmy[num]; };
+  orders.forEach(o=>{
+    if(o.type==='create_army'){ const e=ensureArmy(o.army_num); e.created=true; e.label=o.label||null; }
+    if(o.type==='recruit_unit'){ const e=ensureArmy(o.army_num); const def=unitIdx[o.unit_id]; e.recruits.push({unitId:o.unit_id, unitName:o.unit_name||(def&&def.name)||o.unit_id, qty:o.qty||0}); }
+    if(o.type==='move_army'){ const e=ensureArmy(o.army_num); e.moves.push({from:o.from, to:o.to}); }
+    if(o.type==='set_army_stance'){ const e=ensureArmy(o.army_num); e.stanceChanges.push(o.stance); }
+    if(o.type==='embark_army'){ const e=ensureArmy(o.army_num); e.embarks++; }
+    if(o.type==='split_army'){ const e=ensureArmy(o.from_army_num); e.splitsOut.push({toNum:o.new_army_num, units:o.units||[]}); const ne=ensureArmy(o.new_army_num); ne.created=true; }
+    if(o.type==='link_armies' && o.army_num) ensureArmy(o.army_num);
+  });
+  if(kidForPlan===STATE.kingdom_id || !STATE.kingdom_id){
+    STATE.lastOrders = { kingdomId: kidForPlan, turn: turnNum, byArmy };
+  }
+
   renderPlano(); // refresca os marcos imediatamente (mostra já, se o reino coincidir)
+  renderExercitos(); // refresca a separação "já tinha" / "recrutado agora"
 }
 
 /* ============================== CALCULADORA DE BATALHA NAVAL ============================== */
@@ -3417,57 +3437,107 @@ function renderMapa(){
   }
 }
 
+function buildArmyCard(a, ordersInfo, isPredicted){
+  const unitIdx = fullUnitIndex();
+  const seat = STATE.hexes.find(h=>h.musterSeatOf===STATE.kingdom_id) || STATE.hexes.find(h=>h.musterSeatOf);
+  function deathFactorLocal(g){ return Math.max(0.3, Math.min(1.0, 1.0-g/1100)); }
+
+  const hex = a._hex || (a.location==='capital' && seat ? {col:seat.col,row:seat.row} : null);
+  const hexData = hex ? STATE.hexes.find(h=>h.col===hex.col&&h.row===hex.row) : null;
+  const status = a.status ?? 100;
+  const statusClass = status>=80?'good':(status>=50?'warn':'bad');
+
+  // Cruza a composição do relatório (sempre ANTERIOR às ordens deste turno) com os recrutamentos
+  // pedidos nas ordens — mostrados à parte, marcados como "por confirmar" até ao próximo relatório.
+  const recruitByUnit = {}, recruitName = {};
+  (ordersInfo&&ordersInfo.recruits||[]).forEach(r=>{ recruitByUnit[r.unitId]=(recruitByUnit[r.unitId]||0)+r.qty; recruitName[r.unitId]=r.unitName; });
+
+  let totalWP=0, totalCount=0, gEqWeighted=0;
+  const seenUnitIds = new Set();
+  const rows = (a.units||[]).map(u=>{
+    seenUnitIds.add(u.unitId);
+    const def = unitIdx[u.unitId];
+    const wp = def ? def.wp : (u.xp_wp||0);
+    const wpTotal = wp*u.count;
+    totalWP += wpTotal; totalCount += u.count;
+    if(def) gEqWeighted += goldEqCostFull(def.cost)*u.count;
+    const recruitedNow = recruitByUnit[u.unitId]||0;
+    const recruitNote = recruitedNow ? `<br><span class="good small">+${fmt(recruitedNow)} recrutados este turno (por confirmar)</span>` : '';
+    return `<tr><td>${def?def.name:u.unitId}${def&&def.mounted?' 🐎':''}${recruitNote}</td><td>${fmt(u.count)}</td><td>${fmt(wp)}</td><td>${fmt(wpTotal)}</td></tr>`;
+  });
+  // Unidades recrutadas este turno que ainda não existiam neste exército no relatório
+  Object.keys(recruitByUnit).forEach(unitId=>{
+    if(seenUnitIds.has(unitId)) return;
+    const def = unitIdx[unitId];
+    rows.push(`<tr><td>${recruitName[unitId]||(def&&def.name)||unitId}${def&&def.mounted?' 🐎':''}<br><span class="good small">+${fmt(recruitByUnit[unitId])} recrutados este turno (por confirmar)</span></td><td>0</td><td>${def?fmt(def.wp):'—'}</td><td>—</td></tr>`);
+  });
+
+  const avgGEq = totalCount>0 ? gEqWeighted/totalCount : 0;
+  const df = deathFactorLocal(avgGEq);
+  const siegeInfo = hexData && hexData.besieged_by ? `<p class="bad small">⚠ Este hexágono está a ser sitiado (progresso: ${hexData.siege_progress||0}).</p>` : '';
+  const locLabel = a.location==='capital' ? 'Assento de Recrutamento' : (a.location==='field'?'Campo':a.location||'—');
+
+  let ordersBlock = '';
+  if(ordersInfo){
+    const lines = [];
+    ordersInfo.moves.forEach(m=>lines.push(`Moveu-se: (${m.from&&m.from.col},${m.from&&m.from.row}) → (${m.to&&m.to.col},${m.to&&m.to.row})`));
+    ordersInfo.stanceChanges.forEach(s=>lines.push(`Postura alterada para: ${s}`));
+    ordersInfo.splitsOut.forEach(s=>{
+      const totalSplit = (s.units||[]).reduce((sum,u)=>sum+(u.count||0),0);
+      lines.push(`Dividiu ${fmt(totalSplit)} soldados para o novo Exército ${s.toNum}`);
+    });
+    if(ordersInfo.embarks) lines.push('Ordem de embarque dada');
+    if(lines.length) ordersBlock = `<div class="hr"></div><p class="small"><b>Ordens deste turno:</b></p><ul class="small" style="margin-top:2px;">${lines.map(l=>`<li>${l}</li>`).join('')}</ul>`;
+  }
+
+  const predictedBadge = isPredicted ? '<span class="pill" style="border-color:var(--gold);color:var(--gold);margin-left:6px;">previsto — por confirmar</span>' : '';
+
+  return `<div class="card">
+    <div class="flexrow" style="justify-content:space-between;">
+      <h3 style="margin:0;">Exército ${a.num}${a.label?` "${a.label}"`:''}${predictedBadge}</h3>
+      ${totalCount>0?`<button type="button" class="act secondary useArmyInBattle" data-num="${a.num}">Usar na Calculadora de Batalha</button>`:''}
+    </div>
+    <div class="advisor-meta" style="margin-top:6px;">
+      <span>${locLabel}${hexData?` (${hexData.col},${hexData.row})`:''}</span>
+      <span class="${statusClass}">ESTADO ${status}%</span>
+      <span>${fmt(totalCount)} soldados confirmados</span>
+      <span>WP total: ${fmt(totalWP)}</span>
+    </div>
+    ${siegeInfo}
+    <div class="tbl-wrap" style="margin-top:8px;"><table>
+      <thead><tr><th>Unidade</th><th>Qtd. confirmada</th><th>WP individual</th><th>WP total</th></tr></thead>
+      <tbody>${rows.join('')}</tbody>
+    </table></div>
+    <p class="small muted" style="margin-top:6px;">G-EQ médio: ${fmt(avgGEq)} · Fator de morte: ${df.toFixed(2)}</p>
+    ${ordersBlock}
+  </div>`;
+}
+
 function renderExercitos(){
   const armies = STATE.armies||[];
   const emptyNote = document.getElementById('exercitosEmptyNote');
   const listEl = document.getElementById('exercitosList');
-  if(!armies.length){
+  const ordersByArmy = (STATE.lastOrders && STATE.lastOrders.kingdomId===STATE.kingdom_id) ? STATE.lastOrders.byArmy : {};
+
+  if(!armies.length && !Object.keys(ordersByArmy).length){
     emptyNote.style.display = STATE.kingdom_id ? 'block' : 'none';
     listEl.innerHTML='';
     return;
   }
   emptyNote.style.display='none';
-  const unitIdx = fullUnitIndex();
-  const seat = STATE.hexes.find(h=>h.musterSeatOf===STATE.kingdom_id) || STATE.hexes.find(h=>h.musterSeatOf);
-  function deathFactorLocal(g){ return Math.max(0.3, Math.min(1.0, 1.0-g/1100)); }
 
-  listEl.innerHTML = armies.map(a=>{
-    const hex = a._hex || (a.location==='capital' && seat ? {col:seat.col,row:seat.row} : null);
-    const hexData = hex ? STATE.hexes.find(h=>h.col===hex.col&&h.row===hex.row) : null;
-    const status = a.status ?? 100;
-    const statusClass = status>=80?'good':(status>=50?'warn':'bad');
-    let totalWP=0, totalCount=0, gEqWeighted=0;
-    const rows = (a.units||[]).map(u=>{
-      const def = unitIdx[u.unitId];
-      const wp = def ? def.wp : (u.xp_wp||0);
-      const wpTotal = wp*u.count;
-      totalWP += wpTotal; totalCount += u.count;
-      if(def) gEqWeighted += goldEqCostFull(def.cost)*u.count;
-      return `<tr><td>${def?def.name:u.unitId}${def&&def.mounted?' 🐎':''}</td><td>${fmt(u.count)}</td><td>${fmt(wp)}</td><td>${fmt(wpTotal)}</td></tr>`;
-    }).join('');
-    const avgGEq = totalCount>0 ? gEqWeighted/totalCount : 0;
-    const df = deathFactorLocal(avgGEq);
-    const siegeInfo = hexData && hexData.besieged_by ? `<p class="bad small">⚠ Este hexágono está a ser sitiado (progresso: ${hexData.siege_progress||0}).</p>` : '';
-    const locLabel = a.location==='capital' ? 'Assento de Recrutamento' : (a.location==='field'?'Campo':a.location||'—');
-    return `<div class="card">
-      <div class="flexrow" style="justify-content:space-between;">
-        <h3 style="margin:0;">Exército ${a.num}${a.label?` "${a.label}"`:''}</h3>
-        <button type="button" class="act secondary useArmyInBattle" data-num="${a.num}">Usar na Calculadora de Batalha</button>
-      </div>
-      <div class="advisor-meta" style="margin-top:6px;">
-        <span>${locLabel}${hexData?` (${hexData.col},${hexData.row})`:''}</span>
-        <span class="${statusClass}">ESTADO ${status}%</span>
-        <span>${fmt(totalCount)} soldados</span>
-        <span>WP total: ${fmt(totalWP)}</span>
-      </div>
-      ${siegeInfo}
-      <div class="tbl-wrap" style="margin-top:8px;"><table>
-        <thead><tr><th>Unidade</th><th>Qtd.</th><th>WP individual</th><th>WP total</th></tr></thead>
-        <tbody>${rows}</tbody>
-      </table></div>
-      <p class="small muted" style="margin-top:6px;">G-EQ médio: ${fmt(avgGEq)} · Fator de morte: ${df.toFixed(2)}</p>
-    </div>`;
-  }).join('');
+  let html = armies.map(a=>buildArmyCard(a, ordersByArmy[a.num]||null, false)).join('');
+
+  // Exércitos que só existem nas ordens deste turno (criados agora, o relatório ainda não os confirma)
+  const existingNums = new Set(armies.map(a=>String(a.num)));
+  Object.values(ordersByArmy).forEach(info=>{
+    if(existingNums.has(String(info.num))) return;
+    if(!info.created && !info.recruits.length) return;
+    const fakeArmy = { num:info.num, label:info.label, location:'field', status:100, units:[], _hex:null };
+    html += buildArmyCard(fakeArmy, info, true);
+  });
+
+  listEl.innerHTML = html;
 
   document.querySelectorAll('.useArmyInBattle').forEach(btn=>{
     btn.onclick = ()=>{
