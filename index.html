@@ -136,6 +136,7 @@ button.act.secondary{background:transparent;border:1px solid var(--gold-dim);col
   <button data-tab="plano">🗺 Plano de Campanha</button>
   <button data-tab="historico">📈 Histórico</button>
   <button data-tab="batalha">⚔ Calculadora de Batalha</button>
+  <button data-tab="naval">⚓ Batalha Naval</button>
   <button data-tab="cerco">🏰 Calculadora de Cerco</button>
   <button data-tab="alvos">🎯 Registo de Alvos</button>
   <button data-tab="balanco">⚖ Balanço</button>
@@ -160,6 +161,10 @@ button.act.secondary{background:transparent;border:1px solid var(--gold-dim);col
     <p>Esta ferramenta ainda não tem nenhum relatório carregado. Vai ao separador <b>Ficheiro de Turno</b> e sobe o teu ficheiro <code>.json</code> — funciona com qualquer raça, é só o teu relatório mais recente do jogo.</p>
     <p class="small muted">Nada do que carregares sai deste browser: fica guardado só neste dispositivo, mesmo que outras pessoas usem o mesmo link.</p>
     <button class="act" id="welcomeGoBtn">Ir para Ficheiro de Turno</button>
+  </div>
+  <div class="card" id="battleLogCard" style="display:none;">
+    <h2>⚔ Batalhas Neste Turno</h2>
+    <div id="battleLogList"></div>
   </div>
   <div class="card" id="diffCard" style="display:none;">
     <h2>🔍 O Que Mudou Desde o Último Relatório</h2>
@@ -360,12 +365,24 @@ button.act.secondary{background:transparent;border:1px solid var(--gold-dim);col
 
   <div class="grid cols2">
     <div class="card">
-      <h3 id="ownArmyTitle">🛡 O Teu Exército</h3>
+      <h3 id="ownArmyTitle">🛡 O Teu Exército (+ aliados)</h3>
+      <div class="flexrow" id="ownArmyPrefillRow" style="display:none;margin-bottom:8px;">
+        <label class="small">Carregar do relatório <select id="ownArmyPrefillSel"></select></label>
+        <button class="act secondary" id="ownArmyPrefillBtn" type="button">Preencher</button>
+      </div>
+      <p class="small muted" id="ownArmyNoArmiesNote" style="display:none;">Sem exércitos no relatório carregado — adiciona manualmente.</p>
       <div class="tbl-wrap"><table id="ownArmyTable">
-        <thead><tr><th>Unidade</th><th>WP</th><th>Qtd.</th></tr></thead>
+        <thead><tr><th>Raça</th><th>Unidade</th><th>WP</th><th>Qtd.</th><th></th></tr></thead>
         <tbody></tbody>
       </table></div>
       <div class="flexrow" style="margin-top:8px;">
+        <select id="ownStackRace" style="width:100px;"></select>
+        <select id="ownStackUnit" style="width:140px;"></select>
+        <input type="number" id="ownStackQty" value="10" min="1" style="width:70px;">
+        <button class="act secondary" id="ownStackAddBtn" type="button">+ Adicionar</button>
+      </div>
+      <p class="small muted" style="margin-top:4px;">Junta unidades de qualquer raça ao teu lado — útil para simular reforços aliados.</p>
+      <div class="flexrow" style="margin-top:10px;">
         <label class="small">Comandante: <select id="ownCommander"></select></label>
       </div>
       <div class="flexrow" style="margin-top:6px;">
@@ -381,14 +398,17 @@ button.act.secondary{background:transparent;border:1px solid var(--gold-dim);col
     </div>
 
     <div class="card">
-      <h3>🎯 Exército Inimigo</h3>
-      <div class="flexrow">
-        <label class="small">Raça inimiga <select id="enemyRace"></select></label>
-      </div>
-      <div class="tbl-wrap" style="margin-top:6px;"><table id="enemyArmyTable">
-        <thead><tr><th>Unidade</th><th>WP</th><th>Qtd.</th></tr></thead>
+      <h3>🎯 Exército Inimigo (+ coligação)</h3>
+      <div class="tbl-wrap"><table id="enemyArmyTable">
+        <thead><tr><th>Raça</th><th>Unidade</th><th>WP</th><th>Qtd.</th><th></th></tr></thead>
         <tbody></tbody>
       </table></div>
+      <div class="flexrow" style="margin-top:8px;">
+        <select id="enemyStackRace" style="width:100px;"></select>
+        <select id="enemyStackUnit" style="width:140px;"></select>
+        <input type="number" id="enemyStackQty" value="10" min="1" style="width:70px;">
+        <button class="act secondary" id="enemyStackAddBtn" type="button">+ Adicionar</button>
+      </div>
       <div class="flexrow" style="margin-top:8px;">
         <label class="small">Militar do comandante (0 = sem) <input type="number" id="enemyCommander" value="0" min="0" style="width:70px;"></label>
       </div>
@@ -425,6 +445,88 @@ button.act.secondary{background:transparent;border:1px solid var(--gold-dim);col
   </div>
 </section>
 
+<!-- BATALHA NAVAL -->
+<section class="tab" id="tab-naval">
+  <div class="card">
+    <h2>⚓ Calculadora de Batalha Naval</h2>
+    <p class="small">Usa as fórmulas exatas do manual (§5.9) — desde 2026-08-23 o mar usa a mesma curva de baixas do campo de batalha. Orc e Anão não têm frota por desenho do jogo.</p>
+  </div>
+  <div id="navalNoFleetNote" class="card" style="display:none;">
+    <p class="bad" id="navalNoFleetText"></p>
+  </div>
+  <div id="navalContent">
+  <div class="grid cols2">
+    <div class="card">
+      <h3 id="ownFleetTitle">🛡 A Tua Frota (+ aliados)</h3>
+      <div class="flexrow" id="ownFleetPrefillRow" style="display:none;margin-bottom:8px;">
+        <label class="small">Carregar do relatório <select id="ownFleetPrefillSel"></select></label>
+        <button class="act secondary" id="ownFleetPrefillBtn" type="button">Preencher</button>
+      </div>
+      <p class="small muted" id="ownFleetNoFleetsNote" style="display:none;">Sem frotas no relatório carregado — adiciona manualmente.</p>
+      <div class="tbl-wrap"><table id="ownFleetTable">
+        <thead><tr><th>Raça</th><th>Navio</th><th>WP</th><th>Qtd.</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+      <div class="flexrow" style="margin-top:8px;">
+        <select id="ownFleetStackRace" style="width:100px;"></select>
+        <select id="ownFleetStackUnit" style="width:140px;"></select>
+        <input type="number" id="ownFleetStackQty" value="5" min="1" style="width:70px;">
+        <button class="act secondary" id="ownFleetStackAddBtn" type="button">+ Adicionar</button>
+      </div>
+      <div class="flexrow" style="margin-top:10px;">
+        <label class="small">Comandante <select id="ownFleetCommander"></select></label>
+      </div>
+      <div class="flexrow" style="margin-top:6px;">
+        <label class="small">ESTADO % <input type="number" id="ownFleetStatus" value="100" min="10" max="100" style="width:70px;"></label>
+        <label class="small"><input type="checkbox" id="ownFleetPortMod"> Começou o turno num porto próprio/aliado (×1,25)</label>
+      </div>
+      <div class="flexrow" style="margin-top:6px;">
+        <label class="small"><input type="checkbox" id="ownFleetCargo"> A transportar um exército (×0,85)</label>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>🎯 Frota Inimiga (+ coligação)</h3>
+      <div class="tbl-wrap"><table id="enemyFleetTable">
+        <thead><tr><th>Raça</th><th>Navio</th><th>WP</th><th>Qtd.</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+      <div class="flexrow" style="margin-top:8px;">
+        <select id="enemyFleetStackRace" style="width:100px;"></select>
+        <select id="enemyFleetStackUnit" style="width:140px;"></select>
+        <input type="number" id="enemyFleetStackQty" value="5" min="1" style="width:70px;">
+        <button class="act secondary" id="enemyFleetStackAddBtn" type="button">+ Adicionar</button>
+        <label class="small"><input type="checkbox" id="enemyIsPirate"> Frota pirata (×1,10)</label>
+      </div>
+      <div class="flexrow" style="margin-top:8px;">
+        <label class="small">Militar do comandante (0 = sem) <input type="number" id="enemyFleetCommander" value="0" min="0" style="width:70px;"></label>
+      </div>
+      <div class="flexrow" style="margin-top:6px;">
+        <label class="small">ESTADO % <input type="number" id="enemyFleetStatus" value="100" min="10" max="100" style="width:70px;"></label>
+        <label class="small"><input type="checkbox" id="enemyFleetPortMod"> Começou o turno num porto próprio/aliado (×1,25)</label>
+      </div>
+      <div class="flexrow" style="margin-top:6px;">
+        <label class="small"><input type="checkbox" id="enemyFleetCargo"> A transportar um exército (×0,85)</label>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Contexto</h3>
+    <label class="small">Quem ataca <select id="whoAttacksNaval">
+      <option value="own">Eu ataco</option>
+      <option value="enemy">Eu defendo (o inimigo ataca)</option>
+    </select></label>
+    <button class="act" id="calcNavalBtn" style="margin-top:10px;">Calcular Batalha Naval</button>
+  </div>
+
+  <div class="card" id="navalResultCard" style="display:none;">
+    <h3>Resultado Esperado</h3>
+    <div id="navalResult"></div>
+  </div>
+  </div>
+</section>
+
 <!-- CALCULADORA DE CERCO -->
 <section class="tab" id="tab-cerco">
   <div class="card">
@@ -445,11 +547,17 @@ button.act.secondary{background:transparent;border:1px solid var(--gold-dim);col
   </div>
 
   <div class="card">
-    <h3>O Teu Exército Sitiante</h3>
+    <h3>O Teu Exército Sitiante (+ aliados)</h3>
     <div class="tbl-wrap"><table id="siegeArmyTable">
-      <thead><tr><th>Unidade</th><th>WP</th><th>Corpo</th><th>Qtd.</th></tr></thead>
+      <thead><tr><th>Raça</th><th>Unidade</th><th>WP</th><th>Corpo</th><th>Qtd.</th><th></th></tr></thead>
       <tbody></tbody>
     </table></div>
+    <div class="flexrow" style="margin-top:8px;">
+      <select id="siegeStackRace" style="width:100px;"></select>
+      <select id="siegeStackUnit" style="width:140px;"></select>
+      <input type="number" id="siegeStackQty" value="10" min="1" style="width:70px;">
+      <button class="act secondary" id="siegeStackAddBtn" type="button">+ Adicionar</button>
+    </div>
     <button class="act" id="calcSiegeBtn" style="margin-top:10px;">Calcular Cerco</button>
   </div>
 
@@ -671,6 +779,37 @@ const UNIT_ROSTER_BY_RACE={
 };
 function getUnits(){ return UNIT_ROSTER_BY_RACE[STATE.race] || []; }
 
+/* ---- Elencos de navios (byte-idêntico ao motor — SHIP_ROSTER). Orc e Anão não têm frota por desenho. ---- */
+const SHIP_ROSTER_BY_RACE={
+  Imperial:[
+    {id:'trireme',name:'Drommund',atk:6,def:5,capacity:100,cost:{gold:155,iron:9,wood:50},upkeep:{gold:4},wp:66,mp:90},
+    {id:'war_galleon',name:'Cog',atk:10,def:8,capacity:200,cost:{gold:310,iron:24,wood:90},upkeep:{gold:8},wp:108,mp:60},
+    {id:'dreadnought',name:'Galley',atk:12,def:11,capacity:300,cost:{gold:550,iron:36,wood:130},upkeep:{gold:15},wp:138,mp:60},
+  ],
+  Barbarian:[
+    {id:'longship',name:'Wolfship',atk:8,def:4,capacity:80,cost:{gold:135,iron:8,food:10,wood:45},upkeep:{gold:3},wp:72,mp:90},
+    {id:'sea_raider',name:'Reaver',atk:11,def:5,capacity:120,cost:{gold:245,iron:13,food:15,wood:65},upkeep:{gold:5},wp:96,mp:90},
+    {id:'drakkar',name:'Tigress',atk:14,def:7,capacity:200,cost:{gold:435,iron:22,food:25,wood:100},upkeep:{gold:14},wp:126,mp:60},
+  ],
+  Elf:[
+    {id:'moonskiff',name:'Moonskiff',atk:7,def:6,capacity:60,cost:{gold:170,iron:4,wood:40},upkeep:{gold:5},wp:78,mp:90},
+    {id:'tide_warden',name:'Navio Branco',atk:10,def:9,capacity:100,cost:{gold:295,iron:7,wood:60},upkeep:{gold:8},wp:114,mp:90},
+    {id:'starbreaker',name:'Navio-Cisne',atk:16,def:8,capacity:150,cost:{gold:545,iron:13,wood:85},upkeep:{gold:16},wp:144,mp:60},
+  ],
+  Aesir:[
+    {id:'aesir_snekkja',name:'Snekkja',atk:8,def:4,capacity:80,cost:{gold:120,iron:9,food:10,wood:45},upkeep:{gold:3},wp:72,mp:120},
+    {id:'aesir_drakkar',name:'Drakar',atk:12,def:6,capacity:140,cost:{gold:300,iron:20,food:20,wood:75},upkeep:{gold:8},wp:112,mp:90},
+    {id:'aesir_busse',name:'Busse',atk:14,def:9,capacity:220,cost:{gold:490,iron:31,food:30,wood:105},upkeep:{gold:14},wp:136,mp:60},
+  ],
+  Nomad:[
+    {id:'nomad_dhow',name:'Dhow',atk:6,def:4,capacity:100,cost:{gold:145,iron:2,food:5,wood:50},upkeep:{gold:3},wp:56,mp:90},
+    {id:'nomad_shini',name:'Shini',atk:10,def:6,capacity:140,cost:{gold:300,iron:10,wood:70},upkeep:{gold:6},wp:98,mp:60},
+    {id:'nomad_harraqa',name:'Harraqa',atk:13,def:5,capacity:60,cost:{gold:360,iron:5,wood:45},upkeep:{gold:10},wp:116,mp:60},
+  ],
+};
+function getShips(){ return SHIP_ROSTER_BY_RACE[STATE.race] || []; }
+function shipGoldEqCost(cost){ return (cost.gold||0)+(cost.iron||0)*16+(cost.wood||0)*5; } // sem cavalos — navios nunca custam cavalos
+
 /* ---- Bónus racial de terreno em combate (§3.5) ---- */
 const RACE_HOME_BONUS={
   Imperial:{terrain:null,mult:null,note:'Sem bónus de terreno — em vez disso, ×1,10 ao defender hexágono próprio com construção FI ou POP (bónus Legião).'},
@@ -834,7 +973,7 @@ let STATE = null;
 // APP_VERSION: sobe isto (e o CACHE_NAME correspondente em sw.js) sempre que publicares uma versão nova no GitHub.
 // É o que aparece no canto superior direito da app — se não mudar depois de um deploy, o browser ainda está
 // a servir a cache antiga do service worker.
-const APP_VERSION = 'v2.1 · 2026-09-25';
+const APP_VERSION = 'v2.5 · 2026-09-25';
 document.getElementById('appVersionBadge').textContent = APP_VERSION.split(' · ')[0];
 document.getElementById('appVersionBadge').title = 'Versão do painel: '+APP_VERSION;
 
@@ -854,10 +993,11 @@ function loadState(raw){
       market_prices: raw.market_prices, hexes, turn: raw.turn,
       armies: raw.kingdom_state.armies||[], fleets: raw.kingdom_state.fleets||[],
       events: raw.events||[], diplomacy: raw.kingdom_state.diplomacy||{},
+      conquered_hexes: raw.conquered_hexes||[], lost_hexes: raw.lost_hexes||[],
       map_kingdoms: (raw.map_state.kingdoms||[]).map(k=>({id:k.id,name:k.name,race:k.race,pirate:k.pirate})),
       vassal_of: raw.kingdom_state.vassal_of||null, vassals: raw.kingdom_state.vassals||[],
     };
-  } else { s = raw; s.turn = s.turn ?? 0; s.events = s.events||[]; s.diplomacy = s.diplomacy||{}; s.map_kingdoms = s.map_kingdoms||[]; }
+  } else { s = raw; s.turn = s.turn ?? 0; s.events = s.events||[]; s.diplomacy = s.diplomacy||{}; s.map_kingdoms = s.map_kingdoms||[]; s.conquered_hexes = s.conquered_hexes||[]; s.lost_hexes = s.lost_hexes||[]; }
   STATE = s;
   computeDiff();
   saveDetailedSnapshot();
@@ -994,6 +1134,62 @@ function quarryYield(pop,lv,terrain){
 }
 
 /* ============================== RENDER: VISÃO GERAL ============================== */
+function renderBattleLog(){
+  const card = document.getElementById('battleLogCard');
+  const conquered = STATE.conquered_hexes||[];
+  const lost = STATE.lost_hexes||[];
+  if(!conquered.length && !lost.length){ card.style.display='none'; return; }
+  card.style.display='block';
+
+  const events = STATE.events||[];
+  const findEvent = (col,row,wantTitle)=> events.find(e=>{
+    if(!new RegExp('^'+wantTitle).test(e.title||'')) return false;
+    const m = (e.title||'').match(/\(([\-\d]+),\s*([\-\d]+)\)/);
+    return m && parseInt(m[1])===col && parseInt(m[2])===row;
+  });
+
+  let html = '';
+  const tierPT = {Crushing:'Esmagadora', Decisive:'Decisiva', Costly:'Cara', Narrow:'Renhida', Pyrrhic:'Pírrica'};
+  conquered.forEach(h=>{
+    const e = findEvent(h.col,h.row,'Conquered');
+    const sp = (e&&e.spoils)||{};
+    html += `<div class="recommend good"><b>🏴 Conquistaste (${h.col},${h.row})</b> — ${TERRAIN_LABEL[h.terrain]||h.terrain}.${sp.tier?` Vitória: ${tierPT[sp.tier]||sp.tier} (${Math.round((sp.pct||0)*100)}% de saque)`:''}${(sp.food||sp.iron||sp.horses)?` — saque: ${sp.food?fmt(sp.food)+' comida ':''}${sp.iron?fmt(sp.iron)+' ferro ':''}${sp.horses?fmt(sp.horses)+' cavalos':''}`:''}</div>`;
+  });
+  lost.forEach(h=>{
+    const e = findEvent(h.col,h.row,'Lost');
+    const attackerRace = e&&e.attackerRace;
+    const troopMatch = e&&e.effect ? e.effect.match(/Invading force:\s*(\d+)\s*troops?\s*(\(([^)]+)\))?/i) : null;
+    const troopCount = troopMatch ? parseInt(troopMatch[1]) : null;
+    const mountedRaw = troopMatch ? troopMatch[3] : null;
+    const mountedPT = mountedRaw==='all mounted' ? 'todas montadas' : mountedRaw==='on foot' ? 'a pé' : mountedRaw||'';
+    let line = `<b>🏳 Perdeste (${h.col},${h.row})</b> — ${TERRAIN_LABEL[h.terrain]||h.terrain}.`;
+    if(attackerRace) line += ` Atacante: ${RACE_LABEL_PT[attackerRace]||attackerRace}`;
+    if(troopCount) line += `, força estimada de ${fmt(troopCount)} tropas${mountedPT?` (${mountedPT})`:''}`;
+    line += '.';
+    let btn = '';
+    if(troopCount && attackerRace && UNIT_ROSTER_BY_RACE[attackerRace]){
+      const wantMounted = mountedRaw==='all mounted';
+      btn = `<br><button type="button" class="act secondary battleLogPrefillBtn" data-race="${attackerRace}" data-count="${troopCount}" data-mounted="${wantMounted?'1':'0'}" style="margin-top:6px;">Usar esta estimativa na Calculadora de Batalha</button>`;
+    }
+    html += `<div class="recommend bad">${line}${btn}</div>`;
+  });
+  document.getElementById('battleLogList').innerHTML = html;
+
+  document.querySelectorAll('.battleLogPrefillBtn').forEach(btn=>{
+    btn.onclick = ()=>{
+      const race = btn.dataset.race, count = parseInt(btn.dataset.count), wantMounted = btn.dataset.mounted==='1';
+      const roster = (UNIT_ROSTER_BY_RACE[race]||[]).filter(u=>u.wp>10 && (wantMounted?u.mounted:true));
+      const unit = roster.slice().sort((a,b)=>(a.cost.gold||1)-(b.cost.gold||1))[0];
+      if(!unit) return;
+      const stacks = getStackState('enemy');
+      const existing = stacks.find(s=>s.race===race && s.unitId===unit.id);
+      if(existing) existing.qty += count; else stacks.push({race, unitId:unit.id, qty:count});
+      document.querySelector('#tabnav button[data-tab="batalha"]').click();
+      renderStackTable('enemy', UNIT_ROSTER_BY_RACE);
+    };
+  });
+}
+
 function renderAlerts(){
   const card = document.getElementById('alertsCard');
   const events = (STATE.events||[]).filter(e=>e.type==='negative'||e.type==='warning');
@@ -1090,6 +1286,7 @@ function renderVisaoGeral(){
     welcomeCard.style.display='none';
   }
   renderPersonalitySelector();
+  renderBattleLog();
   renderDiff();
   renderAlerts();
   const r = STATE.resources;
@@ -2013,26 +2210,121 @@ function renderHistorico(){
 /* ============================== CALCULADORA DE BATALHA ============================== */
 function goldEqCostFull(cost){ return (cost.gold||0)+(cost.iron||0)*16+(cost.horses||0)*20+(cost.wood||0)*5; }
 
-function renderArmyTable(tbodyId, units){
-  document.querySelector('#'+tbodyId+' tbody').innerHTML = units.map((u,i)=>`
-    <tr><td>${u.name}${u.mounted?' 🐎':''}</td><td>${u.wp}</td>
-    <td><input type="number" min="0" value="0" data-idx="${i}" class="battleQty_${tbodyId}" style="width:70px;"></td></tr>
-  `).join('');
+/* ============================== COMPOSIÇÃO MULTI-RAÇA (pilhas reutilizadas em Batalha/Cerco/Naval) ============================== */
+const STACK_STATE = {};
+function getStackState(prefix){ if(!STACK_STATE[prefix]) STACK_STATE[prefix]=[]; return STACK_STATE[prefix]; }
+function unitLookup(rosterProvider, race, unitId){ return (rosterProvider[race]||[]).find(u=>u.id===unitId); }
+
+function initStackBuilder(prefix, rosterProvider, defaultRace, unitFilter, customRenderFn){
+  const raceSel = document.getElementById(prefix+'StackRace');
+  const unitSel = document.getElementById(prefix+'StackUnit');
+  if(raceSel.dataset.filled) return;
+  const races = Object.keys(rosterProvider);
+  raceSel.innerHTML = races.map(r=>`<option value="${r}">${RACE_LABEL_PT[r]||r}</option>`).join('');
+  raceSel.value = defaultRace && races.includes(defaultRace) ? defaultRace : races[0];
+  raceSel.dataset.filled='1';
+  const fillUnits = ()=>{
+    const list = (rosterProvider[raceSel.value]||[]).filter(unitFilter||(()=>true));
+    unitSel.innerHTML = list.map(u=>`<option value="${u.id}">${u.name} (WP ${u.wp})</option>`).join('');
+  };
+  raceSel.onchange = fillUnits;
+  fillUnits();
+  const renderFn = customRenderFn || (()=>renderStackTable(prefix, rosterProvider));
+  document.getElementById(prefix+'StackAddBtn').onclick = ()=>{
+    const qty = parseInt(document.getElementById(prefix+'StackQty').value)||0;
+    if(qty<=0) return;
+    const stacks = getStackState(prefix);
+    const race = raceSel.value, unitId = unitSel.value;
+    const existing = stacks.find(s=>s.race===race && s.unitId===unitId);
+    if(existing) existing.qty += qty; else stacks.push({race, unitId, qty});
+    renderFn();
+  };
+}
+
+function renderStackTable(prefix, rosterProvider){
+  const stacks = getStackState(prefix);
+  const tbody = document.querySelector('#'+prefix+'ArmyTable tbody') || document.querySelector('#'+prefix+'FleetTable tbody');
+  tbody.innerHTML = stacks.map((s,i)=>{
+    const u = unitLookup(rosterProvider, s.race, s.unitId);
+    if(!u) return '';
+    return `<tr><td>${RACE_LABEL_PT[s.race]||s.race}</td><td>${u.name}${u.mounted?' 🐎':''}</td><td>${u.wp}</td><td>${fmt(s.qty)}</td><td><button type="button" class="act secondary stackRemoveBtn" data-prefix="${prefix}" data-idx="${i}" style="padding:2px 8px;">✕</button></td></tr>`;
+  }).join('') || '<tr><td colspan="5" class="muted small">Sem unidades adicionadas.</td></tr>';
+  tbody.querySelectorAll('.stackRemoveBtn').forEach(btn=>{
+    btn.onclick = ()=>{
+      getStackState(btn.dataset.prefix).splice(parseInt(btn.dataset.idx),1);
+      renderStackTable(btn.dataset.prefix, rosterProvider);
+    };
+  });
+}
+
+function stackTotals(prefix, rosterProvider){
+  const stacks = getStackState(prefix);
+  let totalWP=0, footWP=0, totalCount=0, gEqWeighted=0;
+  const byRaceMounted = {}; // raça -> WP montado dessa raça, para aplicar a isenção de terreno certa por pilha
+  const byRaceWP = {}; // raça -> WP total, para decidir a raça dominante (bónus de terreno racial)
+  stacks.forEach(s=>{
+    const u = unitLookup(rosterProvider, s.race, s.unitId);
+    if(!u) return;
+    const wp = u.wp*s.qty;
+    totalWP += wp; totalCount += s.qty;
+    byRaceWP[s.race] = (byRaceWP[s.race]||0)+wp;
+    if(u.mounted) byRaceMounted[s.race] = (byRaceMounted[s.race]||0)+wp;
+    else footWP += wp;
+    gEqWeighted += goldEqCostFull(u.cost)*s.qty;
+  });
+  const avgGEq = totalCount>0 ? gEqWeighted/totalCount : 0;
+  let dominantRace=null, bestWP=-1;
+  Object.entries(byRaceWP).forEach(([r,wp])=>{ if(wp>bestWP){dominantRace=r;bestWP=wp;} });
+  return {totalWP, footWP, totalCount, avgGEq, byRaceMounted, dominantRace};
+}
+// WP efetivo de um lado neste terreno: cada pilha montada usa a isenção de cavalaria da SUA PRÓPRIA raça (§3.5.1)
+function effectiveWPForSide(totals, terrain){
+  let eff = totals.footWP;
+  Object.entries(totals.byRaceMounted).forEach(([race,mWP])=>{
+    const scale = ((race==='Nomad'&&terrain==='desert')||(race==='Orc'&&terrain==='forest')) ? 1.0 : (CAV_TERRAIN_SCALE[terrain]||1.0);
+    eff += mWP*scale;
+  });
+  return eff;
+}
+// Preenche pilhas a partir de um exército/frota real do relatório (usado pelos botões "Preencher")
+function prefillStacksFromRoster(prefix, roster, race, rosterProvider){
+  const stacks = getStackState(prefix);
+  (roster||[]).forEach(entry=>{
+    const unitId = entry.unitId || entry.shipId;
+    const u = unitLookup(rosterProvider, race, unitId);
+    if(!u) return;
+    const existing = stacks.find(s=>s.race===race && s.unitId===unitId);
+    if(existing) existing.qty = entry.count||0; else stacks.push({race, unitId, qty:entry.count||0});
+  });
+  renderStackTable(prefix, rosterProvider);
 }
 
 function renderBatalha(){
-  document.getElementById('ownArmyTitle').textContent = `🛡 O Teu Exército (${RACE_LABEL_PT[STATE.race]||STATE.race})`;
-  const ownUnits = getUnits().filter(u=>u.wp>10);
-  renderArmyTable('ownArmyTable', ownUnits);
+  document.getElementById('ownArmyTitle').textContent = `🛡 O Teu Exército (${RACE_LABEL_PT[STATE.race]||STATE.race}) + aliados`;
+  initStackBuilder('own', UNIT_ROSTER_BY_RACE, STATE.race, u=>u.wp>10);
+  initStackBuilder('enemy', UNIT_ROSTER_BY_RACE, Object.keys(UNIT_ROSTER_BY_RACE).find(r=>r!==STATE.race), u=>u.wp>10);
+  renderStackTable('own', UNIT_ROSTER_BY_RACE);
+  renderStackTable('enemy', UNIT_ROSTER_BY_RACE);
 
-  const enemyRaceSel = document.getElementById('enemyRace');
-  if(!enemyRaceSel.dataset.filled){
-    enemyRaceSel.innerHTML = Object.keys(UNIT_ROSTER_BY_RACE).map(r=>`<option value="${r}" ${r===STATE.race?'':''}>${RACE_LABEL_PT[r]||r}</option>`).join('');
-    enemyRaceSel.value = Object.keys(UNIT_ROSTER_BY_RACE).find(r=>r!==STATE.race) || STATE.race;
-    enemyRaceSel.dataset.filled='1';
-    enemyRaceSel.onchange = ()=>renderArmyTable('enemyArmyTable', UNIT_ROSTER_BY_RACE[enemyRaceSel.value].filter(u=>u.wp>10));
+  const armies = STATE.armies||[];
+  const prefillRow = document.getElementById('ownArmyPrefillRow');
+  const noArmiesNote = document.getElementById('ownArmyNoArmiesNote');
+  if(armies.length){
+    prefillRow.style.display='flex'; noArmiesNote.style.display='none';
+    const prefillSel = document.getElementById('ownArmyPrefillSel');
+    prefillSel.innerHTML = armies.map((a,i)=>{
+      const total = (a.units||[]).reduce((s,u)=>s+u.count,0);
+      return `<option value="${i}">Exército ${a.num||i+1} — ${fmt(total)} soldados, ESTADO ${a.status??100}%</option>`;
+    }).join('');
+    document.getElementById('ownArmyPrefillBtn').onclick = ()=>{
+      const a = armies[parseInt(prefillSel.value)];
+      if(!a) return;
+      prefillStacksFromRoster('own', a.units, STATE.race, UNIT_ROSTER_BY_RACE);
+      document.getElementById('ownStatus').value = a.status ?? 100;
+    };
+  } else {
+    prefillRow.style.display='none'; noArmiesNote.style.display='block';
   }
-  renderArmyTable('enemyArmyTable', UNIT_ROSTER_BY_RACE[enemyRaceSel.value].filter(u=>u.wp>10));
 
   const commSel = document.getElementById('ownCommander');
   if(!commSel.dataset.filled){
@@ -2050,31 +2342,14 @@ function renderBatalha(){
   document.getElementById('calcBattleBtn').onclick = computeBattle;
 }
 
-function readArmyFromTable(tbodyId, units){
-  let totalWP=0, mountedWP=0, totalCount=0, gEqWeighted=0;
-  document.querySelectorAll('.battleQty_'+tbodyId).forEach(inp=>{
-    const q = parseInt(inp.value)||0;
-    if(!q) return;
-    const u = units[inp.dataset.idx];
-    totalWP += u.wp*q; totalCount += q;
-    if(u.mounted) mountedWP += u.wp*q;
-    gEqWeighted += goldEqCostFull(u.cost)*q;
-  });
-  const avgGEq = totalCount>0 ? gEqWeighted/totalCount : 0;
-  return {totalWP, mountedWP, footWP: totalWP-mountedWP, totalCount, avgGEq};
-}
-
 function computeBattle(){
-  const ownUnits = getUnits().filter(u=>u.wp>10);
-  const enemyRace = document.getElementById('enemyRace').value;
-  const enemyUnits = UNIT_ROSTER_BY_RACE[enemyRace].filter(u=>u.wp>10);
-  const own = readArmyFromTable('ownArmyTable', ownUnits);
-  const enemy = readArmyFromTable('enemyArmyTable', enemyUnits);
+  const own = stackTotals('own', UNIT_ROSTER_BY_RACE);
+  const enemy = stackTotals('enemy', UNIT_ROSTER_BY_RACE);
   const el = document.getElementById('battleResultCard'); const out = document.getElementById('battleResult');
   document.getElementById('battleResultCard').style.display='block';
 
   if(own.totalCount===0 || enemy.totalCount===0){
-    out.innerHTML = '<p class="bad">Preenche pelo menos uma unidade de cada lado.</p>'; return;
+    out.innerHTML = '<p class="bad">Adiciona pelo menos uma unidade de cada lado.</p>'; return;
   }
 
   const terrain = document.getElementById('battleTerrain').value;
@@ -2087,16 +2362,15 @@ function computeBattle(){
   const ownCmdMult = 1 + ownCmdMil/1000;
   const enemyCmdMult = 1 + enemyCmdMil/1000;
 
-  const ownHome = RACE_HOME_BONUS[STATE.race]||{};
-  const enemyHome = RACE_HOME_BONUS[enemyRace]||{};
+  // Bónus racial de terreno (§3.5): aplicado pela raça DOMINANTE (mais WP) de cada lado — uma
+  // coligação mista usa a raça que pesa mais nesse lado como referência para este bónus.
+  const ownHome = RACE_HOME_BONUS[own.dominantRace]||{};
+  const enemyHome = RACE_HOME_BONUS[enemy.dominantRace]||{};
   const ownTerrainMult = (ownHome.terrain===terrain) ? ownHome.mult : 1.0;
   const enemyTerrainMult = (enemyHome.terrain===terrain) ? enemyHome.mult : 1.0;
 
-  // Isenções de terreno para a cavalaria (§3.5.1): Nómada no deserto, Warg Rider (Orc) na floresta
-  const ownCavScale = ((STATE.race==='Nomad' && terrain==='desert') || (STATE.race==='Orc' && terrain==='forest')) ? 1.0 : (CAV_TERRAIN_SCALE[terrain]||1.0);
-  const enemyCavScale = ((enemyRace==='Nomad' && terrain==='desert') || (enemyRace==='Orc' && terrain==='forest')) ? 1.0 : (CAV_TERRAIN_SCALE[terrain]||1.0);
-  const ownEffWP = own.footWP + own.mountedWP*ownCavScale;
-  const enemyEffWP = enemy.footWP + enemy.mountedWP*enemyCavScale;
+  const ownEffWP = effectiveWPForSide(own, terrain);
+  const enemyEffWP = effectiveWPForSide(enemy, terrain);
 
   const iniciativa = 1.075; // ponto médio de 1,05–1,10, só ataque
   const varMid = 1.0; // ponto médio de 0,90–1,10 — sem variância aplicada (cenário esperado)
@@ -2105,7 +2379,7 @@ function computeBattle(){
   const stanceRaw = document.getElementById(ownIsAttacker?'enemyStance':'ownStance').value; // postura é de quem DEFENDE
   const defStanceMod = stanceRaw==='1.2g' ? 1.2 : parseFloat(stanceRaw);
 
-  let attRoll, defRoll, attSide, defSide, attTerrainMult, defTerrainMult, attCmdMult, defCmdMult, attStatus, defStatus, attWP, defWP;
+  let attRoll, defRoll, attTerrainMult, defTerrainMult, attCmdMult, defCmdMult, attStatus, defStatus, attWP, defWP;
   if(ownIsAttacker){
     attWP=ownEffWP; defWP=enemyEffWP; attTerrainMult=ownTerrainMult; defTerrainMult=enemyTerrainMult;
     attCmdMult=ownCmdMult; defCmdMult=enemyCmdMult; attStatus=ownStatus; defStatus=enemyStatus;
@@ -2163,43 +2437,53 @@ function computeBattle(){
     <div class="hr"></div>
     <div class="grid cols2">
       <div>
-        <h3>O Teu Lado</h3>
-        <p>WP bruto: ${fmt(own.totalWP)} (${fmt(own.mountedWP)} montado) · WP efetivo neste terreno: ${fmt(ownEffWP)}</p>
+        <h3>O Teu Lado${own.dominantRace?` (dominante: ${RACE_LABEL_PT[own.dominantRace]})`:''}</h3>
+        <p>WP bruto: ${fmt(own.totalWP)} · WP efetivo neste terreno: ${fmt(ownEffWP)}</p>
         <p>Baixas esperadas: <b class="${ownIsLoser?'bad':'good'}">${fmt(ownLosses)} de ${fmt(own.totalCount)}</b> (${(ownLossPct*100).toFixed(1)}% nominal × fator morte ${ownDF.toFixed(2)})</p>
         ${ownCmdDeath!==null?`<p class="muted small">Hipótese de morte do comandante: ${(ownCmdDeath*100).toFixed(0)}%</p>`:''}
       </div>
       <div>
-        <h3>Inimigo (${RACE_LABEL_PT[enemyRace]})</h3>
-        <p>WP bruto: ${fmt(enemy.totalWP)} (${fmt(enemy.mountedWP)} montado) · WP efetivo neste terreno: ${fmt(enemyEffWP)}</p>
+        <h3>Inimigo${enemy.dominantRace?` (dominante: ${RACE_LABEL_PT[enemy.dominantRace]})`:''}</h3>
+        <p>WP bruto: ${fmt(enemy.totalWP)} · WP efetivo neste terreno: ${fmt(enemyEffWP)}</p>
         <p>Baixas esperadas: <b class="${enemyIsLoser?'bad':'good'}">${fmt(enemyLosses)} de ${fmt(enemy.totalCount)}</b> (${(enemyLossPct*100).toFixed(1)}% nominal × fator morte ${enemyDF.toFixed(2)})</p>
         ${enemyCmdDeath!==null?`<p class="muted small">Hipótese de morte do comandante: ${(enemyCmdDeath*100).toFixed(0)}%</p>`:''}
       </div>
     </div>
-    <p class="small muted" style="margin-top:8px;">${outcome==='empate' ? 'Nenhum dos lados atinge a margem decisiva de ×1,2 — empate: o atacante recua e ambos os lados sofrem 6–12% de baixas nominais.' : `Vitória decisiva exige atacar > defender×1,2. Aqui: ${fmt(attRoll)} vs ${fmt(defRoll)}×1,2=${fmt(defRoll*1.2)}.`} Cenário sem a variância aleatória de ±10% por lançamento — o resultado real pode oscilar à volta destes números.</p>
+    <p class="small muted" style="margin-top:8px;">${outcome==='empate' ? 'Nenhum dos lados atinge a margem decisiva de ×1,2 — empate: o atacante recua e ambos os lados sofrem 6–12% de baixas nominais.' : `Vitória decisiva exige atacar > defender×1,2. Aqui: ${fmt(attRoll)} vs ${fmt(defRoll)}×1,2=${fmt(defRoll*1.2)}.`} O bónus de terreno racial usa a raça com mais WP em cada lado, não uma média — uma coligação pequena dentro de um exército maior de outra raça não desvia esse bónus. Cenário sem a variância aleatória de ±10% por lançamento.</p>
   `;
 }
 
 /* ============================== CALCULADORA DE CERCO ============================== */
+function renderSiegeStackTable(){
+  const stacks = getStackState('siege');
+  const tbody = document.querySelector('#siegeArmyTable tbody');
+  tbody.innerHTML = stacks.map((s,i)=>{
+    const u = unitLookup(UNIT_ROSTER_BY_RACE, s.race, s.unitId);
+    if(!u) return '';
+    const corpo = u.wp<=10 ? '— (máquina)' : (u.mounted?'2 (montado)':'1');
+    return `<tr><td>${RACE_LABEL_PT[s.race]||s.race}</td><td>${u.name}${u.mounted?' 🐎':''}</td><td>${u.wp}</td><td>${corpo}</td><td>${fmt(s.qty)}</td><td><button type="button" class="act secondary stackRemoveBtn" data-prefix="siege" data-idx="${i}" style="padding:2px 8px;">✕</button></td></tr>`;
+  }).join('') || '<tr><td colspan="6" class="muted small">Sem unidades adicionadas.</td></tr>';
+  tbody.querySelectorAll('.stackRemoveBtn').forEach(btn=>{
+    btn.onclick = ()=>{ getStackState('siege').splice(parseInt(btn.dataset.idx),1); renderSiegeStackTable(); };
+  });
+}
+
 function renderCerco(){
-  const units = getUnits(); // inclui máquinas de cerco (contam para WP, não para corpos)
-  document.querySelector('#siegeArmyTable tbody').innerHTML = units.map((u,i)=>`
-    <tr><td>${u.name}${u.mounted?' 🐎':''}</td><td>${u.wp}</td><td>${u.wp<=10?'— (máquina)':(u.mounted?'2 (montado)':'1')}</td>
-    <td><input type="number" min="0" value="0" data-idx="${i}" class="siegeQty" style="width:70px;"></td></tr>
-  `).join('');
+  initStackBuilder('siege', UNIT_ROSTER_BY_RACE, STATE.race, null, renderSiegeStackTable); // inclui máquinas de cerco (contam para WP, não para corpos)
+  renderSiegeStackTable();
   document.getElementById('calcSiegeBtn').onclick = computeSiege;
 }
 
 function computeSiege(){
-  const units = getUnits();
   const pop = parseInt(document.getElementById('siegeTargetPop').value)||0;
   const isSeat = document.getElementById('siegeTargetType').value==='seat';
   const status = Math.max(0.1, (parseFloat(document.getElementById('siegeStatus').value)||100)/100);
   let totalWP=0, bodies=0, machineCount=0;
-  document.querySelectorAll('.siegeQty').forEach(inp=>{
-    const q=parseInt(inp.value)||0; if(!q) return;
-    const u=units[inp.dataset.idx];
-    totalWP += u.wp*q;
-    if(u.wp<=10) machineCount+=q; else bodies += u.mounted ? q*2 : q;
+  getStackState('siege').forEach(s=>{
+    const u = unitLookup(UNIT_ROSTER_BY_RACE, s.race, s.unitId);
+    if(!u) return;
+    totalWP += u.wp*s.qty;
+    if(u.wp<=10) machineCount+=s.qty; else bodies += u.mounted ? s.qty*2 : s.qty;
   });
   const effectiveWP = totalWP*status; // §5.8.1 (2026-09-21): armyWP × status > limiar — corpos NÃO escalam
 
@@ -2350,9 +2634,9 @@ function renderAlvos(){
     el.addEventListener('click', ()=>{
       const race = el.dataset.race;
       document.querySelector('#tabnav button[data-tab="batalha"]').click();
-      const sel = document.getElementById('enemyRace');
-      sel.value = race; sel.dataset.filled='1';
-      renderArmyTable('enemyArmyTable', UNIT_ROSTER_BY_RACE[race].filter(u=>u.wp>10));
+      const sel = document.getElementById('enemyStackRace');
+      sel.value = race;
+      sel.dispatchEvent(new Event('change'));
     });
   });
 }
@@ -2670,6 +2954,153 @@ function processOrdersFile(raw){
   renderPlano(); // refresca os marcos imediatamente (mostra já, se o reino coincidir)
 }
 
+/* ============================== CALCULADORA DE BATALHA NAVAL ============================== */
+function renderNaval(){
+  const canHaveFleet = !(STATE.race==='Orc'||STATE.race==='Dwarf');
+  const noFleetNote = document.getElementById('navalNoFleetNote');
+  const content = document.getElementById('navalContent');
+  if(STATE.kingdom_id && !canHaveFleet){
+    noFleetNote.style.display='block'; content.style.display='none';
+    document.getElementById('navalNoFleetText').textContent = `O teu reino (${RACE_LABEL_PT[STATE.race]||STATE.race}) não pode ter frota — esta calculadora não se aplica.`;
+    return;
+  }
+  noFleetNote.style.display='none'; content.style.display='block';
+
+  document.getElementById('ownFleetTitle').textContent = `🛡 A Tua Frota (${RACE_LABEL_PT[STATE.race]||STATE.race}) + aliados`;
+  const navyRaces = Object.keys(SHIP_ROSTER_BY_RACE);
+  initStackBuilder('ownFleet', SHIP_ROSTER_BY_RACE, STATE.race);
+  initStackBuilder('enemyFleet', SHIP_ROSTER_BY_RACE, navyRaces.find(r=>r!==STATE.race)||navyRaces[0]);
+  renderStackTable('ownFleet', SHIP_ROSTER_BY_RACE);
+  renderStackTable('enemyFleet', SHIP_ROSTER_BY_RACE);
+
+  const fleets = STATE.fleets||[];
+  const prefillRow = document.getElementById('ownFleetPrefillRow');
+  const noFleetsNote = document.getElementById('ownFleetNoFleetsNote');
+  if(fleets.length){
+    prefillRow.style.display='flex'; noFleetsNote.style.display='none';
+    const prefillSel = document.getElementById('ownFleetPrefillSel');
+    prefillSel.innerHTML = fleets.map((f,i)=>{
+      const total = (f.ships||f.units||[]).reduce((s,u)=>s+(u.count||0),0);
+      return `<option value="${i}">Frota ${f.num||i+1} — ${fmt(total)} navios, ESTADO ${f.status??100}%</option>`;
+    }).join('');
+    document.getElementById('ownFleetPrefillBtn').onclick = ()=>{
+      const f = fleets[parseInt(prefillSel.value)];
+      if(!f) return;
+      const shipList = (f.ships||f.units||[]).map(x=>({unitId:x.unitId||x.shipId, count:x.count}));
+      prefillStacksFromRoster('ownFleet', shipList, STATE.race, SHIP_ROSTER_BY_RACE);
+      document.getElementById('ownFleetStatus').value = f.status ?? 100;
+    };
+  } else {
+    prefillRow.style.display='none'; noFleetsNote.style.display='block';
+  }
+
+  const commSel = document.getElementById('ownFleetCommander');
+  if(!commSel.dataset.filled){
+    commSel.innerHTML = '<option value="0">Nenhum</option>' + (STATE.characters||[]).filter(c=>!c.dead).map(c=>`<option value="${c.military}">${c.name} (Militar ${c.military})</option>`).join('');
+    commSel.dataset.filled='1';
+  }
+
+  document.getElementById('calcNavalBtn').onclick = computeNavalBattle;
+}
+
+function computeNavalBattle(){
+  const own = stackTotals('ownFleet', SHIP_ROSTER_BY_RACE);
+  const enemy = stackTotals('enemyFleet', SHIP_ROSTER_BY_RACE);
+  document.getElementById('navalResultCard').style.display='block';
+  const out = document.getElementById('navalResult');
+
+  if(own.totalCount===0 || enemy.totalCount===0){
+    out.innerHTML = '<p class="bad">Adiciona pelo menos um navio de cada lado.</p>'; return;
+  }
+
+  const whoAttacks = document.getElementById('whoAttacksNaval').value;
+  const ownIsAttacker = whoAttacks==='own';
+  const ownStatus = Math.max(0.1,(parseFloat(document.getElementById('ownFleetStatus').value)||100)/100);
+  const enemyStatus = Math.max(0.1,(parseFloat(document.getElementById('enemyFleetStatus').value)||100)/100);
+  const ownCmdMil = parseFloat(document.getElementById('ownFleetCommander').value)||0;
+  const enemyCmdMil = parseFloat(document.getElementById('enemyFleetCommander').value)||0;
+  const ownCmdMult = 1+ownCmdMil/1000, enemyCmdMult = 1+enemyCmdMil/1000;
+  const ownPortMod = document.getElementById('ownFleetPortMod').checked ? 1.25 : 1.0;
+  const enemyPortMod = document.getElementById('enemyFleetPortMod').checked ? 1.25 : 1.0;
+  const ownCargoMod = document.getElementById('ownFleetCargo').checked ? 0.85 : 1.0;
+  const enemyCargoMod = document.getElementById('enemyFleetCargo').checked ? 0.85 : 1.0;
+  const ownRaceMod = own.dominantRace==='Aesir' ? 1.05 : 1.0;
+  const enemyRaceMod = enemy.dominantRace==='Aesir' ? 1.05 : (document.getElementById('enemyIsPirate').checked ? 1.10 : 1.0);
+
+  const iniciativa = 1.075, varMid = 1.0;
+
+  let attWP,defWP,attStatus,defStatus,attCmdMult,defCmdMult,attPortMod,defPortMod,attCargoMod,defCargoMod,attRaceMod,defRaceMod;
+  if(ownIsAttacker){
+    attWP=own.totalWP; defWP=enemy.totalWP; attStatus=ownStatus; defStatus=enemyStatus;
+    attCmdMult=ownCmdMult; defCmdMult=enemyCmdMult; attPortMod=ownPortMod; defPortMod=enemyPortMod;
+    attCargoMod=ownCargoMod; defCargoMod=enemyCargoMod; attRaceMod=ownRaceMod; defRaceMod=enemyRaceMod;
+  } else {
+    attWP=enemy.totalWP; defWP=own.totalWP; attStatus=enemyStatus; defStatus=ownStatus;
+    attCmdMult=enemyCmdMult; defCmdMult=ownCmdMult; attPortMod=enemyPortMod; defPortMod=ownPortMod;
+    attCargoMod=enemyCargoMod; defCargoMod=ownCargoMod; attRaceMod=enemyRaceMod; defRaceMod=ownRaceMod;
+  }
+  const attRoll = attWP*attStatus*attPortMod*iniciativa*attCmdMult*attCargoMod*attRaceMod*varMid;
+  const defRoll = defWP*defStatus*defPortMod*defCmdMult*defCargoMod*defRaceMod*varMid;
+
+  let outcome, ratio;
+  if(attRoll > defRoll*1.2){ outcome='atacante'; ratio=attRoll/defRoll; }
+  else if(defRoll > attRoll*1.2){ outcome='defensor'; ratio=defRoll/attRoll; }
+  else { outcome='empate'; ratio=1; }
+
+  function lossPctWinner(r){ return 0.10/r; }
+  function lossPctLoser(r){
+    if(r<=10) return Math.min(0.60, Math.max(0.12+0.18*Math.log(r), 0.12*r));
+    if(r<=13) return 0.60;
+    if(r>=25) return 1.0;
+    return 0.50+0.50*(r-10)/15;
+  }
+  let attLossPct, defLossPct;
+  if(outcome==='atacante'){ attLossPct=lossPctWinner(ratio); defLossPct=lossPctLoser(ratio); }
+  else if(outcome==='defensor'){ defLossPct=lossPctWinner(ratio); attLossPct=lossPctLoser(ratio); }
+  else { attLossPct=defLossPct=0.09; }
+
+  function shipDeathFactor(gEq){ return Math.max(0.3, Math.min(1.0, 1.0-gEq/1100)); }
+  const ownDF = shipDeathFactor(own.avgGEq), enemyDF = shipDeathFactor(enemy.avgGEq);
+  let ownLossPct, enemyLossPct;
+  if(ownIsAttacker){ ownLossPct=attLossPct; enemyLossPct=defLossPct; } else { ownLossPct=defLossPct; enemyLossPct=attLossPct; }
+  let ownLosses = Math.round(ownLossPct*own.totalCount*ownDF);
+  let enemyLosses = Math.round(enemyLossPct*enemy.totalCount*enemyDF);
+  const ownIsLoser = (outcome==='atacante'&&!ownIsAttacker)||(outcome==='defensor'&&ownIsAttacker)||outcome==='empate';
+  const enemyIsLoser = (outcome==='atacante'&&ownIsAttacker)||(outcome==='defensor'&&!ownIsAttacker)||outcome==='empate';
+  // "o perdedor paga sempre pelo menos um casco — por frota" (§5.9.3), mas empates ficam isentos, tal como em terra
+  if(outcome!=='empate'){
+    if(ownIsLoser) ownLosses = Math.max(1, ownLosses);
+    if(enemyIsLoser) enemyLosses = Math.max(1, enemyLosses);
+  }
+  const annihilated = ratio>=25;
+
+  const outcomeLabel = outcome==='empate' ? 'Empate' : (outcome==='atacante' ? (ownIsAttacker?'Vitória tua (atacante)':'Vitória do inimigo (atacante)') : (ownIsAttacker?'Vitória do inimigo (defensor)':'Vitória tua (defensor)'));
+  const ownWinning = (outcome==='atacante'&&ownIsAttacker)||(outcome==='defensor'&&!ownIsAttacker);
+
+  out.innerHTML = `
+    <div class="grid cols3">
+      <div class="stat"><div class="v ${ownWinning?'good':(outcome==='empate'?'':'bad')}">${outcomeLabel}</div><div class="l">Resultado esperado</div></div>
+      <div class="stat"><div class="v">${ratio.toFixed(2)}:1</div><div class="l">Rácio de força</div></div>
+      <div class="stat"><div class="v">${fmt(own.totalWP)} vs ${fmt(enemy.totalWP)}</div><div class="l">WP de frota bruto</div></div>
+    </div>
+    <div class="hr"></div>
+    <div class="grid cols2">
+      <div>
+        <h3>A Tua Frota</h3>
+        <p>WP: ${fmt(own.totalWP)} (${fmt(own.totalCount)} navios)</p>
+        <p>Baixas esperadas: <b class="${ownIsLoser?'bad':'good'}">${fmt(ownLosses)} de ${fmt(own.totalCount)}</b> (${(ownLossPct*100).toFixed(1)}% nominal × fator morte ${ownDF.toFixed(2)})</p>
+      </div>
+      <div>
+        <h3>Inimigo${enemy.dominantRace?` (dominante: ${RACE_LABEL_PT[enemy.dominantRace]})`:''}</h3>
+        <p>WP: ${fmt(enemy.totalWP)} (${fmt(enemy.totalCount)} navios)</p>
+        <p>Baixas esperadas: <b class="${enemyIsLoser?'bad':'good'}">${fmt(enemyLosses)} de ${fmt(enemy.totalCount)}</b> (${(enemyLossPct*100).toFixed(1)}% nominal × fator morte ${enemyDF.toFixed(2)})</p>
+      </div>
+    </div>
+    ${annihilated?'<p class="bad" style="margin-top:8px;"><b>⚠ A 25:1 ou pior, a frota derrotada é aniquilada por completo</b> — a percentagem de baixas acima já reflete isso.</p>':''}
+    <p class="small muted" style="margin-top:8px;">${outcome==='empate' ? 'Nenhum dos lados atinge a margem decisiva de ×1,2 — empate: ambos os lados sofrem 6–12% de baixas nominais, sem mínimo de 1 casco.' : `Vitória decisiva exige atacar > defender×1,2. Aqui: ${fmt(attRoll)} vs ${fmt(defRoll)}×1,2=${fmt(defRoll*1.2)}.`} Abaixo de 25:1, uma frota derrotada só é destruída por completo se não tiver para onde recuar — esta calculadora não modela isso, mostra só a curva de baixas. Cenário sem variância aleatória de ±10%.</p>
+  `;
+}
+
 function render(){
   renderVisaoGeral();
   renderAdvisor();
@@ -2681,6 +3112,7 @@ function render(){
   renderPlano();
   renderHistorico();
   renderBatalha();
+  renderNaval();
   renderCerco();
   renderAlvos();
   renderBalanco();
