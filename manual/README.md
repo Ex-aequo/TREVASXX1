@@ -16,3 +16,7 @@ Quando sai um manual novo (pedir ao Claude: "atualiza o separador do manual com 
 3. `python3 tools/update_manual.py assemble trabalho/ manual_pt_vANTIGA.md` → `trabalho/new_pt.md`
 4. `python3 tools/build_manual.py trabalho/new_en.md trabalho/new_pt.md vNOVA manual_pt.json`
 5. Guardar `new_en.md`/`new_pt.md` como `manual_en_vNOVA.md`/`manual_pt_vNOVA.md`, subir o `CACHE_NAME` em `sw.js` e publicar.
+
+## Vista 3D (separador Mapa)
+`mapa3d.html` + `images/shields/` vêm do `player_page` (a versão MAX traz os escudos embutidos):
+`python3 tools/extract_3d.py player_page_MAX_Vnnn.html <pasta do painel>` → depois subir o `CACHE_NAME` em `sw.js` e publicar.

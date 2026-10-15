@@ -286,6 +286,13 @@ button.act.secondary{background:transparent;border:1px solid var(--gold-dim);col
   <div id="mapaContent">
   <div class="small muted" id="mapaWrapNote" style="display:none;margin-bottom:8px;">🌐 <b>Mapa circular</b> (manual §2.14.8): as colunas dão a volta — o que sai pelo lado oeste reaparece a este. Todos os hexágonos têm 6 vizinhos e as distâncias contam-se pelo caminho mais curto, mesmo através da costura. Hexágonos de mar na costura que toquem em terra são costeiros. Nómadas: um movimento de 2 hexágonos do acampamento precisa de um hexágono de terra livre no meio, também através da costura.</div>
   <div class="mobileWarn" id="mapaMobileWarn" style="display:none;background:#4a2a2a;border:1px solid #e87a7a;border-radius:8px;padding:8px 10px;font-size:.78rem;color:#ffb4b4;margin-bottom:10px;">⚠ Ecrã pequeno detetado — o zoom com dois dedos pode não se comportar tão bem aqui como no computador; usa o scroll normal e os botões +/− se precisares.</div>
+  <div class="flexrow" style="margin-bottom:8px;">
+    <button id="map3dBtn" type="button" class="act secondary" title="Vista tridimensional deste mapa — só de leitura, com o mesmo nevoeiro de guerra do mapa plano">🧊 Vista 3D</button>
+    <button id="map3dFsBtn" type="button" class="act secondary" style="display:none;" title="Preencher o ecrã com o mapa (Esc para sair)">⛶ Ecrã inteiro</button>
+    <span class="small muted" id="map3dMsg"></span>
+  </div>
+  <div id="map3dWrap" class="card" style="display:none;padding:0;height:72vh;min-height:360px;overflow:hidden;background:#0d1117;"></div>
+  <div class="small muted" id="map3dCredits" style="display:none;margin:-4px 0 8px;">Vista 3D: three.js (MIT) e os modelos/ícones do jogo — ícones de game-icons.net (CC BY 3.0: Delapouite, Pepijn Poolman); modelos Kenney (CC0). Em mapas circulares, a vista 3D não junta as bordas (a costura este↔oeste aparece como duas bordas).</div>
   <div class="layout" style="display:flex;flex-direction:column;gap:12px;">
     <div class="card" id="mapaMapcard" style="width:100%;padding:8px;position:relative;">
       <div style="position:absolute;top:14px;right:14px;display:flex;flex-direction:column;gap:4px;z-index:5;">
@@ -1113,12 +1120,13 @@ let STATE = null;
 // APP_VERSION: sobe isto (e o CACHE_NAME correspondente em sw.js) sempre que publicares uma versão nova no GitHub.
 // É o que aparece no canto superior direito da app — se não mudar depois de um deploy, o browser ainda está
 // a servir a cache antiga do service worker.
-const APP_VERSION = 'v4.1 · 2026-10-15';
+const APP_VERSION = 'v4.2 · 2026-10-15';
 document.getElementById('appVersionBadge').textContent = APP_VERSION.split(' · ')[0];
 document.getElementById('appVersionBadge').title = 'Versão do painel: '+APP_VERSION;
 
 const SEED = {"kingdom_id": null, "kingdom_name": "", "race": "", "resources": {"food": 0, "gold": 0, "iron": 0, "horses": 0, "wood": 0, "stone": 0}, "opinion": 0, "taxRate": 0, "characters": [], "candidate_pool": [], "market_prices": {"food": 8, "iron": 12, "horses": 20, "wood": 5, "stone": 7}, "hexes": [], "turn": 0, "armies": [], "fleets": [], "events": [], "diplomacy": {}, "map_kingdoms": [], "vassal_of": null, "vassals": []};
 
+let MAP3D = null;   // dados do mapa para a vista 3D — só em memória (nunca persistidos)
 function loadState(raw){
   // raw pode ser um relatório completo (com map_state) ou já o formato reduzido "seed"
   let s;
@@ -1144,10 +1152,19 @@ function loadState(raw){
       wrap: {cols: !!(raw.map_state.wrap&&raw.map_state.wrap.cols), rows: !!(raw.map_state.wrap&&raw.map_state.wrap.rows)},
     };
   } else { s = raw; s.turn = s.turn ?? 0; s.events = s.events||[]; s.diplomacy = s.diplomacy||{}; s.map_kingdoms = s.map_kingdoms||[]; s.conquered_hexes = s.conquered_hexes||[]; s.lost_hexes = s.lost_hexes||[]; s.mapHexes = s.mapHexes||[]; s.lastOrders = s.lastOrders||null; }
+  MAP3D = null;
+  if(raw.map_state){
+    // mesmo formato que o documento 3D do jogo usa para um relatório (fog view, só as tuas forças) — ver normalise() em mapa3d.html
+    const ks3 = raw.kingdom_state||{}, kid3 = raw.kingdom_id, kd3 = [...(raw.map_state.kingdoms||[])];
+    if(!kd3.some(k=>k.id===kid3)) kd3.push({id:kid3,name:raw.kingdom_name,color:raw.kingdom_color,race:raw.kingdom_race});
+    MAP3D = {mode:`${raw.kingdom_name||'Reino'} · turno ${raw.turn}`, cols:raw.map_state.cols, rows:raw.map_state.rows, hexes:raw.map_state.hexes, kingdoms:kd3,
+      forces:[...(ks3.armies||[]).map(f=>({type:'army',kid:kid3,f})), ...(ks3.fleets||[]).map(f=>({type:'fleet',kid:kid3,f}))], shieldBase:'images/shields/'};
+  }
   STATE = s;
   computeDiff();
   saveDetailedSnapshot();
   render();
+  if(window.__map3dRefresh) window.__map3dRefresh();
 }
 
 /* ============================== DIFF AUTOMÁTICO ============================== */
@@ -3822,6 +3839,70 @@ const Manual = (function(){
   return { init, open:(id)=>{ init(); if(data) openSection(id); } };
 })();
 
+/* ============================== VISTA 3D (documento extraído do player_page: mapa3d.html) ============================== */
+const Map3D = (function(){
+  let on=false, frame=null, obs=null, visible=true;
+  const el=id=>document.getElementById(id);
+  function send(keep){
+    const w = frame && frame.contentWindow;
+    if(!w || !w.show3D || !MAP3D) return false;
+    try{ w.show3D(MAP3D, !!keep); }catch(e){ el('map3dMsg').textContent='Não consegui desenhar a vista 3D: '+(e&&e.message||e); return false; }
+    return true;
+  }
+  function fail(msg){ el('map3dMsg').textContent = msg||'A vista 3D não arrancou (o dispositivo pode não suportar WebGL).'; }
+  function apply(){
+    el('map3dBtn').classList.toggle('active', on);
+    el('map3dWrap').style.display = on ? '' : 'none';
+    el('map3dCredits').style.display = on ? '' : 'none';
+    el('mapaMapcard').style.display = on ? 'none' : '';
+    el('mapaSidepanel').style.display = on ? 'none' : '';
+    el('map3dBtn').textContent = on ? '🗺 Mapa plano' : '🧊 Vista 3D';
+    el('map3dFsBtn').style.display = (on && el('map3dWrap').requestFullscreen) ? '' : 'none';
+  }
+  function toggle(){
+    if(!MAP3D){ el('map3dMsg').textContent='Carrega primeiro um relatório com mapa — a vista 3D desenha o mesmo mapa do plano.'; return; }
+    el('map3dMsg').textContent='';
+    on=!on; apply();
+    if(!on) return;
+    const wrap=el('map3dWrap');
+    if(frame){ // já existe: se o contexto gráfico se perdeu ou falhou, refaz; senão só reenvia
+      const w=frame.contentWindow;
+      if((w && w.__detail3d && w.__detail3d().ctx) || (w && w.__3dCrashed)){ if(obs) obs.disconnect(); frame.remove(); frame=null; obs=null; }
+      else { send(true); if(w&&w.pause3D) w.pause3D(false); return; }
+    }
+    frame=document.createElement('iframe');
+    frame.title='Mapa 3D'; frame.style.cssText='width:100%;height:100%;border:0;display:block;';
+    frame.addEventListener('load', ()=>{
+      let n=300, errTicks=0;
+      (function wait(){
+        const w=frame && frame.contentWindow; if(!w) return;
+        if(w.show3D){ send(false); if(w.pause3D) w.pause3D(!visible); }
+        else if((w.__3dErr && ++errTicks>10) || n--<=0) fail(w.__3dErr);
+        else setTimeout(wait,100);
+      })();
+    });
+    frame.src='mapa3d.html';
+    wrap.appendChild(frame);
+    if(window.IntersectionObserver){
+      obs=new IntersectionObserver(es=>{ visible=es[es.length-1].isIntersecting; const w=frame&&frame.contentWindow; if(w&&w.pause3D) w.pause3D(!visible); });
+      obs.observe(frame);
+    }
+  }
+  function fs(){
+    const w=el('map3dWrap');
+    if(document.fullscreenElement){ document.exitFullscreen(); } else if(w.requestFullscreen){ w.requestFullscreen().catch(()=>{}); }
+  }
+  function refresh(){ if(on) send(true); }          // relatório novo carregado com a vista aberta
+  function setTabVisible(v){ visible=v; const w=frame&&frame.contentWindow; if(w&&w.pause3D) w.pause3D(!v); }   // separador Mapa escondido → para o desenho
+  function init(){
+    el('map3dBtn').addEventListener('click', toggle);
+    el('map3dFsBtn').addEventListener('click', fs);
+  }
+  return {init,refresh,setTabVisible};
+})();
+Map3D.init();
+window.__map3dRefresh = Map3D.refresh;
+
 /* ============================== TABS ============================== */
 document.getElementById('tabnav').addEventListener('click', e=>{
   const btn = e.target.closest('button'); if(!btn) return;
@@ -3832,6 +3913,7 @@ document.getElementById('tabnav').addEventListener('click', e=>{
   // O Mapa só sabe o espaço real que tem depois de ficar mesmo visível (display:block) —
   // reajusta a seguir a esse momento, não no carregamento de dados (que pode acontecer com a aba escondida).
   if(btn.dataset.tab==='manual') Manual.init();
+  Map3D.setTabVisible(btn.dataset.tab==='mapa');
   if(btn.dataset.tab==='mapa' && window.MapaView) requestAnimationFrame(()=>requestAnimationFrame(window.MapaView.refit));
 });
 

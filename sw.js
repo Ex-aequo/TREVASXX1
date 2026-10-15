@@ -1,7 +1,7 @@
-// Service worker do painel TREVASXXI — cache offline de um único ficheiro estático.
+// Service worker do painel TREVASXXI — cache offline de ficheiros estáticos.
 // Sem chamadas de rede próprias: o painel não depende de nenhuma API externa.
-const CACHE_NAME = 'trevasxxi-v29';
-const ASSETS = ['./', './index.html', './manual_pt.json', './manifest.json', './icon-192.png', './icon-512.png'];
+const CACHE_NAME = 'trevasxxi-v30';
+const ASSETS = ['./', './index.html', './manual_pt.json', './mapa3d.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -20,10 +20,20 @@ self.addEventListener('activate', (event) => {
 });
 
 // Cache-first: funciona offline assim que a primeira visita tiver corrido.
-// Se atualizares o index.html no GitHub, sobe também a versão do CACHE_NAME (ex.: 'trevasxxi-v2')
-// para forçar os browsers a irem buscar a versão nova em vez de servirem a antiga da cache.
+// Os escudos da vista 3D (images/shields/, ~170 ficheiros, 5 MB no total) NÃO são pré-guardados:
+// guardam-se à medida que a vista 3D os pede, e só os dos reinos do teu mapa.
+// Se atualizares ficheiros no GitHub, sobe também a versão do CACHE_NAME para forçar os browsers a irem buscar a versão nova.
 self.addEventListener('fetch', (event) => {
   event.respondWith(
-    caches.match(event.request).then((cached) => cached || fetch(event.request))
+    caches.match(event.request).then((cached) => {
+      if (cached) return cached;
+      return fetch(event.request).then((resp) => {
+        if (resp && resp.ok && /\/images\/shields\//.test(event.request.url)) {
+          const copy = resp.clone();
+          caches.open(CACHE_NAME).then((c) => c.put(event.request, copy));
+        }
+        return resp;
+      });
+    })
   );
 });
