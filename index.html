@@ -136,6 +136,29 @@ button.act.secondary{background:transparent;border:1px solid var(--gold-dim);col
 .tag-bad{color:#d47f7f;font-weight:bold;}
 .hr{height:1px;background:var(--border);margin:10px 0;}
 .rangebar{font-size:.75rem;color:var(--text-dim);}
+
+/* ---- Manual ---- */
+.manual-layout{display:grid;grid-template-columns:minmax(220px,300px) 1fr;gap:12px;align-items:start;}
+.manual-side{position:sticky;top:8px;max-height:calc(100vh - 24px);overflow:auto;padding:10px;margin-bottom:0;}
+.manual-body{min-width:0;margin-bottom:0;line-height:1.55;font-size:.92rem;}
+.manual-body h3{font-size:1.05rem;border-bottom:1px solid var(--border);padding-bottom:4px;margin:22px 0 8px;color:var(--gold);}
+.manual-body h4{font-size:.95rem;margin:18px 0 6px;color:var(--gold);}
+.manual-body h5.partline{font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;color:var(--text-dim);margin:0 0 4px;}
+.manual-body p{margin:6px 0;} .manual-body li{margin:3px 0;}
+.manual-body blockquote{margin:10px 0;padding:6px 12px;border-left:3px solid var(--gold-dim);background:var(--bg2);border-radius:0 6px 6px 0;}
+.manual-body code{background:var(--bg2);padding:1px 5px;border-radius:4px;font-size:.85em;}
+.mtbl{overflow-x:auto;margin:8px 0;} .manual-body table{border-collapse:collapse;font-size:.82rem;min-width:50%;}
+.manual-body th,.manual-body td{border:1px solid var(--border);padding:4px 8px;text-align:left;vertical-align:top;}
+.manual-body th{background:var(--panel2);}
+.manual-body a.xref{color:var(--gold);cursor:pointer;text-decoration:underline dotted;}
+.manual-body mark,.mres mark{background:rgba(199,172,116,.45);color:inherit;border-radius:2px;padding:0 1px;}
+.mtoc-part{font-weight:600;font-size:.8rem;margin:10px 0 3px;color:var(--gold);cursor:pointer;}
+.mtoc-item{display:block;width:100%;text-align:left;background:none;border:none;color:var(--text);padding:3px 6px;font-size:.8rem;border-radius:5px;cursor:pointer;}
+.mtoc-item:hover,.mtoc-item.active{background:var(--panel2);color:var(--gold);}
+.mres{display:block;width:100%;text-align:left;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:7px 9px;margin-bottom:6px;color:var(--text);cursor:pointer;font-size:.8rem;}
+.mres:hover{border-color:var(--gold-dim);}
+.mres b{color:var(--gold);} .mres .snip{display:block;margin-top:3px;color:var(--text-dim);}
+@media (max-width:800px){ .manual-layout{grid-template-columns:1fr;} .manual-side{position:static;max-height:260px;} }
 </style>
 </head>
 <body>
@@ -172,6 +195,8 @@ button.act.secondary{background:transparent;border:1px solid var(--gold-dim);col
   <div class="navdivider"></div>
   <button data-tab="alvos">🎯 Registo de Alvos</button>
   <button data-tab="balanco">⚖ Balanço</button>
+  <div class="navdivider"></div>
+  <button data-tab="manual">📖 Manual</button>
 </nav>
 
 <div class="wrap">
@@ -711,6 +736,23 @@ button.act.secondary{background:transparent;border:1px solid var(--gold-dim);col
   </div>
 </section>
 
+<!-- MANUAL PT -->
+<section class="tab" id="tab-manual">
+  <div class="card">
+    <h2>📖 Manual do Jogo <span class="badge" id="manualVersionBadge" style="vertical-align:middle;margin-left:6px;"></span></h2>
+    <p class="small muted">Tradução para português europeu do manual oficial, com os termos de jogo em inglês entre parênteses. Em caso de dúvida, o manual oficial em inglês prevalece. A pesquisa ignora acentos e maiúsculas.</p>
+    <div class="flexrow" style="margin-top:8px;">
+      <input type="search" id="manualSearch" placeholder="Pesquisar no manual (ex.: guarnição, garrison, 2.13.7, fator de morte)…" style="flex:1;min-width:220px;font-size:.95rem;padding:9px 11px;" autocomplete="off">
+      <button id="manualClear">Limpar</button>
+    </div>
+    <div class="small muted" id="manualStatus" style="margin-top:6px;"></div>
+  </div>
+  <div class="manual-layout">
+    <aside class="manual-side card" id="manualSide"></aside>
+    <article class="manual-body card" id="manualBody"><p class="muted">A carregar o manual…</p></article>
+  </div>
+</section>
+
 <!-- ORDENS ENVIADAS -->
 <section class="tab" id="tab-ordens">
   <div class="card">
@@ -1071,7 +1113,7 @@ let STATE = null;
 // APP_VERSION: sobe isto (e o CACHE_NAME correspondente em sw.js) sempre que publicares uma versão nova no GitHub.
 // É o que aparece no canto superior direito da app — se não mudar depois de um deploy, o browser ainda está
 // a servir a cache antiga do service worker.
-const APP_VERSION = 'v4.0 · 2026-10-15';
+const APP_VERSION = 'v4.1 · 2026-10-15';
 document.getElementById('appVersionBadge').textContent = APP_VERSION.split(' · ')[0];
 document.getElementById('appVersionBadge').title = 'Versão do painel: '+APP_VERSION;
 
@@ -3642,6 +3684,144 @@ function render(){
   renderOrdersUploadHandlers();
 }
 
+/* ============================== MANUAL (pt_PT, com pesquisa) ============================== */
+const Manual = (function(){
+  let data=null, loading=false, idx=null, groups=[], groupOf={}, current=null;
+  const el = id=>document.getElementById(id);
+  const fold = (str)=>{ let o=''; for(const c of str){ const f=c.normalize('NFD').replace(/[̀-ͯ]/g,''); o += f.length===1 ? f.toLowerCase() : (f[0]||c).toLowerCase(); } return o; };
+  const esc = t=>t.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const stripTags = h=>{ const d=document.createElement('div'); d.innerHTML=h; return (d.textContent||'').replace(/\s+/g,' ').trim(); };
+
+  function topKey(sec){
+    if(sec.level<=0) return sec.id;
+    const m = String(sec.num).match(/^(\d+\.\d+[a-z]?)/);
+    return m ? 's'+m[1] : sec.id;
+  }
+  function build(){
+    groups=[]; groupOf={}; idx=[];
+    let part=null;
+    data.sections.forEach(sec=>{
+      const key=topKey(sec);
+      if(sec.level===0){ part={id:sec.id,title:sec.num+' — '+sec.title,groups:[]}; groups.push(part); }
+      let g = groupOf[key];
+      if(!g){ g={key,part:part?part.title:'',items:[],head:sec}; groupOf[key]=g; if(part&&sec.level>0) part.groups.push(g); }
+      g.items.push(sec); groupOf[sec.id]=g;
+      const text = stripTags(sec.html);
+      idx.push({sec,text,ftext:fold(text),ftitle:fold(sec.num+' '+sec.title)});
+    });
+  }
+  function load(){
+    if(data||loading) return;
+    loading=true;
+    fetch('manual_pt.json').then(r=>{ if(!r.ok) throw new Error(r.status); return r.json(); }).then(d=>{
+      data=d; build();
+      el('manualVersionBadge').textContent = 'manual '+(d.version||'');
+      renderToc(); 
+      let last=null; try{ last=localStorage.getItem('trevasxxi_manual_last'); }catch(e){}
+      openSection(last && groupOf[last] ? last : 's1.1');
+      onQuery();
+    }).catch(()=>{
+      el('manualBody').innerHTML='<p class="bad">Não consegui carregar o manual (<code>manual_pt.json</code>). Se estás offline, abre o painel uma vez com ligação à internet para o guardar no dispositivo.</p>';
+    }).finally(()=>{ loading=false; });
+  }
+  function renderToc(){
+    let h='';
+    groups.forEach(pt=>{
+      h+=`<div class="mtoc-part">${esc(pt.title)}</div>`;
+      pt.groups.forEach(g=>{ h+=`<button class="mtoc-item" data-sec="${g.head.id}">${esc(g.head.num)} ${esc(g.head.title)}</button>`; });
+    });
+    el('manualSide').innerHTML=h; markActive();
+  }
+  function markActive(){
+    document.querySelectorAll('#manualSide .mtoc-item').forEach(b=>b.classList.toggle('active', !!current && groupOf[b.dataset.sec]===groupOf[current]));
+  }
+  function highlight(root, terms){
+    if(!terms.length) return null;
+    const walker=document.createTreeWalker(root,4); // SHOW_TEXT
+    const nodes=[]; let n; while((n=walker.nextNode())) nodes.push(n);
+    let first=null;
+    nodes.forEach(node=>{
+      const txt=node.nodeValue, f=fold(txt); const hits=[];
+      terms.forEach(t=>{ let i=f.indexOf(t); while(i>=0){ hits.push([i,i+t.length]); i=f.indexOf(t,i+t.length); } });
+      if(!hits.length) return;
+      hits.sort((a,b)=>a[0]-b[0]);
+      const merged=[]; hits.forEach(h=>{ const l=merged[merged.length-1]; if(l&&h[0]<=l[1]) l[1]=Math.max(l[1],h[1]); else merged.push(h.slice()); });
+      const frag=document.createDocumentFragment(); let pos=0;
+      merged.forEach(([a,b])=>{
+        if(a>pos) frag.appendChild(document.createTextNode(txt.slice(pos,a)));
+        const m=document.createElement('mark'); m.textContent=txt.slice(a,b); frag.appendChild(m); if(!first) first=m; pos=b;
+      });
+      if(pos<txt.length) frag.appendChild(document.createTextNode(txt.slice(pos)));
+      node.parentNode.replaceChild(frag,node);
+    });
+    return first;
+  }
+  function openSection(id, terms){
+    const g=groupOf[id]; if(!g) return;
+    current=id;
+    try{ localStorage.setItem('trevasxxi_manual_last', id); }catch(e){}
+    let h = g.part ? `<h5 class="partline">${esc(g.part)}</h5>` : '';
+    g.items.forEach(sec=>{
+      const tag = sec.level<=2 ? 'h3' : 'h4';
+      h+=`<${tag} id="m-${sec.id}">${esc(sec.num)} ${esc(sec.title)}</${tag}>${sec.html}`;
+    });
+    const body=el('manualBody'); body.innerHTML=h; markActive();
+    terms = terms||[];
+    const firstMark = highlight(body, terms);
+    const target = document.getElementById('m-'+id);
+    const scrollTo = firstMark || target;
+    if(scrollTo && scrollTo.scrollIntoView) scrollTo.scrollIntoView({block:'start'});
+    else if(body.scrollIntoView) body.scrollIntoView();
+  }
+  function snippet(r, terms){
+    const t=r.text, f=r.ftext; let at=-1;
+    for(const x of terms){ const i=f.indexOf(x); if(i>=0 && (at<0||i<at)) at=i; }
+    if(at<0) return '';
+    const a=Math.max(0,at-60), b=Math.min(t.length,at+140);
+    let s=esc(t.slice(a,b)); 
+    // realce simples no excerto (por posições dos termos no texto normalizado)
+    const fs=f.slice(a,b); const marks=[];
+    terms.forEach(x=>{ let i=fs.indexOf(x); while(i>=0){ marks.push([i,i+x.length]); i=fs.indexOf(x,i+x.length); } });
+    marks.sort((p,q)=>p[0]-q[0]);
+    let out='',pos=0; const raw=t.slice(a,b);
+    marks.forEach(([p,q])=>{ if(p<pos) return; out+=esc(raw.slice(pos,p))+'<mark>'+esc(raw.slice(p,q))+'</mark>'; pos=q; });
+    out+=esc(raw.slice(pos));
+    return (a>0?'…':'')+out+(b<t.length?'…':'');
+  }
+  function onQuery(){
+    if(!data) return;
+    const q=el('manualSearch').value.trim();
+    if(!q){ renderToc(); el('manualStatus').textContent=''; return; }
+    const terms=fold(q).split(/\s+/).filter(Boolean);
+    const res=[];
+    idx.forEach(r=>{
+      if(!terms.every(t=>r.ftext.indexOf(t)>=0 || r.ftitle.indexOf(t)>=0)) return;
+      let score=0; terms.forEach(t=>{ if(r.ftitle.indexOf(t)>=0) score+=20; if(r.sec.num===q || ('s'+r.sec.num)===q) score+=100; let i=-1,c=0; while((i=r.ftext.indexOf(t,i+1))>=0 && c<30) c++; score+=c; });
+      res.push({r,score});
+    });
+    res.sort((a,b)=>b.score-a.score);
+    el('manualStatus').textContent = res.length ? `${res.length} secç${res.length===1?'ão':'ões'} com "${q}"${res.length>60?' — a mostrar as 60 melhores':''}` : `Sem resultados para "${q}".`;
+    el('manualSide').innerHTML = res.slice(0,60).map(({r})=>`<button class="mres" data-sec="${r.sec.id}"><b>§${esc(r.sec.num)}</b> ${esc(r.sec.title)}<span class="snip">${snippet(r,terms)}</span></button>`).join('') || '<p class="small muted">Sem resultados. Tenta outra palavra (a pesquisa ignora acentos), ou o termo em inglês.</p>';
+  }
+  function init(){
+    if(init.done) return; init.done=true;
+    let timer=null;
+    el('manualSearch').addEventListener('input', ()=>{ clearTimeout(timer); timer=setTimeout(onQuery,150); });
+    el('manualClear').addEventListener('click', ()=>{ el('manualSearch').value=''; onQuery(); });
+    el('manualSide').addEventListener('click', e=>{
+      const b=e.target.closest('[data-sec]'); if(!b) return;
+      const q=el('manualSearch').value.trim();
+      openSection(b.dataset.sec, q? fold(q).split(/\s+/).filter(Boolean) : []);
+    });
+    el('manualBody').addEventListener('click', e=>{
+      const a=e.target.closest('a.xref'); if(!a) return;
+      e.preventDefault(); openSection(a.dataset.sec);
+    });
+    load();
+  }
+  return { init, open:(id)=>{ init(); if(data) openSection(id); } };
+})();
+
 /* ============================== TABS ============================== */
 document.getElementById('tabnav').addEventListener('click', e=>{
   const btn = e.target.closest('button'); if(!btn) return;
@@ -3651,6 +3831,7 @@ document.getElementById('tabnav').addEventListener('click', e=>{
   document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
   // O Mapa só sabe o espaço real que tem depois de ficar mesmo visível (display:block) —
   // reajusta a seguir a esse momento, não no carregamento de dados (que pode acontecer com a aba escondida).
+  if(btn.dataset.tab==='manual') Manual.init();
   if(btn.dataset.tab==='mapa' && window.MapaView) requestAnimationFrame(()=>requestAnimationFrame(window.MapaView.refit));
 });
 
