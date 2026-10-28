@@ -41,7 +41,7 @@ O separador **Kingdom** da Página do Jogador tem também um botão **🖨 Print
 
 4\. Os jogadores emitem ordens e exportam o seu ficheiro de ordens. *(Um turno a meio pode ser posto de parte: 💾 TEMP SAVE na barra superior grava um \`draft\_\<Kingdom\>\_turn\<N\>.json\` com todas as ordens em fila até ao momento — a primeira gravação pergunta onde o guardar (escolhe a pasta onde mantens a Página do Jogador; o Chrome e o Edge lembram-se dela em todas as gravações e carregamentos seguintes, os outros navegadores usam a pasta Transferências); mais tarde, carrega de novo o relatório do mesmo turno e usa 📂 TEMP LOAD nesse rascunho para retomares exatamente onde ficaste. O rascunho não é um ficheiro de ordens — SUBMIT TURN continua a ter de ir para o GM — e só serve para o reino e o turno em que foi gravado. Também restaura o que as tuas ordens já tinham gasto do mapa: a população que um recrutamento levantou, a tripulação que um navio levou e os colonos que uma fundação enviou, juntamente com os contadores que limitam o recrutamento à parte de um turno. No TEMP LOAD a página volta a verificar a regra de nunca coexistir: uma marcha ou rota guardada pertencente a uma unidade que é membro de uma ligação é descartada com um aviso — um membro segue o seu líder, e um rascunho de uma página mais antiga poderia, de outro modo, plantar no mapa um trajeto fantasma impossível de cancelar. Um rascunho também recorda de que processamento do turno veio o seu relatório: se o GM processou esse turno de novo e carregas o rascunho sobre o novo relatório, a página pergunta primeiro —* This draft was made on ANOTHER processing of Turn N… *— porque o rascunho traz de volta as posições e os stocks de exércitos do processamento antigo. Cancelar mantém o relatório que carregaste (planeia a partir dele); OK carrega o rascunho de qualquer forma, e as tuas ordens indicam então ao GM em que processamento foram planeadas)* *(Num telemóvel — na vertical ou na horizontal — a página está organizada para o dedo: o menu é uma faixa no topo que fica no ecrã enquanto deslizas, cada separador abre no seu início, e o texto e os botões têm tamanho adequado ao dedo. Os seletores de ficheiros mostram todos os ficheiros, de modo que um relatório que a tua aplicação de correio guardou com outro nome (\`report\_….json.txt\`) ainda pode ser escolhido; a página verifica o conteúdo e avisa quando um ficheiro não é um relatório. Um computador mantém a disposição habitual; numa janela demasiado estreita para toda a barra superior, a barra passa para uma segunda linha, mantida à direita, de modo que SUBMIT TURN fica no canto superior direito.)* *(Num telemóvel ou tablet, a exportação — e 💾 TEMP SAVE — abre a folha de partilha do sistema em vez de uma transferência. Para o ficheiro de ordens (SUBMIT TURN), envia-o diretamente ao GM por correio ou conversa. Para um rascunho de TEMP SAVE, escolhe Guardar em Ficheiros e conserva-o tu — não é para o GM, e 📂 TEMP LOAD abre-o a partir de Ficheiros. Cancelar a partilha não envia nem guarda nada; carrega de novo no botão. Num ecrã tátil, toca num botão a cinzento (ou prime longamente qualquer botão) para ler porque está desativado ou o que faz — as explicações que um rato mostra ao passar por cima.)*
 
-5\. O GM recolhe todos os ficheiros de ordens e carrega-os no Processador de Turnos juntamente com o estado atual do jogo. *(Dois ficheiros do mesmo reino — um jogador que voltou a exportar — são assinalados na lista de ranhuras assim que são carregados, ficando marcado para manter o submetido mais tarde; o turno não será processado enquanto um deles não for removido.)* *(Cada execução de processamento grava um id no seu \`gm_state\` e em cada relatório, e o ficheiro de ordens traz de volta o id do relatório em que foi planeado. Se processares um turno duas vezes, envia os relatórios da execução cujo \`gm_state\` mantens: um ficheiro de ordens planeado na outra execução é assinalado na lista de ranhuras e no registo — os seus exércitos podem não estar onde as suas ordens esperam. O turno é processado na mesma.)*
+5\. O GM recolhe todos os ficheiros de ordens e carrega-os no Processador de Turnos juntamente com o estado atual do jogo. *(Dois ficheiros do mesmo reino — um jogador que voltou a exportar — são assinalados na lista de ranhuras assim que são carregados, ficando marcado para manter o submetido mais tarde; o turno não será processado enquanto um deles não for removido.)* *(Todos os rumores (rumours) dos ficheiros de ordens carregados aparecem por inteiro na caixa 🗣 RUMOURS TO REVIEW, acima do registo, exatamente como os jogadores os lerão, com o respetivo autor: ✓ PASS ou ✕ STRIKE cada um antes de processar — um rumor com muitas quebras de linha ou caracteres invisíveis é assinalado com ⚠. ⚙ PROCESS TURN pergunta primeiro enquanto houver algum rumor por rever; um ficheiro que o turno vai recusar de qualquer forma fica marcado como recusado e não precisa de revisão (§8.8.7).)* *(Cada execução de processamento grava um id no seu \`gm_state\` e em cada relatório, e o ficheiro de ordens traz de volta o id do relatório em que foi planeado. Se processares um turno duas vezes, envia os relatórios da execução cujo \`gm_state\` mantens: um ficheiro de ordens planeado na outra execução é assinalado na lista de ranhuras e no registo — os seus exércitos podem não estar onde as suas ordens esperam. O turno é processado na mesma.)*
 
 6\. O GM executa o turno. O TP processa todas as fases (phases), gera um relatório por jogador mais um registo do GM.
 
@@ -93,6 +93,8 @@ Quando um jogador relata algo estranho, volta a executar o turno em vez de adivi
 
 - **Mostra como um turno se resolve, não os números exatos.** Os dados são relançados e é usado o Processador de Turnos mais recente, pelo que os números que os teus jogadores receberam serão diferentes.
 
+- **Rumores riscados (Struck rumours).** Os rumores que o GM riscou na execução real só são riscados na repetição se o gm_state_turn\<N+1\>.json dessa execução estiver ao lado do ficheiro de entrada ou for indicado com --strikes \<ficheiro\> — regista qual rumor foi riscado (o reino e uma impressão digital, nunca as palavras). Sem ele, todos os rumores se espalham e são cobrados como foram apresentados, e a ferramenta diz em que caso está.
+
 **1.4 Como Ler Este Manual**
 
 - floor(x) = arredondar para baixo. ceil(x) = arredondar para cima. min(a,b) / max(a,b) = mínimo/máximo de dois valores.
@@ -143,7 +145,7 @@ TREVASXXI não é afiliado, apoiado nem patrocinado por qualquer autor, editor, 
 
 **6. Código de Conduta**
 
-Aderir a uma campanha significa aceitar este Código de Conduta. Há tolerância zero: infringir a regra 6.1 ou 6.2 implica a expulsão da campanha (6.6).
+Aderir a uma campanha significa aceitar este Código de Conduta. Há tolerância zero: infringir a regra 6.1 ou 6.2 implica a expulsão da campanha (6.6). A única exceção é um rumor que o GM risca: o GM decide, consoante a gravidade, o que se segue (6.6).
 
 \##### 6.1 Respeito
 
@@ -152,6 +154,8 @@ Aderir a uma campanha significa aceitar este Código de Conduta. Há tolerância
 - Mantém as disputas fora do jogo fora do jogo. Se algo te incomodar, diz-o ao GM em privado.
 
 - Não publiques mensagens, relatórios ou capturas de ecrã de outro jogador sem o seu consentimento.
+
+- Os rumores que espalhas também seguem estas regras. O GM vê todos os rumores antes de o turno ser processado e pode riscar um que as infrinja: um rumor riscado não se espalha e não custa nada.
 
 \##### 6.2 Jogo limpo
 
@@ -187,7 +191,7 @@ Aderir a uma campanha significa aceitar este Código de Conduta. Há tolerância
 
 - O GM pode atualizar este documento. Os jogadores são informados de cada alteração, e continuar a jogar significa aceitar a versão atualizada.
 
-\##### 6.6 Expulsão Infringir a regra 6.1 ou 6.2 implica a expulsão da campanha, a critério exclusivo do GM, sem aviso e sem recurso.
+\##### 6.6 Expulsão Infringir a regra 6.1 ou 6.2 implica a expulsão da campanha, a critério exclusivo do GM, sem aviso e sem recurso. Para um rumor que o GM risca, o GM decide consoante a gravidade: apenas o risco, ou a expulsão.
 
 Ao aderires a uma campanha de TREVASXXI, confirmas que leste e aceitas este Aviso Legal e Código de Conduta.
 
@@ -213,7 +217,7 @@ Cada hexágono tem:
 
 **Lupa.** O botão 🔍 por baixo de **Fit to map** ativa uma lente redonda que segue o cursor sobre o mapa do reino (teclado: L, e Esc fecha-a). Não aumenta a imagem — volta a desenhar essa parte do mapa com maior ampliação, de modo que o terreno, os ícones de locais e os numerais dos exércitos se mantêm legíveis. Num telemóvel, segue o teu dedo. A lente nunca altera a posição do mapa: desliga-a e ficas exatamente onde estavas.
 
-**Vista 3D.** O botão **🧊 3D VIEW** no fim da linha de camadas do mapa do reino troca o mapa por uma vista tridimensional do mesmo terreno; carrega nele outra vez para regressar. Num telemóvel (um ecrã com 700 píxeis de largura ou menos) a vista 3D ocupa o ecrã inteiro, com a linha de camadas por cima. Mostra o que o mapa plano te mostra — o mesmo nevoeiro e os mesmos hexágonos recordados, os teus exércitos e frotas onde as tuas ordens em fila os levam, e os exércitos e frotas estrangeiros que o teu reconhecimento revela. Uma força estrangeira aparece como uma companhia ou um navio sob o escudo e o nome do seu reino, e nada mais: a sua força permanece desconhecida, tal como no mapa plano. Passa o cursor sobre um hexágono para ver os detalhes — num ecrã tátil, toca nele. Arrasta para rodar, arrasta com o botão direito para deslocar e usa a roda para ampliar (num ecrã tátil: um dedo roda a vista, dois dedos em pinça ampliam e deslocam), ou usa o painel no ecrã (teclado: WASD ou as setas deslocam, Q/E rodam, R/F inclinam, +/− ampliam, H repõe a vista). Os botões de camada filtram a vista 3D como filtram o mapa plano: com **Terrain** desligado, o terreno mantém o relevo e o mar o seu nível, mas perdem as cores, as árvores e os picos; **Constructions+** mostra apenas os povoados, qualquer cerco à sua volta, as fronteiras dos reinos e os sinais de obras das tuas ordens de povoado em fila, cada povoado com o seu código de construção. Um exército é desenhado como uma companhia de figuras que cresce com os seus soldados — uma figura para um soldado, duas para dois, e a partir de três soldados cerca de uma figura por cada dez (nunca menos de três), até 12 (6 em **Detail: low**) — pelo que mostra o tamanho e a composição, não uma contagem de cabeças: todos os tipos de tropa que contém aparecem enquanto houver espaço (primeiro as máquinas de cerco, como as suas máquinas; acima do limite os tipos mais pequenos ficam de fora), e um exército ainda sem soldados mostra apenas o seu estandarte. Cada povo constrói e navega no seu próprio estilo, e os povoados de um reino pirata aparecem como refúgios de piratas; todas as frotas navegam no estilo do seu reino, sejam quais forem os cascos que contêm, e as frotas de um reino pirata hasteiam a bandeira negra com a caveira e os ossos cruzados. Um povoado é desenhado com muralha apenas se a tiver. Um hexágono de que só te lembras é desenhado esbatido em sépia, tal como foi visto pela última vez — seja qual for o que o botão **Terrain** diga — e a sua dica diz isso mesmo; um povoado recordado é desenhado com muralha se o seu nível tiver uma, e o seu dono não é recordado. **Labels** esconde as etiquetas de nomes, nunca os sinais de obras; **Detail: low** desliga as sombras e reduz as florestas e as companhias para computadores mais lentos, e um telemóvel ou tablet começa nele, a menos que escolhas o contrário. Um dispositivo cujo navegador não consegue executar gráficos 3D é informado disso e mantém o mapa plano; se um telemóvel recuperar a sua memória gráfica (por mudança de aplicação ou falta de memória), a vista fica em pausa com uma mensagem e regressa por si — ou fecha-a e abre-a de novo. Se a vista parar alguma vez com uma mensagem de erro, recarrega a página; o mapa plano não é afetado. A vista serve apenas para observar: as ordens dão-se no mapa plano e nas outras vistas. Os escudos dos reinos vêm da pasta de imagens da página, tal como os do mapa plano.
+**Vista 3D.** O botão **🧊 3D VIEW** no fim da linha de camadas do mapa do reino troca o mapa por uma vista tridimensional do mesmo terreno; carrega nele outra vez para regressar. Num telemóvel (um ecrã com 700 píxeis de largura ou menos) a vista 3D ocupa o ecrã inteiro, com a linha de camadas por cima. Mostra o que o mapa plano te mostra — o mesmo nevoeiro e os mesmos hexágonos recordados, os teus exércitos e frotas onde as tuas ordens em fila os levam, e os exércitos e frotas estrangeiros que o teu reconhecimento revela. Um exército estrangeiro aparece como figuras encapuzadas e cinzentas sob um estandarte "?", com um aro cinzento tracejado e uma névoa baixa, e uma frota estrangeira como um navio, cada um sob o escudo e o nome do seu reino, e nada mais: a sua força permanece desconhecida, tal como no mapa plano. Cada exército assenta numa placa da cor do seu reino, e o aro da placa mostra a tua relação com esse reino: dourado para os teus exércitos, verde para um aliado, vassalo ou suserano, vermelho para um reino em guerra contigo, cinzento para os restantes — as etiquetas de nome estrangeiras dizem também "ally", "enemy" ou "neutral". Os teus exércitos mostram a sua força com pontos dourados na frente da placa (um abaixo de 100 soldados, dois abaixo de 500, três abaixo de 1,500, quatro a partir de 1,500) e um estandarte mais alto à medida que crescem, e adotam uma formação conforme a postura deste turno: uma coluna ao longo de uma marcha em fila, uma linha de escudos em Defensive, um quadrado compacto em Garrison, de frente para as muralhas com tendas em Siege, uma cunha com escadas em Assault; em Ambush agacham-se à cobertura com o estandarte baixado e sem placa, apenas um aro dourado tracejado, e só tu o vês. Uma marcha em fila é desenhada no chão como um rasto vermelho, como no mapa plano: do hexágono de onde o exército parte, um ponto em cada hexágono que atravessa, e uma seta no hexágono onde é mostrado. Passa o cursor sobre um hexágono para ver os detalhes — num ecrã tátil, toca nele. Arrasta para rodar, arrasta com o botão direito para deslocar e usa a roda para ampliar (num ecrã tátil: um dedo roda a vista, dois dedos em pinça ampliam e deslocam), ou usa o painel no ecrã (teclado: WASD ou as setas deslocam, Q/E rodam, R/F inclinam, +/− ampliam, H repõe a vista). Os botões de camada filtram a vista 3D como filtram o mapa plano: com **Terrain** desligado, o terreno mantém o relevo e o mar o seu nível, mas perdem as cores, as árvores e os picos; **Constructions+** mostra apenas os povoados, qualquer cerco à sua volta, as fronteiras dos reinos e os sinais de obras das tuas ordens de povoado em fila, cada povoado com o seu código de construção. Um exército é desenhado como uma companhia de figuras que cresce com os seus soldados — uma figura para um soldado, duas para dois, e a partir de três soldados cerca de uma figura por cada dez (nunca menos de três), até 12 (6 em **Detail: low**) — pelo que mostra o tamanho e a composição, não uma contagem de cabeças: todos os tipos de tropa que contém aparecem enquanto houver espaço (primeiro as máquinas de cerco, como as suas máquinas; acima do limite os tipos mais pequenos ficam de fora), e um exército ainda sem soldados mostra apenas o seu estandarte. Cada povo constrói e navega no seu próprio estilo, e os povoados de um reino pirata aparecem como refúgios de piratas; todas as frotas navegam no estilo do seu reino, sejam quais forem os cascos que contêm, e as frotas de um reino pirata hasteiam a bandeira negra com a caveira e os ossos cruzados. Um povoado é desenhado com muralha apenas se a tiver. Um hexágono de que só te lembras é desenhado esbatido em sépia, tal como foi visto pela última vez — seja qual for o que o botão **Terrain** diga — e a sua dica diz isso mesmo; um povoado recordado é desenhado com muralha se o seu nível tiver uma, e o seu dono não é recordado. **Labels** esconde as etiquetas de nomes, nunca os sinais de obras; **Detail: low** desliga as sombras e reduz as florestas e as companhias para computadores mais lentos, e um telemóvel ou tablet começa nele, a menos que escolhas o contrário. Um dispositivo cujo navegador não consegue executar gráficos 3D é informado disso e mantém o mapa plano; se um telemóvel recuperar a sua memória gráfica (por mudança de aplicação ou falta de memória), a vista fica em pausa com uma mensagem e regressa por si — ou fecha-a e abre-a de novo. Se a vista parar alguma vez com uma mensagem de erro, recarrega a página; o mapa plano não é afetado. A vista serve apenas para observar: as ordens dão-se no mapa plano e nas outras vistas. Os escudos dos reinos vêm da pasta de imagens da página, tal como os do mapa plano.
 
 **Ecrã inteiro.** O botão **⛶ FULLSCREEN** ao lado de **🧊 3D VIEW** preenche o ecrã com o mapa do reino — a linha de camadas e o mapa, plano ou 3D — e podes alternar entre os dois em ecrã inteiro. Carrega em **✕ EXIT FULLSCREEN** ou em Esc para regressar; o mapa plano mantém a sua posição e ampliação. Os navegadores que não conseguem mostrar um elemento da página em ecrã inteiro, como o Safari no iPhone, não mostram o botão.
 
@@ -262,8 +266,8 @@ A tabela abaixo lista todos os passos **na ordem exata em que o Processador de T
 | Fase 7              | Espiões (Spies)                                                                                                                                                                                                                                                                                                                                                                               |
 | Fase 8              | Diplomacia (Diplomacy) (mudanças de postura)                                                                                                                                                                                                                                                                                                                                                  |
 | Fase 8 · Vassalagem | os juramentos do último turno respondidos (os aceites jurados), renúncia, e depois os juramentos deste turno oferecidos; uma guerra entre suserano e vassalo termina o vínculo no momento em que começa, em qualquer fase (resolve-se **antes** das mensagens)                                                                                                                                |
-| Fase 8 · Mensagens  | mensagens, \[CEASEFIRE\], \[TRIBUTE\]                                                                                                                                                                                                                                                                                                                                                         |
-| Fim do turno        | Transferências de Recursos (Resource Transfers) — primeiro as ofertas de caravana do último turno respondidas, depois send_resource + \[TRIBUTE\] (direto / oferta / recusado consoante a posição, §2.8.3)                                                                                                                                                                                     |
+| Fase 8 · Mensagens  | mensagens, \[CEASEFIRE\]; cada \[TRIBUTE\] parte aqui, à medida que é lido (direto / oferta / recusado consoante a posição, §2.8.3)                                                                                                                                                                                                                                                                                                                                                         |
+| Fim do turno        | Transferências de Recursos (Resource Transfers) — primeiro são servidas as ofertas de caravana aceites do último turno, depois os send_resource deste turno (direto / oferta / recusado consoante a posição, §2.8.3). As caravanas \[TRIBUTE\] deste turno já partiram (Fase 8 · Mensagens)                                                                                                                                                                                     |
 | Fim do turno        | Varrimentos de forças vazias e de integridade de ligações (tudo o que esvazie uma força: nenhum exército sem soldados nem frota sem cascos, e nenhuma ligação através de uma relação quebrada, sobrevive ao turno)                                                                                                                                                                            |
 | Fim do turno        | Experiência de Forja (Forge Experience) (exércitos Anões)                                                                                                                                                                                                                                                                                                                                     |
 | Fase 10             | Mexericos e Rumores (Gossip & Rumours) — um rumor anónimo por reino com um Mestre de Espiões, para todos os reinos (§8.8.7)                                                                                                                                                                                                                                                                   |
@@ -346,11 +350,11 @@ Se algum hexágono tiver um contador de Progresso de Cerco que **exceda** o seu 
 
 - Todos os exércitos do **dono** das muralhas que estejam dentro **rendem-se**: todas as unidades são destruídas. Cada um deles é uma Guarnição (Garrison) cercada, seja qual for a ordem que deu (§2.13.7). O exército de outro reino lá dentro — mesmo um em Garrison — não é a guarnição do dono: é expulso (abaixo). O sitiante apodera-se do arsenal rendido (60–80% do seu ferro e cavalos, §2.13.11).
 
-- Os outros exércitos defensores nesse hexágono — na prática apenas um exército do dono que esteja fora das suas próprias muralhas (qualquer exército do dono que não esteja em Garrison), pois todos os do dono lá dentro são Guarnições cercadas — retiram (retreat) (até 3 saltos por terra — nunca atravessando o mar, §5.5.6), abandonando os seus engenhos (§5.8.6). **Se não for encontrado hexágono de retirada, são abatidos na debandada, exatamente como o exército de um terceiro em guerra com o sitiante** (o ponto abaixo): o sitiante despoja os destroços como faria a um arsenal rendido (§2.13.11), e sofres uma penalização de **−2 a −4 de opinião** pelo exército perdido, somada à do próprio povoado. Em qualquer dos casos o destino do exército é comunicado: um cartão para a debandada, ou um cartão para o recuo.
+- Os outros exércitos defensores nesse hexágono — na prática apenas um exército do dono que esteja fora das suas próprias muralhas (qualquer exército do dono que não esteja em Garrison), pois todos os do dono lá dentro são Guarnições cercadas — retiram (retreat) (até 3 saltos por terra — nunca atravessando o mar, §5.5.6), abandonando os seus engenhos (§5.8.6). **Se não for encontrado hexágono de retirada, são abatidos na debandada, exatamente como o exército de um terceiro em guerra com o sitiante** (o ponto abaixo): o sitiante despoja os destroços como faria a um arsenal rendido (§2.13.11), e sofres uma penalização de **−2 a −4 de opinião** pelo exército perdido, somada à do próprio povoado (ambas contam para o limite de derrotas de −8, §8.5.3). Em qualquer dos casos o destino do exército é comunicado: um cartão para a debandada, ou um cartão para o recuo.
 
 - **Ninguém dentro das muralhas é espectador quando elas caem** (§5.6): todos os reinos lá dentro estão em guerra com o sitiante, pelo que o seu exército recua pelas regras de retirada acima ou é abatido se encurralado — nunca *"holds its camp"*, nunca uma última resistência em tempo de paz.
 
-- O exército de um **terceiro reino** acampado **fora** das muralhas do hexágono caído que seja **aliado mútuo, vassalo ou suserano do sitiante permanece** — o terreno pertence agora a um amigo seu, e recebe o cartão *"holds its camp"* (a mesma regra de um hexágono assaltado, §5.11). Qualquer outro exército de um terceiro reino é **expulso** — recua pelas mesmas regras de retirada e o seu dono é notificado. Se não tiver para onde fugir, a sua relação com o sitiante decide: um reino **em guerra** com o sitiante é **abatido na debandada** — o sitiante despoja os seus destroços (§2.13.11), e o seu dono sofre a penalização normal de opinião do perdedor (−2 a −4); um reino **em paz** com ele faz antes uma **última resistência**, exatamente como quando as muralhas são assaltadas — declara guerra, combate aí o exército do sitiante, e retoma o terreno se vencer.
+- O exército de um **terceiro reino** acampado **fora** das muralhas do hexágono caído que seja **aliado mútuo, vassalo ou suserano do sitiante permanece** — o terreno pertence agora a um amigo seu, e recebe o cartão *"holds its camp"* (a mesma regra de um hexágono assaltado, §5.11). Qualquer outro exército de um terceiro reino é **expulso** — recua pelas mesmas regras de retirada e o seu dono é notificado. Se não tiver para onde fugir, a sua relação com o sitiante decide: um reino **em guerra** com o sitiante é **abatido na debandada** — o sitiante despoja os seus destroços (§2.13.11), e o seu dono sofre a penalização normal de opinião do perdedor (−2 a −4, dentro do seu limite de derrotas de −8, §8.5.3); um reino **em paz** com ele faz antes uma **última resistência**, exatamente como quando as muralhas são assaltadas — declara guerra, combate aí o exército do sitiante, e retoma o terreno se vencer.
 
 > ***▶ Exemplo — as muralhas caem.** A cidade amuralhada de Aldoria (12,7) tem o Exército I de Aldoria e o Exército II da sua aliada Sylvane. O III de Gruk-Mor, acampado às portas, ordena Siege no turno 5; esse primeiro tique cerca a cidade (progresso 1) e declara guerra também a Sylvane. A partir do turno 6 ambos os exércitos lá dentro estão cercados; nenhum ordena Sally. O progresso sobe 2, 3, 4 (o cartão do defensor diz Collapse imminent!), depois 5 no turno 9 — e na Pré-Fase 4 do turno 9 a cidade cai. O I de Aldoria **rende-se** (um exército cercado é uma Guarnição; Gruk-Mor recupera 60–80% do seu ferro e cavalos). O II de Sylvane, aliado e não guarnição do dono, é **expulso** até 3 hexágonos por terra — ou abatido e despojado se não tiver para onde ir. O III de Gruk-Mor, agora no seu próprio hexágono amuralhado, fica dentro das muralhas.*
 
@@ -364,11 +368,17 @@ Se algum hexágono tiver um contador de Progresso de Cerco que **exceda** o seu 
 
 **2.8 Transferências de Recursos (Resource Transfers) (fim do turno)**
 
-Há duas formas de enviar recursos — **o mesmo sistema subjacente**: o painel **🐪 Shipments → 📦 Send Resources** (ordens send_resource, uma por mercadoria) **e** o símbolo \[TRIBUTE: amount resource\] dentro de uma mensagem diplomática (§8.7). Qualquer um pode enviar **ouro (gold), comida, ferro, cavalos, madeira ou pedra**, deduzidos no **fim do turno**, *depois* de toda a tua própria despesa (manutenção, construção, recrutamento) — apenas o excedente, e parcial se ficares aquém — e transportados por caravana (caravan, §2.8.2) para quem a tua posição permitir (§2.8.3). A página permite **um envio por mercadoria por turno**; se um ficheiro de ordens trouxer mesmo assim vários envios da mesma mercadoria para o mesmo reino, o Processador de Turnos **funde-os numa única caravana** que leva a soma (um cartão de expedição para cada lado, um lançamento de bandidos) — nunca várias.
+Há duas formas de enviar recursos — **o mesmo sistema subjacente**: o painel **🐪 Shipments → 📦 Send Resources** (ordens send_resource, uma por mercadoria) **e** o símbolo \[TRIBUTE: amount resource\] dentro de uma mensagem diplomática (§8.7). Qualquer um pode enviar **ouro (gold), comida, ferro, cavalos, madeira ou pedra**, deduzidos no **fim do turno**, *depois* de toda a tua própria despesa (manutenção, construção, recrutamento e o preço de um rumor, reservado antes de qualquer caravana partir — §8.8.7) — apenas o excedente, e parcial se ficares aquém — e transportados por caravana (caravan, §2.8.2) para quem a tua posição permitir (§2.8.3). A página permite **um envio por mercadoria por turno**; se um ficheiro de ordens trouxer mesmo assim vários envios da mesma mercadoria para o mesmo reino, o Processador de Turnos **funde-os numa única caravana** que leva a soma (um cartão de expedição para cada lado, um lançamento de bandidos). As ofertas aceites do último turno não entram nessa fusão: cada uma parte como a sua própria caravana (§2.8.3).
+
+**Os tributos não se fundem.** Cada mensagem \[TRIBUTE: …\] levanta a sua própria caravana, com o seu próprio lançamento de bandidos — um tributo por mensagem, até 3 mensagens por turno (§8.7). Assim, num só turno um reino pode fazer até **quatro** novos envios da mesma mercadoria para o mesmo reino: um a partir do painel Send Resources e um em cada uma de três mensagens. As ofertas que esse reino aceitou do último turno partem além destes, cada uma como a sua própria caravana — até **oito** caravanas de uma mercadoria para um reino num turno.
+
+> ***▶ Exemplo — oito caravanas.** No último turno eras neutro com um vizinho e enviaste-lhe 100 de pedra a partir do painel e três mensagens \[TRIBUTE: 100 stone\] — quatro ofertas. Neste turno ele aceita as quatro, vocês completam um pacto comercial, e enviam as mesmas quatro outra vez, agora diretamente. Partem oito caravanas de pedra para esse reino neste turno, cada uma com o seu próprio lançamento de bandidos.*
+>
+> ***▶ Exemplo.** Envias 400 de pedra a um aliado a partir do painel e escreves três mensagens ao mesmo aliado, cada uma com \[TRIBUTE: 200 stone\]. Partem quatro caravanas no fim do turno — 400, 200, 200 e 200 de pedra, 1,000 ao todo — cada uma com o seu próprio lançamento de bandidos. Os tributos partem primeiro — as mensagens são lidas antes dos envios do painel — pelo que, com apenas 700 de pedra de excedente, os três tributos levam 600 e a caravana do painel leva os 100 que restam.*
 
 **2.8.1 Devolver terra capturada (Returning captured land) (transferência de hexágono)**
 
-Um reino pode devolver um hexágono ao seu **dono original** — o reino que o detinha no início da campanha — se os dois estiverem numa **aliança mútua** (ambos os lados com postura de Aliança; unilateral é inerte, como em todo o lado). Ordena-o a partir do painel **Shipments → 📦 Send Resources** ("🤝 Return Captured Land", listado automaticamente quando tens hexágonos elegíveis); o hexágono, a sua população e qualquer local de produção mudam de soberano no **fim do turno**, intactos — é uma entrega pacífica, não uma conquista, pelo que não se aplica degradação de conquista. No máximo **um hexágono por reino por turno**.
+Um reino pode devolver um hexágono ao seu **dono original** — o reino que o detinha no início da campanha — se os dois estiverem numa **aliança mútua** (ambos os lados com postura de Aliança; unilateral é inerte, como em todo o lado). Ordena-o a partir do separador **🏰 Constructions** ("🤝 Return Captured Land", no fundo do separador, listado automaticamente quando tens hexágonos elegíveis); o hexágono, a sua população e qualquer local de produção mudam de soberano no **fim do turno**, intactos — é uma entrega pacífica, não uma conquista, pelo que não se aplica degradação de conquista. No máximo **um hexágono por reino por turno**.
 
 Restrições: só o reino original do hexágono o pode alguma vez receber (cada hexágono lembra-se para sempre do seu fundador — nunca pode ser oferecido a mais ninguém, e a terra que era neutra no início da campanha nunca pode ser "devolvida"); capitais, sedes de recrutamento e hexágonos cercados não podem ser cedidos.
 
@@ -411,7 +421,11 @@ Como a posição é lida *depois* da diplomacia da Fase 8, um pacto comercial qu
 
 3\. **Fim do turno N+1 — o resultado.**
 
-- **Aceite:** a caravana parte **com a quantidade total oferecida, ou não parte de todo**. Se no fim desse turno já não tiveres tudo, a oferta fica **nula**: nada é enviado, ambos os lados recebem o cartão *Caravan offer void*, não é mostrada qualquer distância e o recetor não é informado de quanto tinhas. O recetor concordou com *aquela* dádiva, por isso um remetente não pode oferecer 5,000 e enviar 1 só para ler o comprimento da estrada. Se a quantidade total sair, é uma caravana normal a partir daqui (§2.8.2): ambos os lados recebem os cartões de despacho/chegada, e passas a saber o comprimento da estrada. Foi isso que o recetor aceitou ao aceitar.
+- **Aceite:** a caravana parte **com a quantidade total oferecida, ou não parte de todo**. Se já não tiveres tudo quando for servida no fim desse turno, a oferta fica **nula**: nada é enviado, ambos os lados recebem o cartão *Caravan offer void*, não é mostrada qualquer distância e o recetor não é informado de quanto tinhas. O recetor concordou com *aquela* dádiva, por isso um remetente não pode oferecer 5,000 e enviar 1 só para ler o comprimento da estrada. Se a quantidade total sair, é uma caravana normal a partir daqui (§2.8.2): ambos os lados recebem os cartões de despacho/chegada, e passas a saber o comprimento da estrada. Foi isso que o recetor aceitou ao aceitar.
+
+- **O que parte primeiro.** As tuas mensagens \[TRIBUTE\] desse turno partem durante as Mensagens, **antes** de as ofertas aceites serem servidas; os teus envios do painel partem **depois** delas (§2.3). Um tributo pode, portanto, gastar o armazém de que uma oferta aceite precisa.
+
+> ***▶ Exemplo.** Tens 700 de pedra. Mayaris aceitou a tua oferta de 500 de pedra do último turno, e neste turno escreves três mensagens a Wyrmskar, cada uma com \[TRIBUTE: 200 stone\]. Os três tributos partem primeiro e levam 600; quando a oferta é servida tens 100, pelo que a oferta de 500 de pedra fica **nula** — nada vai para Mayaris. Envia os tributos um turno mais tarde, ou a partir do painel, para manter a oferta.*
 
 - **Recusada:** nada se move; ambos os lados recebem um cartão.
 
@@ -419,7 +433,7 @@ Como a posição é lida *depois* da diplomacia da Fase 8, um pacto comercial qu
 
 - **Guerra entretanto:** se os dois reinos estiverem em guerra no fim do turno N+1, uma oferta aceite é recusada em ambos os lados.
 
-O símbolo \[TRIBUTE: …\] segue a mesma regra do painel. Um tributo (tribute) a um neutro torna-se uma oferta e mantém a etiqueta 🏛 depois de aceite. Um tributo a um inimigo é recusado. A mensagem em si é entregue na mesma, porque só os bens ficam retidos. O separador Messages avisa-te de ambos os casos quando colocas a mensagem em fila. Se os dois trocarem \[CEASEFIRE\] no mesmo turno, a paz é feita antes de o tributo ser lido, pelo que o tributo sai como oferta em vez de ser recusado.
+O símbolo \[TRIBUTE: …\] segue a mesma regra do painel. Um tributo (tribute) a um neutro torna-se uma oferta e mantém a etiqueta 🏛 depois de aceite. Um tributo a um inimigo é recusado. A mensagem em si é entregue na mesma, porque só os bens ficam retidos. O separador Messages avisa-te de ambos os casos quando colocas a mensagem em fila. Um tributo a um reino com o qual estás em guerra quando as mensagens são lidas é **recusado mesmo que os dois façam a paz com `\[CEASEFIRE\]` nesse mesmo turno**, seja qual for a mensagem que escreveste primeiro — envia-o no turno a seguir à paz. Os envios do painel são lidos no fim do turno, depois da paz, pelo que seguem a nova posição.
 
 > ***▶ Exemplo — um turno, três envios** (reinos inventados). No turno 12, Valdoria envia 500 de ouro a cada um de três reinos:*
 >
@@ -442,6 +456,23 @@ Esta fase corre para cada reino. Todo o rendimento (income) é calculado a parti
 **2.9.1 Crescimento da População (Population Growth)**
 
 Cada hexágono de construção (construction) possuído cresce 1–3% do **limite de população** do seu nível em cada turno, e pára no limite; os hexágonos vazios nunca crescem. Fórmula, limites e o caminho legado dos hexágonos vazios: §3.8. O cartão **👥 Population grew** do relatório (report) indica o ganho do turno e o novo total, e nomeia todos os povoados já no limite do seu nível: estes só voltam a crescer após uma melhoria.
+
+**Emigração (Emigration).** Se a Opinião for **40 ou inferior** no início do turno (a mesma leitura de início de turno da penalização fiscal, §2.9.6), **nenhuma povoação cresce**, e cada povoação perde antes uma parte das pessoas que nela vivem (TP_EMIGRATION_BANDS):
+
+|                   |                                              |
+|-------------------|----------------------------------------------|
+| **Intervalo de Opinião** | **Pessoas que saem de cada povoação, por turno** |
+| 41–100            | nenhuma (crescimento normal)                 |
+| 31–40             | 1%                                           |
+| 21–30             | 2.5%                                         |
+| 11–20             | 5%                                           |
+| 0–10              | 10%                                          |
+
+left = max(1, floor(pop × share / 100)) por povoação com população
+
+As pessoas que saem perdem-se; nenhum outro reino as ganha. Saem antes de o imposto e a produção dos locais deste turno serem contados, pelo que o mesmo turno já cobra a menos gente. Uma povoação com população perde sempre pelo menos 1 pessoa, por isso uma povoação pequena pode esvaziar-se por completo, e os seus locais deixam então de produzir. Uma povoação tem de atingir o seu teto para ser melhorada (§2.11.7), pelo que um reino nestes escalões não consegue melhorar uma povoação que ainda não esteja cheia. O cartão **👥 People left your kingdom** do relatório substitui o cartão de crescimento e indica o número. Para a travar, sobe a opinião acima de 40: cada turno com uma taxa de imposto abaixo de 5% sobe-a (§2.9.13).
+
+> ***▶ Exemplo — emigração.** Um reino com duas povoações, de 4,000 e de 30 pessoas, começa o turno com Opinião 25 (escalão 21–30, 2.5%). A grande perde floor(4,000 × 2.5 / 100) = 100 pessoas; a pequena perderia floor(30 × 2.5 / 100) = 0, pelo que perde o mínimo de 1. Nenhuma cresce. O imposto deste turno é contado sobre 3,900 + 29 = 3,929 pessoas, e depois aplica-se a penalização de 30% (§2.9.6).*
 
 **2.9.2 Rendimento do Terreno (Terrain Income)**
 
@@ -481,7 +512,7 @@ Taxa de imposto definida pelo jogador: 1–10 (por omissão 5). **Todas as taxas
 
 rawTax = floor(totalPop × taxRate / 100)
 
-totalPop = soma de todas as populações dos hexágonos possuídos após o crescimento deste turno — e depois de os recrutas deste turno terem sido retirados dela (Pré-Fase 2b, §2.6a): recrutar baixa a base de imposto do mesmo turno.
+totalPop = soma de todas as populações dos hexágonos possuídos após o crescimento ou a emigração (§2.9.1) deste turno — e depois de os recrutas deste turno terem sido retirados dela (Pré-Fase 2b, §2.6a): recrutar baixa a base de imposto do mesmo turno.
 
 **Imposto num relance** — o que cada taxa cobra, quanto isso rende com 25,000 pessoas, e o que faz à opinião (opinion) em cada turno (§2.9.13). Uma opinião baixa fica então com a sua quota PENALTYTAX do que é cobrado (§2.9.6). A coluna do ouro escala com a população; a coluna da opinião é igual para qualquer reino.
 
@@ -496,36 +527,50 @@ totalPop = soma de todas as populações dos hexágonos possuídos após o cresc
 | 6%           | 1,500                       | −2                     |
 | 7%           | 1,750                       | −4                     |
 | 8%           | 2,000                       | −6                     |
-| 9%           | 2,250                       | −8                     |
-| 10%          | 2,500                       | −10                    |
+| 9%           | 2,250                       | −10                    |
+| 10%          | 2,500                       | −15                    |
 
-Mais imposto é sempre mais ouro; o preço é a opinião.
+Num único turno, mais imposto é mais ouro; o preço é a opinião: com 50 ou menos a opinião tira de volta uma parte do imposto, e com 20 ou menos a maior parte (§2.9.6).
 
 > ***▶ Exemplo — imposto, depois a penalização de opinião.** Um reino de 26,000 pessoas mantém 7% de imposto com Opinião 35 no início do turno.*
 >
 > *• **Imposto:** rawTax = floor(26,000 × 7 / 100) = 1,820 de ouro.*
 >
-> *• **Penalização de opinião (§2.9.6):** a Opinião 35 está no escalão 31–40, 4% → penaltyAmt = floor(1,820 × 4 / 100) = 72 → netTax = 1,748 de ouro.*
+> *• **Penalização de opinião (§2.9.6):** a Opinião 35 está no escalão 31–40, 10% → penaltyAmt = floor(1,820 × 10 / 100) = 182 → netTax = 1,638 de ouro.*
 >
-> *• **Opinião (§2.9.13):** manter 7% move a opinião −4 → 31 no turno seguinte. Se o reino tivesse mantido 5%, teria cobrado 1,300 de ouro, pago a mesma penalização de 4% (netTax = 1,248) e mantido a Opinião 35 — 500 de ouro por turno comprados com 4 de opinião por turno, até a opinião chegar ao escalão de penalização seguinte.*
+> *• **Opinião (§2.9.13):** manter 7% move a opinião −4 → 31 no turno seguinte. O mesmo reino com Opinião 55 teria ficado com todo o 1,820 de ouro; com Opinião 15 ficaria apenas com 1,820 − floor(1,820 × 60 / 100) = 728. Manter a taxa leva a opinião para esses escalões. Para voltar a subir, a taxa tem de descer abaixo de 5%.*
 
 **2.9.6 Penalização de Opinião sobre o Imposto (Opinion Penalty on Tax)**
 
-Se a Opinião for **50 ou inferior**, uma parte do rendimento bruto do imposto perde-se (os relatórios designam esta dedução **PENALTYTAX**; repara que exatamente 50 já é penalizado). A quota é lida da tua opinião no **início** do turno, antes de a taxa de imposto deste turno a mover (TP_TAX_PENALTY_BANDS):
+Se a Opinião for **50 ou inferior**, uma parte do rendimento bruto do imposto perde-se (os relatórios designam esta dedução **PENALTYTAX**; repara que exatamente 50 já é penalizado). De 31 a 50 a perda é pequena; com 30 ou menos sobe depressa, e com 20 ou menos perde-se a maior parte do imposto. A quota é lida da tua opinião no **início** do turno — antes de a taxa de imposto deste turno a mover, e antes de qualquer cerco, assalto ou surtida travados mais cedo no mesmo turno (Pré-Fase 3) a mover (TP_TAX_PENALTY_BANDS):
 
 |                   |                 |
 |-------------------|-----------------|
 | **Intervalo de Opinião** | **Penalização de Imposto** |
 | 51–100            | 0%              |
-| 41–50             | 2% do imposto bruto   |
-| 31–40             | 4% do imposto bruto   |
-| 21–30             | 6% do imposto bruto   |
-| 11–20             | 8% do imposto bruto   |
-| 0–10              | 10% do imposto bruto  |
+| 41–50             | 5% do imposto bruto   |
+| 31–40             | 10% do imposto bruto  |
+| 21–30             | 30% do imposto bruto  |
+| 11–20             | 60% do imposto bruto  |
+| 0–10              | 90% do imposto bruto  |
 
 penaltyAmt = floor(rawTax × penaltyTax / 100)
 
 netTax = max(0, rawTax − penaltyAmt)
+
+> ***▶ Exemplo — manter 10% a partir da Opinião 90.** Uma povoação de 25,000 pessoas, já no teto do seu nível (pelo que não cresce), já tributada a 10%. Em cada turno, o escalão de penalização e a emigração são lidos da opinião com que o turno **começa**; depois 10% move a opinião −15 (§2.9.13).*
+>
+> *• **Turnos 1–3** — começam em 90, 75, 60: sem penalização, ninguém sai → 2,500 de ouro em cada turno. A opinião termina o turno 3 em 45.*
+>
+> *• **Turno 4** — começa em 45 (41–50): 2,500 − floor(2,500 × 5 / 100) = 2,375. Termina em 30.*
+>
+> *• **Turno 5** — começa em 30 (21–30): saem primeiro 2.5%, floor(25,000 × 2.5 / 100) = 625 → 24,375 pessoas; rawTax = 2,437, penalização floor(2,437 × 30 / 100) = 731 → 1,706. Termina em 15.*
+>
+> *• **Turno 6** — começa em 15: saem 5% (1,218 → 23,157); rawTax = 2,315, penalização de 60% = 1,389 → 926. Termina em 0.*
+>
+> *• **Turno 7 em diante** — começa em 0: saem 10% (2,315 → 20,842); rawTax = 2,084, penalização de 90% = 1,875 → 209, e um décimo das pessoas volta a sair em cada turno.*
+>
+> *Sete turnos pagam 12,716 de ouro contra 8,750 a um 5% estável — mas o reino perdeu um sexto da sua população e, a partir daí, rende 209 por turno onde 5% pagaria 1,250.*
 
 **2.9.7 Bónus de Rendimento das Personagens (Character Income Bonuses)**
 
@@ -633,11 +678,11 @@ plainsFood é o +1 de comida por hexágono de planície sem local de produção 
 
 O tributo de vassalo é depois deduzido ao ouro acumulado do vassalo.
 
-> ***▶ Exemplo — o rendimento da Fase 1 de um pequeno reino.** Uma construção de sede de recrutamento (pop 10,000) + duas construções menores (pop 5,000 cada) + três construções em planície, cada uma com uma quinta de Nível 2 (pop 2,000 cada). Taxa de imposto 5, Opinião 60, sem personagens, sem pactos comerciais.*
+> ***▶ Exemplo — o rendimento da Fase 1 de um pequeno reino.** Uma construção de sede de recrutamento (pop 10,000) + duas construções menores (pop 5,000 cada) + três construções em planície, cada uma com uma quinta de Nível 2 (pop 2,000 cada). Taxa de imposto 5, Opinião 75, sem personagens, sem pactos comerciais.*
 >
 > *• **Ouro do terreno:** nenhum (§2.9.2).*
 >
-> *• **Imposto:** população total = 10,000 + 2×5,000 + 3×2,000 = 26,000; rawTax = floor(26,000 × 5 / 100) = 1,300 de ouro. A Opinião 60 está acima de 50, pelo que não há penalização de imposto → netTax = 1,300.*
+> *• **Imposto:** população total = 10,000 + 2×5,000 + 3×2,000 = 26,000; rawTax = floor(26,000 × 5 / 100) = 1,300 de ouro. A Opinião 75 está acima de 50, pelo que não há penalização de imposto → netTax = 1,300.*
 >
 > *• **Comida das quintas:** uma quinta de Nível 2 sorteia a sua taxa em cada turno em \[0.20, 0.50\] (§3.6.1), pelo que cada uma destas rende entre floor(2,000 × 0.20) = 400 e floor(2,000 × 0.50) = 1,000 de comida → **1,200 a 3,000 de comida**, e um valor diferente em cada turno. O que tens garantido é o mínimo: 1,200. Os três hexágonos de planície têm um local de produção, pelo que **não** produzem também o +1 fixo de comida do terreno.*
 >
@@ -653,9 +698,19 @@ Podes alterar a taxa em no máximo **1 ponto percentual por turno** (p. ex. 5→
 
 **Alterar a taxa não custa opinião por si só. A taxa que mantiveres move a opinião em cada turno**, segundo a taxa que cobrou o imposto desse turno:
 
-opinionChange = (TP_TAX_OPINION_NEUTRAL − taxRate) × TP_TAX_OPINION_PER_POINT — +2 por ponto abaixo de 5%, −2 por ponto acima (todas as taxas na tabela *Tax at a glance*, §2.9.5).
+opinionChange = (TP_TAX_OPINION_NEUTRAL − taxRate) × TP_TAX_OPINION_PER_POINT — +2 por ponto abaixo de 5%, −2 por ponto acima até 8%. As duas taxas mais altas custam mais: **9% custa 10 e 10% custa 15** em cada turno (todas as taxas na tabela *Tax at a glance*, §2.9.5).
 
-Não se lançam dados. A alteração ocorre na Fase 1, logo a seguir ao imposto, e a opinião mantém-se entre 0–100. Como uma tax_change se aplica depois do rendimento, **o turno em que ordenas uma nova taxa ainda move a opinião à taxa antiga**; o valor da nova taxa começa no turno seguinte, juntamente com o seu ouro. Aplica-se a todos os reinos, incluindo um que não tenha enviado ordens. A opinião **não recupera por si própria**: além de uma taxa abaixo de 5%, só sobe através de eventos — qualquer batalha ganha, um reino que te declare guerra, a conclusão de uma paz ou de um cessar-fogo (§8.5.3). O teu cartão de rendimento indica a alteração que realmente ocorreu (· opinion −6 (tax 8%) — menos, ou nada, quando a opinião já está em 0 ou 100), e a Página do Jogador mostra o valor em Opinião Pública (Public Opinion) e junto de uma alteração de imposto em fila.
+Não se lançam dados. A alteração ocorre na Fase 1, logo a seguir ao imposto, e a opinião mantém-se entre 0–100. Como uma tax_change se aplica depois do rendimento, **o turno em que ordenas uma nova taxa ainda move a opinião à taxa antiga**; o valor da nova taxa começa no turno seguinte, juntamente com o seu ouro. Aplica-se a todos os reinos, incluindo um que não tenha enviado ordens. A opinião **não recupera por si própria**: além de uma taxa abaixo de 5%, só sobe através de eventos — qualquer batalha ganha (no máximo +3 por turno), ou fazer uma paz ou um cessar-fogo após pelo menos 3 turnos de guerra (§8.5.3). O teu cartão de rendimento indica a alteração que realmente ocorreu (· opinion −6 (tax 8%) — menos, ou nada, quando a opinião já está em 0 ou 100), e a Página do Jogador mostra o valor em Opinião Pública (Public Opinion) e junto de uma alteração de imposto em fila.
+
+> ***▶ Exemplo — as duas taxas mais altas.** Três reinos de 25,000 pessoas começam com Opinião 70 e mantêm a sua taxa durante três turnos.*
+>
+> *• **8%** — 2,000 de ouro por turno; opinião 70 → 64 → 58 → 52. Nunca penalizado.*
+>
+> *• **9%** — opinião 70 → 60 → 50 → 40. 2,250, 2,250, depois 2,138 (o terceiro turno começa em 50: perde-se 5% do imposto). O quarto começaria em 40: perde-se 10% e sai 1% das pessoas.*
+>
+> *• **10%** — opinião 70 → 55 → 40 → 25. 2,500, 2,500, depois 2,228 (o terceiro turno começa em 40: saem primeiro 250 pessoas, rawTax = 2,475, perde-se 10%). O quarto começaria em 25: perde-se 30%, saem 2.5%.*
+>
+> *O 9.º ponto custa mais 4 de opinião do que o 8.º, e o 10.º custa mais 5 do que o 9.º: os últimos pontos de imposto são os mais caros.*
 
 **2.10 Fase 2 — Manutenção e Fome (Phase 2 — Upkeep & Starvation)**
 
@@ -764,9 +819,13 @@ Preços de base: Food 8g, Iron 12g, Horses 20g, Wood 5g, Stone 7g.
 
 O Processador de Turnos revalida no servidor todas as ordens de mercado: uma compra é **limitada** ao que o teu ouro cobre e uma venda ao que o teu armazém contém (preenchimento parcial, indicado como "of N requested"). Só é descartada uma ordem que não preencheria nenhuma unidade. **A Página do Jogador aplica o mesmo limite a uma compra enquanto a pões em fila**: se pedires mais do que o teu dinheiro disponível cobre, ela põe em fila o que podes pagar e diz-te ambos os valores — não recusa a ordem inteira. Como a página conta apenas o dinheiro (nunca o rendimento deste turno), o motor pode preencher ligeiramente *mais* do que a página pôs em fila, nunca menos.
 
-A Página do Jogador valida as ordens de **venda** contra o **dinheiro disponível** (§2.12.1) — apenas o armazém que já tens; a produção que chega neste turno não é vendável na página, mesmo que o Processador de Turnos verifique o armazém na Fase 3, depois de o rendimento e a manutenção terem sido aplicados. As ordens de **compra** continuam a exigir o ouro em mão.
+A Página do Jogador valida as ordens de **venda** contra o **dinheiro disponível** (§2.12.1) — apenas o armazém que já tens; a produção que chega neste turno não é vendável na página, mesmo que o Processador de Turnos verifique o armazém na Fase 3, depois de o rendimento e a manutenção terem sido aplicados. As ordens de **compra** continuam a exigir o ouro em mão. Se pedires para vender mais do que podes, a página põe em fila o que podes vender e diz-te os dois valores, como faz com uma compra.
 
 Uma ordem por mercadoria por reino por turno (as duplicadas são eliminadas, ficando a última submetida). Cada ordem está limitada a **999 unidades** — o campo da Página do Jogador pára aí e o Processador de Turnos limita qualquer valor maior a 999.
+
+**O separador Market** tem uma linha por mercadoria: o que tens e quanto podes vender neste turno, o preço de compra e de venda com a forma como o preço se moveu no último turno, um interruptor **Buy \| Sell**, a quantidade (**100**, **500** ou **Max** — o máximo que o teu armazém vendável ou o teu ouro cobre, até 999) e o ouro que a ordem move. **Place order** põe-na em fila e dobra a linha numa só, com **✕ Cancel**. O fundo da tabela soma o ouro de todas as transações em fila. Junto a cada mercadoria, um pequeno gráfico mostra o seu preço nos **últimos 5 turnos** e quantas unidades todos os reinos juntos compraram (barras acima da linha) e venderam (abaixo) em cada turno — as barras de cada mercadoria são escaladas ao seu turno mais movimentado, por isso compara as mercadorias pelos números, não pela altura das barras; passa o cursor sobre um turno, ou toca nele, para ver os seus valores. Uma mercadoria sem turnos registados ainda não mostra gráfico.
+
+**As vendas são pagas antes das compras.** A página envia as tuas vendas à frente das compras, pelo que o ouro de uma venda pode pagar uma compra no mesmo turno — a página já o conta quando te diz o que o teu ouro cobre.
 
 **Cancelar uma ordem em fila** inverte-a exatamente — mas só enquanto o seu produto ainda estiver livre. Uma **compra** não pode ser cancelada depois de os bens comprados estarem já comprometidos com outras ordens pendentes (p. ex. a construção de um navio posta depois da compra — os recrutas nunca podem depender de uma compra em fila, pois são validados sem ela); uma **venda** não pode ser cancelada depois de o seu ouro estar comprometido. Cancela primeiro as ordens dependentes.
 
@@ -1147,6 +1206,8 @@ Os novos recrutas juntam-se a uma pilha com WP base e diluem proporcionalmente a
 Os reinos Orc e Anão não podem construir navios — as ordens build_ship destas raças são rejeitadas.
 
 **A frota tem de estar atracada num dos teus próprios portos.** Uma frota no mar — ou atracada num porto aliado, neutro ou inimigo — não pode construir; o Processador de Turnos rejeita a ordem (a Página do Jogador bloqueia-a antes de a poderes submeter). O porto memorizado de uma frota é simplesmente o **último porto em que atracou**, seja quem for o dono — só a própria ordem de construção verifica a propriedade — pelo que podes construir em **qualquer** porto próprio em que entres, não apenas onde a frota foi levantada pela primeira vez. **Um bloqueio não impede a construção**: uma frota tua atracada num porto bloqueado pode construir aí, e pode ser levantada uma nova frota — embora, ao lado do bloqueador, combata-o antes de qualquer frota se mover (§2.6).
+
+**Constróis os cascos da tua própria raça, seja qual for o porto em que construas.** Um porto capturado deixa-te construir aí a partir do Elenco de Navios (Ship Roster) da tua raça (Parte IV). Nunca te dá os cascos da raça que construiu o porto: um reino Imperial que construa num porto Aesir conquistado obtém Drommunds, Cogs e Galleys, não Snekkjas. Isto difere do recrutamento em terra, onde uma povoação estrangeira compatível oferece o seu próprio par de unidades (§2.12.1). Um casco estrangeiro só chega como presa tomada numa batalha naval (§2.13.12). Um reino Orc ou Anão que tome um porto não constrói nada aí.
 
 Os navios são acrescentados à frota especificada. Custos deduzidos na Fase 4 (a capacidade de pagamento é o dinheiro disponível, §2.12.1).
 
@@ -1585,7 +1646,7 @@ Daqui decorrem duas coisas. **No turno em que as muralhas cairiam, um socorro ch
 
 **2.13.8 Declaração de Guerra por Movimento (War Declaration from Movement)**
 
-Se um exército se move para um hexágono (hex) pertencente a um reino — ou se move para combater um exército de um reino — que não esteja atualmente em guerra (war) com quem se move, a guerra é declarada automaticamente antes de o combate ser resolvido. Isto aplica-se quer o hexágono de destino esteja **sem defesa** (uma tomada de território) quer **defendido** (uma batalha campal), e aplica-se mesmo quando o alvo é um terceiro neutro cujo exército atacas em terreno disputado ou no teu próprio terreno. Cada declaração deste tipo custa ao agressor **−3 a −8** de opinião (opinion), reforça o defensor em **+2 a +5**, e gera cartões para ambos os reinos; um atacante que arrasta vários reinos para o mesmo combate paga a penalização de agressor apenas uma vez por passo de uma marcha ou viagem, ou uma vez por batalha (§8.5.3).
+Se um exército se move para um hexágono (hex) pertencente a um reino — ou se move para combater um exército de um reino — que não esteja atualmente em guerra (war) com quem se move, a guerra é declarada automaticamente antes de o combate ser resolvido. Isto aplica-se quer o hexágono de destino esteja **sem defesa** (uma tomada de território) quer **defendido** (uma batalha campal), e aplica-se mesmo quando o alvo é um terceiro neutro cujo exército atacas em terreno disputado ou no teu próprio terreno. Cada declaração deste tipo custa ao agressor **−3 a −8** de opinião (opinion), deixa a opinião do defensor **inalterada**, e gera cartões para ambos os reinos; um atacante que arrasta vários reinos para o mesmo combate paga a penalização de agressor apenas uma vez por passo de uma marcha ou viagem, ou uma vez por batalha (§8.5.3).
 
 Uma guerra iniciada neste turno bloqueia também todas as ordens de postura (stance) que não sejam de guerra dirigidas a esse inimigo na Fase 8 do mesmo turno (§2.16.2).
 
@@ -1960,7 +2021,7 @@ Todas as ordens diplomáticas são avaliadas contra o instantâneo da postura no
 
 **Posturas baseadas em consentimento**: A **guerra** (War) é espelhada automaticamente para o alvo (a guerra é sempre forçada a ser simétrica). **O comércio e a aliança nunca são espelhados** — cada um exige que ambos os reinos definam a postura de forma independente. **A paz depende do ponto de partida**: passar de uma aliança ou pacto comercial **mútuo** para paz continua a ser unilateral e arrasta consigo a postura do outro lado, mas **terminar uma guerra exige consentimento mútuo** — uma ordem de paz em guerra é uma *proposta*, não um decreto (ver *Ending a war* abaixo). Um pacto comercial ou uma aliança unilateral não concede quaisquer benefícios, e **em qualquer dos casos recebes um aviso de "one-sided pact" no teu relatório em cada turno em que continue sem reciprocidade** (um cartão 🤝 one-sided-alliance, ou um cartão 📦 one-sided-trade). **O alvo também é notificado**: em cada turno em que uma proposta continue aberta, o reino a quem foi feita recebe um cartão 🤝 *"proposes an alliance"* (ou 📦 *"seeks a trade pact"*) que lhe diz para retribuir em Diplomacia — incluindo os reinos passivos. Quando a proposta é finalmente retribuída, o proponente original recebe um cartão de confirmação *"accepted your alliance"* / *"opened trade with you"*. O cartão do teu relatório para a ordem diz **"proposed to"** (*"ALLIANCE proposed to"*) até o pacto ser mútuo — só então diz *forged*/*established* — e o separador Diplomacia mostra a aliança como *"Alliance — proposed (awaiting reply)"*, com **⇢ SENT** ao lado do botão de retirar (um pacto comercial unilateral também mostra ⇢ SENT). O outro lado também a vê em Diplomacia: o cartão do proponente traz **⇠ OFFERS ALLIANCE** (ou **⇠ OFFERS TRADE**) ao lado do botão que lhe responde — premir esse botão forma o pacto, e até o turno ser processado o cartão mostra **✓ ACCEPTING**. Uma oferta comercial de um reino com o qual não partilhas fronteira é etiquetada *(no border)*: um pacto comercial exige-a, uma aliança não. Até lá não concede quaisquer benefícios (nem movimento através do território, nem recrutamento aliado, nem bónus do pacto), e a Página do Jogador (Player Page) só trata um reino como aliado verdadeiro quando a aliança é mútua. **Retirar uma proposta sem resposta é silencioso**: é gratuito, deixa totalmente intacta a postura do outro reino e não lhe envia qualquer cartão — nunca se formou nada, por isso nada termina. Os reinos passivos (que não submetem ordens) nunca retribuem, pelo que não podem ser arrastados para uma aliança ou pacto comercial.
 
-**Terminar uma guerra — Propor Paz (consentimento mútuo) (Ending a war — Propose Peace)**: em guerra, o separador Diplomacia oferece 🕊 **Propose Peace** (uma aliança ou pacto comercial termina-se com os botões ✕ **End Alliance** e ✕ **End Trade Pact**). Uma ordem de paz em guerra altera apenas a **tua** postura para paz, como **oferta permanente**: o inimigo mantém a sua postura de guerra e, como um par está em guerra enquanto *qualquer* dos lados mantiver a guerra, **os combates continuam sem alteração** até ele aceitar. Ambos os lados recebem cartões em cada turno em que a oferta permaneça aberta (🕊 *"peace offered — war continues"* para ti, 🕊 *"proposes peace"* para ele), e o teu cartão de Diplomacia ostenta o distintivo *"⚔ War — 🕊 peace offered"*. A paz **forma-se** quando o outro lado também ordena paz (o seu botão diz 🕊 **Accept Peace** enquanto a tua oferta se mantém) — só então a guerra termina e o **dividendo da paz** (+1 a +3 de opinião, para ambos os lados) é pago. **Retirar**: voltar a declarar guerra enquanto a tua oferta se mantém limita-se a retirar a oferta da mesa — a guerra nunca terminou, por isso **não** é uma nova declaração e **não** custa opinião (o botão diz ✕ *Withdraw Peace Offer*). **Os reinos passivos aceitam automaticamente**: um reino que não submeteu ordens nesse turno aceita automaticamente uma oferta de paz permanente, pelo que uma guerra contra um reino ausente ou controlado pelo GM pode sempre ser terminada.
+**Terminar uma guerra — Propor Paz (consentimento mútuo) (Ending a war — Propose Peace)**: em guerra, o separador Diplomacia oferece 🕊 **Propose Peace** (uma aliança ou pacto comercial termina-se com os botões ✕ **End Alliance** e ✕ **End Trade Pact**). Uma ordem de paz em guerra altera apenas a **tua** postura para paz, como **oferta permanente**: o inimigo mantém a sua postura de guerra e, como um par está em guerra enquanto *qualquer* dos lados mantiver a guerra, **os combates continuam sem alteração** até ele aceitar. Ambos os lados recebem cartões em cada turno em que a oferta permaneça aberta (🕊 *"peace offered — war continues"* para ti, 🕊 *"proposes peace"* para ele), e o teu cartão de Diplomacia ostenta o distintivo *"⚔ War — 🕊 peace offered"*. A paz **forma-se** quando o outro lado também ordena paz (o seu botão diz 🕊 **Accept Peace** enquanto a tua oferta se mantém) — só então a guerra termina e o **dividendo da paz** (+1 a +3 de opinião, para ambos os lados) é pago — nada se a guerra tiver menos de 3 turnos (§2.16.5). **Retirar**: voltar a declarar guerra enquanto a tua oferta se mantém limita-se a retirar a oferta da mesa — a guerra nunca terminou, por isso **não** é uma nova declaração e **não** custa opinião (o botão diz ✕ *Withdraw Peace Offer*). **Os reinos passivos aceitam automaticamente**: um reino que não submeteu ordens nesse turno aceita automaticamente uma oferta de paz permanente (com o mesmo dividendo, e a mesma regra dos 3 turnos), pelo que uma guerra contra um reino ausente ou controlado pelo GM pode sempre ser terminada.
 
 **2.16.3 Efeitos de Opinião da Diplomacia (Opinion Effects of Diplomacy)**
 
@@ -1990,11 +2051,37 @@ Até 3 mensagens por turno para quaisquer reinos. Mensagens até 1000 caracteres
 
 **Difusão para todos os reinos (Broadcast to all kingdoms)**: em vez de escolheres um destinatário, podes dirigir uma mensagem a **All Kingdoms**. É entregue a todos os outros reinos — incluindo os que estão em paz, em guerra, ou controlados pelo GM/ausentes (passivos) — e **conta como uma das tuas 3 mensagens**. Os destinatários veem-na claramente identificada como difusão (📢), para saberem que foi enviada a todos e não em privado só para eles. Os comandos especiais (\[CEASEFIRE\], \[TRIBUTE\]) **não** funcionam dentro de uma difusão — é apenas um anúncio simples; para propores um cessar-fogo ou enviares tributo tens de enviar a mensagem diretamente a esse reino.
 
-**Mecanismo de cessar-fogo (Ceasefire mechanic)**: Se ambos os reinos em guerra incluírem, de forma independente, o símbolo \[CEASEFIRE\] numa mensagem dirigida um ao outro no mesmo turno, a paz é estabelecida automaticamente — desde que a guerra não tenha sido declarada primeiro nesta mesma Fase 8 (um cessar-fogo não pode anular uma guerra declarada neste turno). Ganho de opinião para ambos: +(2 + floor(rand×4)) = +2 a +5.
+**Mecanismo de cessar-fogo (Ceasefire mechanic)**: Se ambos os reinos em guerra incluírem, de forma independente, o símbolo \[CEASEFIRE\] numa mensagem dirigida um ao outro no mesmo turno, a paz é estabelecida automaticamente — desde que a guerra não tenha sido declarada primeiro nesta mesma Fase 8 (um cessar-fogo não pode anular uma guerra declarada neste turno). Ganho de opinião para ambos: +(2 + floor(rand×4)) = +2 a +5 — mas só se a guerra tiver durado pelo menos 3 turnos (TP_PEACE_OPINION_MIN_WAR_TURNS; uma guerra declarada no turno 10 paga a partir de um cessar-fogo no turno 13). Uma guerra mais recente termina na mesma; apenas não paga opinião, e o cartão diz porquê. O mesmo vale para a paz formada por ordens mútuas (§8.5.3).
+
+> ***▶ Exemplo — quando um cessar-fogo paga.** Valdoria declara guerra a Corvia no turno 10: Valdoria perde 3–6 de opinião, a de Corvia não se move (§8.5.3).*
+>
+> *• **Ambos enviam `\[CEASEFIRE\]` no turno 11** — a guerra tem 1 turno. A paz regressa, nenhum dos lados ganha nada; cada cartão diz "Opinion +0 (the war was only 1 turn old; a ceasefire or peace pays opinion only after 3 turns of war)".*
+>
+> *• **Ambos o enviam no turno 13** — a guerra tem 3 turnos: paz, e cada lado ganha +2 a +5.*
+>
+> *• **Uma guerra iniciada no mesmo turno** — se Valdoria, em vez disso, marchar para a terra de Corvia no turno 10 e ambos enviarem \[CEASEFIRE\] nesse mesmo turno, a guerra por marcha tem 0 turnos: termina de imediato e não paga nada (Valdoria paga na mesma os seus −3 a −8 pela declaração).*
+>
+> *• Um cessar-fogo no próprio turno 10 é impossível: uma guerra declarada na diplomacia desse turno não pode ser desfeita no mesmo turno.*
 
 **2.17 Eventos Aleatórios (Random Events)**
 
-Não existem eventos aleatórios: nenhum reino tira um evento em qualquer ponto do turno. O que um reino ganha ou perde provém apenas das suas próprias ordens, do mapa e dos outros reinos.
+Não existem eventos aleatórios: nenhum reino tira um evento em qualquer ponto do turno.
+
+**Os dados continuam a decidir algumas regras fixas.** Cada uma aplica-se do mesmo modo a todos os reinos, tem um intervalo publicado, e o seu cartão nomeia o resultado — nenhuma delas é um evento:
+
+- crescimento da população, 1–3% por turno (§2.9.1);
+
+- comida dos portos (§2.9.4) e colheitas das quintas (§3.6.1), lançadas de novo em cada turno;
+
+- rendimento dos pactos comerciais e de aliança, 0–2% por parceiro (§2.9.8);
+
+- crescimento das manadas, 1–3% por turno (§2.9.9), e reprodução dos Orcs (§2.9.10);
+
+- deserção e fome quando um reino não consegue pagar ou alimentar as suas tropas (§2.10);
+
+- batalhas e os restantes lançamentos de combate (Parte V), e espionagem (§2.15, §8.8).
+
+> ***▶ Exemplo.** "Horse herds grew by 2% (+9) — Your plains breed strong horses this season" é a regra de crescimento das manadas (§2.9.9), não um evento: todos os reinos com dois ou mais cavalos criam 1–3% em cada turno.*
 
 **2.18 Geração de Relatórios (Report Generation)**
 
@@ -2009,6 +2096,8 @@ O rendimento dos pactos comerciais/de aliança é **discriminado por parceiro** 
 **Registo de Guerra (War Record)**: cada reino mantém um balanço corrente de vitórias–derrotas, mostrado como ⚔ **War Record (W–L)** na faixa de território sob o teu livro de Perfil — registos separados de exército e frota (p. ex. 4–1 exército · 1–0 frota). Uma vitória ou derrota só é registada numa **batalha real exército contra exército ou frota contra frota** — batalhas campais, surtidas, assaltos a povoações com guarnição, desembarques anfíbios contra um exército defensor, e batalhas navais. Os combates **apenas contra milícia** (assaltar uma povoação sem guarnição) e os **empates** **não** contam. O balanço acumula-se ao longo de todo o jogo (começa em 0–0 e nunca é reposto). O separador **Rankings** inclui uma tabela **🏆 Total Wins** que ordena todos os reinos por vitórias de exército + vitórias de frota; como todas as tabelas, mostra classificações (a tua posição relativa aos rivais), não os números exatos dos adversários — as tuas próprias contagens estão no teu Perfil.
 
 **2.19 Memória do Mapa (Map Memory)**
+
+**Como o mapa mostra o que vês.** A tua própria terra é desenhada por inteiro. A terra que vês mas não possuis — junto às tuas fronteiras, à volta dos teus exércitos e frotas, a partir de relatórios de espiões — é desenhada num tom acinzentado do seu terreno (planície verde-acinzentada, floresta verde-escura). A água que vês é desenhada esbatida. O nevoeiro — hexágonos que nunca viste — é preto no mapa do reino. Passa o cursor sobre qualquer hexágono que vejas para ver o seu terreno e dono.
 
 **Memória do mapa.** O teu reino recorda permanentemente todos os hexágonos que alguma vez viu — território, alcance de exploração, relatórios de espiões, e todos os hexágonos por onde os teus exércitos e frotas passam na marcha (cada hexágono percorrido e os seus arredores). Os hexágonos recordados permanecem no teu mapa nos turnos futuros, desenhados esbatidos e tracejados: conheces o **terreno** e, abaixo, o local de produção e a povoação como os viste pela última vez — nada em tempo real. Não são mostrados donos nem tropas aí — um hexágono recordado vazio NÃO está confirmado como vazio; um exército inteiro pode estar nele. Só a visão atual (a tua terra, os arredores das tuas unidades, os relatórios de espiões deste turno) mostra informação em direto. **As tuas cartas também recordam o que lá estava**: o local de produção e a povoação/fortificação *como as viste pela última vez* — desenhados esbatidos nos hexágonos recordados em todos os mapas e nomeados na dica do hexágono ("last seen: ⚓ Port Lv.II · 🏰 G3"). A memória só é atualizada enquanto um hexágono está à vista: um porto construído depois de teres partido não aparece, um arrasado continua a aparecer até voltares a olhar, e nada sobre o seu dono, população ou força das muralhas é guardado. Um local recordado é uma memória, não informação — o motor nunca o trata como atual (podes planear um desembarque num porto recordado, e o Processador de Turnos resolve-o contra o mapa real).
 
@@ -2428,6 +2517,8 @@ Duas consequências que vale a pena interiorizar:
 - O crescimento **satura e pára** no teto; nunca o ultrapassa por si só. A população *acima* do teto (que a degradação por conquista pode deixar para trás, §5.6.3) fica exatamente onde está — nunca é reduzida, nunca cresce.
 
 - Um **acampamento Nómada movido** leva consigo as suas gentes e o seu teto, e deixa o hexágono antigo a zero (§2.11.10).
+
+- Com Opinião 40 ou inferior nenhuma povoação cresce e cada uma perde pessoas (emigração, §2.9.1).
 
 > ***⚠ A consequência que mais dói.** Como o crescimento pára de vez no teto, uma sede de recrutamento cujo nível comporte menos de 300 pessoas **nunca** poderá enviar colonos até que a própria sede seja melhorada (§2.11.9).*
 
@@ -3728,7 +3819,7 @@ Um exército transportado nem altera o ritmo da frota nem descansa a bordo — o
 >
 > *- **Cimeria** — o líder que ordenou a marcha — também declara guerra a **Vanaheim e Ophir**, os dois reinos arrastados para a defesa de Nemedia apenas pela sua ligação, nenhum dos quais tinha qualquer disputa com ela à partida: "War declared against Vanaheim! … The peace is over … Previous stance: peace … Opinion -6 (aggressor penalty)." Vanaheim é o par que é cobrado — a carta de Ophir traz a MESMA prosa de aliança quebrada ("A sworn alliance lies in ruins … Previous stance: alliance") mas uma linha de efeito limitada: "No further opinion penalty — already charged once this step." Ophir era aliada de Cimeria — marchar sobre o hexágono de Nemedia é o que quebrou essa aliança — mas Cimeria paga os −6 só uma vez por todo o passo, não uma vez por reino que arrasta para a guerra.*
 >
-> *- Vanaheim e Ophir, arrastadas para a defesa sem disputa própria, nunca trazem uma carta de agressor por este combate — recebem a carta de **defensor** por cada atacante que lhes acaba de declarar guerra (Cimeria, Aquilonia, Zingara), e o limite aplica-se apenas ao lado agressor, pelo que cada uma dessas cartas de defensor traz o seu próprio +4 completo, sem limite: "Cimeria is now at WAR with you! … Your opinion +4 (defender's rally) … Previous stance: peace" para Vanaheim, "… A sworn alliance lies shattered … Previous stance: alliance" para Ophir. O reino que marchou e forçou o combate paga o custo de opinião — uma vez por passo, por muitos reinos com que entre em guerra de novo; o reino que ficou em terreno próprio e foi arrastado pela sua ligação nunca paga, e recebe o seu próprio apoio por inteiro de cada vez.*
+> *- Vanaheim e Ophir, arrastadas para a defesa sem disputa própria, nunca trazem uma carta de agressor por este combate — recebem a carta de **defensor** por cada atacante que lhes acaba de declarar guerra (Cimeria, Aquilonia, Zingara), e a sua opinião não se move — uma declaração custa apenas ao reino que a faz: "Cimeria is now at WAR with you! … No opinion change for you … Previous stance: peace" para Vanaheim, "… A sworn alliance lies shattered … Previous stance: alliance" para Ophir. O reino que marchou e forçou o combate paga o custo de opinião — uma vez por passo, por muitos reinos com que entre em guerra de novo; o reino que ficou em terreno próprio e foi arrastado pela sua ligação nunca paga nada.*
 >
 > *- **As consequências da derrota.** O grupo de Cimeria perdeu o campo: Cimeria recua para (1,2), o hexágono de onde a coluna marchou — e Aquilonia e Zingara, que nunca o deixaram (os membros só seguem o líder para dentro depois de uma vitória), **mantêm-se onde estão** — e no momento em que o último aterra, a ligação quebra-se para os três. O registo do GM regista-o numa linha, por nome de reino: "Cimeria AI + Aquilonia AI + Zingara AI — group dissolved · Defeat — the group scattered." Cada um dos três JOGADORES vê algo diferente no seu relatório — o seu próprio exército, não a lista de nomes: "Army I — link broken · The link group is no more — Defeat at (1,3) against Nemedia, Vanaheim, Ophir — the group scattered. The army acts independently again. · Independent command restored." Reformá-lo custa uma nova proposta e (para os aliados) uma nova aceitação. O grupo de Nemedia **manteve o terreno e continua ligado** — só o lado perdedor se dispersa. A opinião moveu-se em todos os reinos que combateram (vencedores +2, perdedores −3, independente das variações das declarações de guerra acima), e a coligação de Nemedia dividiu 30% dos despojos do campo por quota de pontos de guerra.*
 >
@@ -4174,32 +4265,52 @@ Exige ordens independentes de ambos os reinos **e uma fronteira partilhada**, e 
 
 0–100. Por omissão 90. Representa o apoio popular interno. Não representa as relações entre reinos.
 
+A Página do Jogador (Player Page) nomeia, no Perfil (Profile), o humor ao lado do valor, segundo os escalões do §8.5.2: **Content** acima de 50 (não se perde imposto), **Restless** 41–50 (uma pequena penalização fiscal, ninguém sai), **Disgruntled** 21–40 (as pessoas saem, até 30% do imposto perdido), **Rebellious** 20 ou menos (60–90% do imposto perdido, 5–10% das pessoas saem em cada turno).
+
 **8.5.2 Opinião e rendimento de impostos (Opinion and Tax Income)**
 
-Com opinião 50 ou inferior perde-se uma parte do imposto bruto (PENALTYTAX): 2% em 41–50, subindo 2 pontos por cada escalão de dez até 10% em 0–10 (§2.9.6).
+Com opinião 50 ou inferior perde-se uma parte do imposto bruto (PENALTYTAX): 5% em 41–50, 10% em 31–40, 30% em 21–30, 60% em 11–20 e 90% em 0–10 (§2.9.6).
+
+Com opinião 40 ou inferior as pessoas também saem: nenhuma povoação cresce, e cada uma perde 1% (31–40), 2.5% (21–30), 5% (11–20) ou 10% (0–10) das suas pessoas em cada turno (emigração, §2.9.1).
 
 **8.5.3 Como muda a opinião (How Opinion Changes)**
 
 |   |   |
 |---|---|
 | **Causa** | **Efeito** |
-| Taxa de imposto mantida, **todos os turnos** (a taxa que cobrou) | +2 por ponto abaixo de 5%, −2 por ponto acima: +8 a 1% até −10 a 10% (§2.9.13) · mudar a taxa não custa nada por si só |
+| Taxa de imposto mantida, **todos os turnos** (a taxa que cobrou) | +2 por ponto abaixo de 5%, −2 por ponto acima até 8%, depois −10 a 9% e −15 a 10%: +8 a 1% até −15 a 10% (§2.9.13) · mudar a taxa não custa nada por si só |
 | Défice de ouro | −5 a −12 |
-| **Qualquer batalha ganha** — em campo, surtida/libertação, praia, assalto (tomado ou repelido), naval, queda automática de cerco | vencedor **+1 a +3** |
-| **Qualquer batalha perdida** — mesma lista | perdedor **−2 a −4** |
-| Povoação tomada / assalto repelido — **proprietário terceiro** (a guarnição de outrem lutou pela tua povoação) | o proprietário sofre a mesma oscilação que a guarnição: −2 a −4 numa queda, +1 a +3 numa defesa bem-sucedida |
-| Guerra declarada por ordem de diplomacia (Fase 8), a partir da paz | agressor −3 a −6; alvo +2 a +5 |
-| Guerra declarada por movimento ou combate (Fases 5–6) | agressor −3 a −8 — **uma vez por passo de uma marcha ou viagem** (a batalha ao entrar no hexágono e qualquer choque de chegada a que esse passo conduza partilham uma só cobrança) e **uma vez por batalha** para qualquer outro confronto, por muitos reinos que o combate arraste; as guerras declaradas ao dono do hexágono e ao seu ocupante quando começa um passo de marcha, desembarque, movimento de frota, assalto ou choque de acampamento/porto contam para essa cobrança, uma incursão ou uma ligação de guerra por bloqueio conta como um só confronto com o choque de porto nesse porto, e uma reivindicação de origem e o primeiro passo da marcha contam como dois (§2.13.8); cada guerra adicional continua a ser declarada e assinalada com cartão, com a linha de efeito a dizer *"No further opinion penalty — already charged once this step"* dentro de um passo de marcha ou viagem e *"… once this battle"* em qualquer outro lado; alvo +2 a +5 em cada declaração |
-| Guerra declarada, unilateral, a partir de aliança — **apenas alianças MÚTUAS** | agressor −8 a −15; alvo +5 a +10; traição difundida a todos os reinos · declarar guerra após uma *proposta* unilateral a que o alvo nunca correspondeu é uma declaração normal (−3 a −6, sem difusão) |
+| **Qualquer batalha ganha** — em campo, surtida/libertação, praia, assalto (tomado ou repelido), naval, queda automática de cerco | vencedor **+1 a +3** · todas as vitórias de um turno juntas sobem a opinião **no máximo +3** (TP_BATTLE_OPINION_CAP) — **por reino**: cada reino do lado vencedor conta o seu próprio +3; um cartão diz quanto ficou retido |
+| **Qualquer batalha perdida** — mesma lista | perdedor **−2 a −4** · todas as derrotas de um turno juntas baixam a opinião **no máximo −8** (TP_BATTLE_OPINION_LOSS_CAP) — por reino; um cartão diz quanto foi devolvido |
+| Povoação tomada / assalto repelido — **proprietário terceiro** (a guarnição de outrem lutou pela tua povoação) | o proprietário sofre a mesma oscilação que a guarnição: −2 a −4 numa queda, +1 a +3 numa defesa bem-sucedida (uma defesa conta para o limite de vitórias de +3 do proprietário, uma queda para o seu limite de derrotas de −8) |
+| Guerra declarada por ordem de diplomacia (Fase 8), a partir da paz | agressor −3 a −6; a opinião do alvo não muda |
+| Guerra declarada por movimento ou combate (Fases 5–6) | agressor −3 a −8 — **uma vez por passo de uma marcha ou viagem** (a batalha ao entrar no hexágono e qualquer choque de chegada a que esse passo conduza partilham uma só cobrança) e **uma vez por batalha** para qualquer outro confronto, por muitos reinos que o combate arraste; as guerras declaradas ao dono do hexágono e ao seu ocupante quando começa um passo de marcha, desembarque, movimento de frota, assalto ou choque de acampamento/porto contam para essa cobrança, uma incursão ou uma ligação de guerra por bloqueio conta como um só confronto com o choque de porto nesse porto, e uma reivindicação de origem e o primeiro passo da marcha contam como dois (§2.13.8); cada guerra adicional continua a ser declarada e assinalada com cartão, com a linha de efeito a dizer *"No further opinion penalty — already charged once this step"* dentro de um passo de marcha ou viagem e *"… once this battle"* em qualquer outro lado; a opinião do alvo não muda em nenhuma declaração |
+| Guerra declarada, unilateral, a partir de aliança — **apenas alianças MÚTUAS** | agressor −8 a −15; a opinião do alvo não muda; traição difundida a todos os reinos · declarar guerra após uma *proposta* unilateral a que o alvo nunca correspondeu é uma declaração normal (−3 a −6, sem difusão) |
 | Guerra mútua (ambos declaram no mesmo turno) | ambos −1 a −3 |
 | Quebrar aliança (paz a partir de aliança) — **apenas alianças MÚTUAS** | quem declara −2 a −4; alvo −1 a −3 · ambos os lados recebem cartão; retirar uma *proposta* de aliança unilateral a que o alvo nunca correspondeu é gratuito para ambos |
 | Descer aliança a comércio — **apenas alianças MÚTUAS** | quem declara −1 a −2; alvo −1 a −2 · ambos os lados recebem cartão; retirar uma proposta sem correspondência é gratuito |
-| Paz formada (mútua — a guerra só termina quando ambos os lados mantêm ou ordenam paz ou melhor; ordens de guerra→aliança/comércio, por si sós, não dão nada) | ambos +1 a +3 |
-| Cessar-fogo aceite | ambos +2 a +5 |
+| Paz formada (mútua — a guerra só termina quando ambos os lados mantêm ou ordenam paz ou melhor; ordens de guerra→aliança/comércio, por si sós, não dão nada) | ambos +1 a +3 · **+0 se a guerra tiver menos de 3 turnos** (TP_PEACE_OPINION_MIN_WAR_TURNS) |
+| Cessar-fogo aceite | ambos +2 a +5 · **+0 se a guerra tiver menos de 3 turnos** (TP_PEACE_OPINION_MIN_WAR_TURNS) |
 
-Limitada inferiormente a 0, e superiormente a 100. Cada oscilação resultante de uma batalha é indicada no seu próprio cartão do relatório (a linha de efeito traz · Opinion +N / · Opinion −N), pelo que a opinião nunca se move sem uma causa visível.
+Limitada inferiormente a 0, e superiormente a 100. Cada oscilação resultante de uma batalha é indicada no seu próprio cartão do relatório (a linha de efeito traz · Opinion +N / · Opinion −N). Quando o limite de vitórias retém parte dos ganhos de um turno, ou o limite de derrotas devolve parte das suas perdas, mais um cartão diz quanto, no fim da secção de combate do turno — pelo que a opinião nunca se move sem uma causa visível. Os dois limites contam os valores dos próprios cartões de batalha, e as batalhas do turno movem a opinião uma só vez, depois da última delas: opinion = clamp(opinion + min(wins, +3) − min(losses, 8)), mantida entre 0–100 apenas nesse ponto. Por isso são separados (um turno de vitórias e derrotas mantém até +3 e até −8, seja qual for a ordem das batalhas — a partir da Opinião 10, quatro vitórias de +2 e cinco derrotas de −3 terminam em 10 + 3 − 8 = 5), e cobrem apenas resultados de batalha — declarações de guerra, imposto, um défice de ouro, pazes e cessar-fogos nunca são limitados.
 
-> ***▶ Exemplo — a opinião é um imposto discreto sobre a agressão.** A opinião começa em 90 e só morde a 50 ou menos, onde corta 2–10% do teu rendimento de impostos, tanto mais quanto mais baixa for (a linha PENALTYTAX no teu cartão de rendimento). O verdadeiro perigo é o ciclo de retroalimentação: declarar guerras, manter uma taxa de imposto acima de 5% (cobrada todos os turnos), **e cada batalha perdida (−2 a −4 cada)** arrastam a opinião para baixo, e uma série delas pode fazer-te cair abaixo de 50 exatamente quando uma guerra exige o máximo de rendimento. As derrotas custam mais do que as vitórias rendem (+1 a +3), pelo que uma guerra longa de desgaste corrói até a reputação de um vencedor. O golpe mais duro é a **traição** — declarar guerra a um aliado custa −8 a −15 de uma só vez, mais uma difusão a todos os outros reinos. Uma única facada numa aliança pode fazer-te passar de confortável a sobretaxado e desconfiado. Trata a opinião como um orçamento que gastas em agressão, e mantém a taxa de imposto abaixo de 5% (+2 por ponto, todos os turnos) para recuperar entre guerras.*
+> ***▶ Exemplo — o limite de vitórias.** Com Opinião 60, os teus cinco destacamentos ganham cada um um pequeno combate num turno, com +3, +1, +1, +3 e +3: cada cartão de Victory mostra o seu próprio valor (+11 ao todo), mas só conta +3. O teu relatório acrescenta "Victories this turn: opinion +3 (of +11)" · "Opinion −8 (victory cap +3 a turn)", e terminas em 63. O teu inimigo perdeu cinco batalhas: cada cartão de Defeat mostra −2 a −4, mas no máximo conta −8 num turno, e o seu relatório acrescenta "Defeats this turn: opinion −8 (of −N)". Se um aliado lutou a teu lado nessas batalhas, conta também o seu próprio +3. Com Opinião 99, as mesmas cinco vitórias continuam a manter só +3 dos seus +11 — aparece o cartão do limite — e a opinião pára em 100: min(100, 99 + 3) = 100.*
+>
+> ***▶ Exemplo — vitórias e derrotas num só turno.** O teu reino começa o turno com Opinião 45, a tributar 5%. No início do turno (Pré-Fase 3) o teu exército toma uma aldeia de assalto: +3. Na Fase 5 perdes quatro batalhas (−4, −3, −4, −2 = −13) e ganhas mais uma (+2).*
+>
+> *• **O imposto e a emigração** leem **45**, a opinião com que o turno começou — não os 48 que o assalto deixou antes da Fase 1: perde-se 5% do imposto, ninguém sai.*
+>
+> *• As **vitórias** somaram +5: só conta +3 — "Victories this turn: opinion +3 (of +5)" · "Opinion −2 (victory cap +3 a turn)".*
+>
+> *• As **derrotas** somaram −13: só conta −8 — "Defeats this turn: opinion −8 (of −13)" · "Opinion +5 (defeat cap −8 a turn)".*
+>
+> *• Terminas em 45 + 3 − 8 = 40: o turno seguinte começa no escalão 31–40 — perde-se 10% do imposto e sai 1% das pessoas.*
+>
+> *• O **teu inimigo**, que ganhou quatro dessas batalhas (digamos +2, +3, +1, +3 = +9) e perdeu duas (o assalto e a última batalha, digamos −3 e −4 = −7), mantém +3 e paga −7 por inteiro (abaixo do limite de −8): líquido −4.*
+>
+> ***▶ Exemplo — uma declaração contra ti.** Corvia, em paz contigo, ordena guerra contra ti. Corvia perde 3–6 de opinião; a tua não se move. O teu cartão diz "Corvia declared war on you" · "No opinion change — a declaration costs only the realm that makes it". Se Corvia, em vez disso, marchar para a tua terra, paga −3 a −8 e o teu cartão diz "Corvia is now at WAR with you!" · "No opinion change for you — a declaration costs only the realm that makes it". Ser alvo de uma declaração não te dá nada; ganhar as batalhas que se seguem pode dar (+3 por turno, no máximo).*
+>
+> ***▶ Exemplo — a opinião é um imposto discreto sobre a agressão.** A opinião começa em 90 e não custa nada acima de 50. De 31 a 50 tira 5–10% do teu rendimento de impostos; com 30 ou menos tira 30–90% (a linha PENALTYTAX no teu cartão de rendimento). O verdadeiro perigo é o ciclo de retroalimentação: declarar guerras, manter uma taxa de imposto acima de 5% (cobrada todos os turnos), **e cada batalha perdida (−2 a −4 cada)** arrastam a opinião para baixo, e uma série delas pode fazer-te cair abaixo de 30 exatamente quando uma guerra exige o máximo de rendimento — e com 40 ou menos as tuas pessoas começam a sair (§2.9.1). As derrotas custam mais do que as vitórias rendem (+1 a +3 cada e +3 por turno no máximo, contra −2 a −4 cada e −8 por turno no máximo), pelo que uma guerra longa de desgaste corrói até a reputação de um vencedor. O golpe mais duro é a **traição** — declarar guerra a um aliado custa −8 a −15 de uma só vez, mais uma difusão a todos os outros reinos. Uma única facada numa aliança pode fazer-te passar de confortável a sobretaxado e desconfiado. Trata a opinião como um orçamento que gastas em agressão, e mantém a taxa de imposto abaixo de 5% (+2 por ponto, todos os turnos) para recuperar entre guerras.*
 
 **8.6 Vassalagem (Vassalage)**
 
@@ -4284,11 +4395,15 @@ Cada ordem hire_spy é um pedido de informação único, resolvido na Fase 7 —
 
 Um reino com um **Mestre de Espiões** (o gabinete de espionagem, §7) pode espalhar **um rumor por turno**: um texto livre até 1,000 carateres que chega a **todos os reinos** — o teu, em guerra (war), em paz (peace) e ausentes — como um cartão 🗣 *Rumours spread through the courts*, o último cartão do relatório do turno (Fase 10). **Não tem remetente**: nenhum reino pode saber quem o espalhou, e nada no jogo o rastreia. Só o registo de processamento do GM nomeia o autor.
 
-- **Preço:** round(500 × (1 − Politics / 200)) de ouro, pago quando o rumor se espalha — Política 50 paga 375g, 90 paga 275g, 100 paga 250g, 150 paga 125g. Um reino que não consiga pagar quando chega a Fase 10 não espalha nada e é informado disso.
+- **Preço:** round(500 × (1 − Politics / 200)) de ouro, pago quando o rumor se espalha — Política 50 paga 375g, 90 paga 275g, 100 paga 250g, 150 paga 125g. O preço é **reservado antes das Mensagens**, pelo que nenhum envio ou \[TRIBUTE\] desse turno o pode gastar; um rumor que depois não se espalhe (riscado pelo GM, sem Mestre de Espiões, nada escrito) não custa nada. Um reino que não consiga pagar nesse momento não tem nada reservado; só espalha o rumor se ainda puder pagar quando chegar a Fase 10 (o ouro que chega por caravana conta), e é informado disso no caso contrário.
+
+> ***▶ Exemplo.** O teu Mestre de Espiões tem Política 90 (preço 275g) e terminas o turno com 3,390g. Pões um rumor em fila e envias \[TRIBUTE: 5000 gold\] a um aliado. Os 275g são reservados primeiro; o tributo leva os 3,115g que restam; o rumor espalha-se; a tua tesouraria termina em 0.*
 
 - **Um Mestre de Espiões atribuído neste turno já serve**: a Fase 10 corre depois das atribuições da Fase 4. Sem Mestre de Espiões, nada se espalha (com cartão).
 
 - **Apenas palavras.** Um rumor não move nenhuma opinião, postura ou recurso; \[CEASEFIRE\] e \[TRIBUTE\] não fazem nada dentro dele. Acreditar ou não nele fica ao critério de quem lê.
+
+- **O GM vê todos os rumores antes de o turno ser processado** e pode riscar um que infrinja o Código de Conduta (§1.5); o que se segue a um risco depende da gravidade (§1.5, regra 6.6). Um rumor riscado não se espalha e não custa nada; o seu autor lê *Rumour not spread — The Game Master struck your rumour — it broke the code of conduct.*
 
 - O separador **Spies** da Página do Jogador contém a caixa do rumor, o seu preço e o motivo por que está a cinzento (sem Mestre de Espiões, ouro insuficiente).
 
@@ -4300,7 +4415,7 @@ Um reino com um **Mestre de Espiões** (o gabinete de espionagem, §7) pode espa
 
 **A economia acumula-se; os exércitos depreciam-se.** Os locais de produção (sites) geram rendimento todos os turnos. Um exército custa manutenção (upkeep) todos os turnos. O jogador que construir mais depressa infraestruturas no início gastará mais do que os adversários a meio do jogo, sem precisar de ganhar todas as batalhas.
 
-**A opinião (opinion) é um multiplicador de imposto.** Um reino com opinião 20 perde 8% do seu imposto (tax) para a agitação, e um com 10 ou menos perde 10%. Um défice de ouro provoca deserção e perda de opinião em simultâneo, criando uma cascata: falta de dinheiro → menos soldados → mais falta de dinheiro. Evita esta espiral.
+**A opinião (opinion) é um multiplicador de imposto.** Um reino com opinião 20 perde 60% do seu imposto (tax) para a agitação, um com 10 ou menos perde 90%, e com 40 ou menos o seu povo começa a sair (§2.9.6, §2.9.1). Um défice de ouro provoca deserção e perda de opinião em simultâneo, criando uma cascata: falta de dinheiro → menos soldados → mais falta de dinheiro. Evita esta espiral.
 
 **As baixas (casualties) seguem o preço.** A fórmula deathFactor = clamp(0.3–1.0, 1.0 − price×(1+veterancy)/1100) (preço = o custo total de recrutamento da unidade em equivalente de ouro) significa que as tropas baratas morrem à percentagem total da batalha, enquanto as unidades mais caras mal sangram — independentemente do que marcha ao lado delas. O poder de ataque não compra sobrevivência; ouro, ferro (×16), cavalos, madeira e experiência compram — a comida nunca.
 
@@ -4420,7 +4535,7 @@ As posturas são **guardadas** (§5.4), pelo que uma Emboscada registada há tur
 
 **Alavancagem de opinião**: trair um aliado mútuo é o maior golpe de opinião individual do jogo (§8.5.3). Se estás prestes a ser eliminado, romper uma aliança para ir para a guerra custa-te mais do que a própria guerra.
 
-**Momento do cessar-fogo**: um \[CEASEFIRE\] mútuo (§2.16.5) faz a paz no mesmo turno, sem qualquer ordem diplomática a aguardar — acorda-o com a outra parte e envia as duas mensagens em conjunto quando precisares de mudar depressa.
+**Momento do cessar-fogo**: um \[CEASEFIRE\] mútuo (§2.16.5) faz a paz no mesmo turno, sem qualquer ordem diplomática a aguardar — acorda-o com a outra parte e envia as duas mensagens em conjunto quando precisares de mudar depressa. Só paga opinião quando a guerra tem 3 turnos (§2.16.5).
 
 **Acumulação de pactos**: Cada pacto mútuo — comercial **ou** de aliança — contribui com um bónus de ouro de 0–2% de forma independente por turno. Três parceiros mútuos dão em média ~3% de ouro de bónus (intervalo de 0–6%). Escala com o rendimento, pelo que os jogadores mais ricos obtêm mais valor absoluto. No máximo 5 parceiros pagam num turno, pelo que o rendimento de pactos tem teto em 10% do imposto + portos — até cinco aliados são um motor económico; para lá de cinco, os aliados servem para a guerra, não para o ouro.
 
@@ -4524,7 +4639,7 @@ As posturas são **guardadas** (§5.4), pelo que uma Emboscada registada há tur
 
 **ODD-R** — O sistema de coordenadas da grelha de hexágonos usado pelo TREVASXXI.
 
-**Opinião (Opinion)** — Métrica interna de popularidade (0–100, por omissão 90). Afeta o rendimento do imposto; a taxa de imposto que mantiveres move-a todos os turnos (§2.9.13).
+**Opinião (Opinion)** — Métrica interna de popularidade (0–100, por omissão 90). Afeta o rendimento do imposto (§2.9.6) e, com 40 ou menos, a população (emigração, §2.9.1); a taxa de imposto que mantiveres move-a todos os turnos (§2.9.13).
 
 **Opção A (Option A)** — A arquitetura de reposição de estado: o TP descarta todo o estado submetido pelos jogadores antes de processar; um reino sem estado guardado é verificado e reconstruído (§2.5).
 
@@ -4716,13 +4831,17 @@ portFood = Σ floor(pop × foodRate); foodRate: SORTEADO por porto por turno a Q
 
 forgeXP = +2% (fixo) para xp_wp da unidade (exércitos Anões, estacionários, no hexágono da forja, no fim do turno)
 
+emigPct = opinion\<=10?10 : opinion\<=20?5 : opinion\<=30?2.5 : opinion\<=40?1 : 0 (TP_EMIGRATION_BANDS, opinião no início do turno; substitui o crescimento, antes do rendimento)
+
+pop −= max(1, floor(pop × emigPct / 100)) por povoação com população quando emigPct \> 0
+
 rawTax = floor(totalPop × taxRate / 100)
 
-penaltyPct = opinion\<=10?10 : opinion\<=20?8 : opinion\<=30?6 : opinion\<=40?4 : opinion\<=50?2 : 0 (TP_TAX_PENALTY_BANDS, opinião no início do turno)
+penaltyPct = opinion\<=10?90 : opinion\<=20?60 : opinion\<=30?30 : opinion\<=40?10 : opinion\<=50?5 : 0 (TP_TAX_PENALTY_BANDS, opinião no início do turno)
 
 netTax = max(0, rawTax − floor(rawTax × penaltyPct / 100))
 
-opinion += (TP_TAX_OPINION_NEUTRAL − taxRate) × TP_TAX_OPINION_PER_POINT (logo após o imposto, mantida entre 0–100; uma tax_change aplica-se depois disto)
+opinion += (TP_TAX_OPINION_NEUTRAL − taxRate) × TP_TAX_OPINION_PER_POINT (9% e 10%: −TP_TAX_OPINION_TOP em vez disso; logo após o imposto, mantida entre 0–100; uma tax_change aplica-se depois disto)
 
 baseGold = netTax + portGold
 
@@ -4787,7 +4906,7 @@ Pré-Fase 3 Cerco e Assalto — exércitos cercados fixos (marcha recusada, apen
 
 Pré-Fase 4 Queda Automática do Cerco — hexágonos com progresso \> limiar são transferidos
 
-Fase 1 Crescimento da População (1–3% por hexágono)
+Fase 1 Crescimento da População (1–3% por hexágono) — ou, com opinião 40 ou inferior, emigração em vez disso (§2.9.1)
 
 \+ Rendimento de terreno (planície +1f; sem ouro de terreno)
 
@@ -4863,13 +4982,13 @@ Fase 8 ·V Vassalagem — os juramentos do turno anterior respondidos (vassal_of
 
 Fase 8 ·M Mensagens (até 3; \[CEASEFIRE\] paz automática se mútua; \[TRIBUTE: n res\], §2.8.3)
 
-Fim do turno Transferências de Recursos — send_resource + \[TRIBUTE\] (apenas excedente, aplicado após todas as despesas)
-
-Aleatório 40% por reino; 1 evento no máximo; pool de guerra ou paz + pool de raça
+Fim do turno Transferências de Recursos — as ofertas aceites do último turno, depois send_resource (os \[TRIBUTE\] já partiram na Fase 8 ·M) (apenas excedente, aplicado após todas as despesas)
 
 Varrimentos Varrimentos de forças vazias e de integridade de ligações
 
 Forja Exércitos Anões estacionados num local de Forja ganham XP
+
+Fase 10 Mexericos e Rumores (Gossip & Rumours) — um rumor anónimo por reino com um Mestre de Espiões, para todos os reinos; um rumor que o GM riscou não se espalha em lado nenhum e não custa nada (§8.8.7)
 
 XP Pers. Experiência de Personagens (§7.10)
 
