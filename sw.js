@@ -1,6 +1,6 @@
 // Service worker do painel TREVASXXI — cache offline de ficheiros estáticos.
 // Sem chamadas de rede próprias: o painel não depende de nenhuma API externa.
-const CACHE_NAME = 'trevasxxi-v30';
+const CACHE_NAME = 'trevasxxi-v31';
 const ASSETS = ['./', './index.html', './manual_pt.json', './mapa3d.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', (event) => {

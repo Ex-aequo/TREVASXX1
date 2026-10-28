@@ -251,6 +251,8 @@ button.act.secondary{background:transparent;border:1px solid var(--gold-dim);col
       <div class="stat" style="min-width:110px;"><div class="v" id="opinionVal">90</div><div class="l">Opinião (0–100)</div></div>
       <div class="stat" style="min-width:110px;"><div class="v" id="taxPenaltyVal">0%</div><div class="l">Penalização fiscal</div></div>
       <div class="stat" style="min-width:110px;"><div class="v" id="taxRateVal">5%</div><div class="l">Taxa de imposto</div></div>
+      <div class="stat" style="min-width:110px;"><div class="v" id="moodVal">—</div><div class="l">Estado do povo</div></div>
+      <div class="stat" style="min-width:110px;"><div class="v" id="emigVal">0%</div><div class="l">Emigração / turno</div></div>
     </div>
   </div>
 </section>
@@ -259,7 +261,7 @@ button.act.secondary{background:transparent;border:1px solid var(--gold-dim);col
 <section class="tab" id="tab-advisor">
   <div class="card">
     <h2>⭐ Advisor — As 5 Melhores Ações Agora</h2>
-    <p class="small">Calculado a cada carregamento de relatório a partir de todas as regras, fórmulas e tabelas do manual v747. As ações são convertidas para um valor comum em ouro-equivalente (usando os preços de venda do mercado) para poderem ser comparadas entre si, depois ordenadas por retorno por ouro investido — ações grátis (atribuições, imposto) sobem sempre ao topo quando têm valor positivo. Nº 1 é a mais eficaz.</p>
+    <p class="small">Calculado a cada carregamento de relatório a partir de todas as regras, fórmulas e tabelas do manual v767. As ações são convertidas para um valor comum em ouro-equivalente (usando os preços de venda do mercado) para poderem ser comparadas entre si, depois ordenadas por retorno por ouro investido — ações grátis (atribuições, imposto) sobem sempre ao topo quando têm valor positivo. Nº 1 é a mais eficaz.</p>
     <div id="advisorList"></div>
   </div>
 </section>
@@ -434,7 +436,7 @@ button.act.secondary{background:transparent;border:1px solid var(--gold-dim);col
     <h2>Simulador de Taxa de Imposto</h2>
     <p class="small">Só podes alterar ±1 ponto percentual por turno. A tabela usa a tua população atual (soma de hexágonos possuídos).</p>
     <div class="tbl-wrap"><table id="taxTable">
-      <thead><tr><th>Taxa</th><th>Ouro bruto</th><th>Penalização (Opinião atual)</th><th>Ouro líquido</th><th>Opinião/turno</th></tr></thead>
+      <thead><tr><th>Taxa</th><th>Ouro bruto</th><th>Penalização (Opinião atual)</th><th>Ouro líquido</th><th>Opinião/turno</th><th>Turnos até ≤50 / ≤40</th></tr></thead>
       <tbody></tbody>
     </table></div>
   </div>
@@ -452,7 +454,7 @@ button.act.secondary{background:transparent;border:1px solid var(--gold-dim);col
     <h2>📋 Recrutamento Concreto — Próximos 8 Turnos</h2>
     <p class="small">Simulação turno-a-turno a partir do teu relatório mais recente: crescimento populacional (§2.9.1, 2%/turno médio), rendimento no valor garantido, manutenção de ouro/ferro das tropas já em pé, e <b>consumo de comida contínuo</b> (§2.10.4: 1/soldado a pé, 2/montado — 1 se Nómada) subtraído a cada turno antes de recrutar mais. O recrutamento é travado para nunca comprometer mais de 85% do rendimento de comida desse turno em manutenção — a folga fica para crescimento e imprevistos.</p>
     <div class="tbl-wrap"><table id="recruitPlanTable">
-      <thead><tr><th>Turno</th><th>Ações de arranque</th><th>Recrutar</th><th>Exército acumulado</th><th>Ouro no fim</th><th>Comida no fim</th></tr></thead>
+      <thead><tr><th>Turno</th><th>Ações de arranque</th><th>Recrutar</th><th>Exército acumulado</th><th>Ouro no fim</th><th>Comida no fim</th><th>Opinião no fim</th></tr></thead>
       <tbody></tbody>
     </table></div>
     <p class="small" id="recruitPlanWarning"></p>
@@ -788,7 +790,7 @@ button.act.secondary{background:transparent;border:1px solid var(--gold-dim);col
   <div class="card">
     <h3>O que esta ferramenta faz — e o que não faz</h3>
     <ul class="small">
-      <li>Calcula rendimentos, custos de construção/melhoria, recrutamento e cenários de imposto usando as fórmulas exatas do manual v747 e da Página do Jogador V350.</li>
+      <li>Calcula rendimentos, custos de construção/melhoria, recrutamento e cenários de imposto usando as fórmulas exatas do manual v767 e da Página do Jogador V381.</li>
       <li><b>Não</b> gera nem assina um ficheiro de ordens — continua a emitir as tuas ordens na Página do Jogador oficial. Esta ferramenta é só para decidir o que ordenar.</li>
       <li>Os valores de produção variável (quintas, portos) mostram sempre o valor garantido e o máximo possível — nunca uma previsão exata, porque o motor rola de novo a cada turno.</li>
     </ul>
@@ -799,7 +801,7 @@ button.act.secondary{background:transparent;border:1px solid var(--gold-dim);col
 </div>
 
 <script>
-/* ============================== DADOS DO MOTOR (sincronizados com o manual v747 / player_page V350) ============================== */
+/* ============================== DADOS DO MOTOR (sincronizados com o manual v767 / player_page V381) ============================== */
 const SITE_COSTS={farm:1000,mine:1000,port:5000,lumbermill:1000,quarry:1000};
 const C_MINE_FIND_CHANCE={mountain:0.25,hills:0.15,desert:0.07,plains:0.07,forest:0.05};
 const C_MINE_MAX_LEVEL={mountain:3,hills:2,desert:2,plains:1,forest:1};
@@ -816,7 +818,9 @@ const C_FARM_UPGRADE_COST={2:2000,3:3000};
 const C_PORT_UPGRADE_COST={2:10000,3:15000};
 const C_LUMBERMILL_UPGRADE_COST={2:2000,3:3000};
 const C_QUARRY_UPGRADE_COST={2:2000,3:3000};
-const C_TAX_PENALTY_BANDS=[[10,10],[20,8],[30,6],[40,4],[50,2]]; // [até opinião, penalização%]
+const C_TAX_PENALTY_BANDS=[[10,90],[20,60],[30,30],[40,10],[50,5]]; // [até opinião, penalização% do imposto bruto] (§2.9.6, v767)
+const C_TAX_OPINION_TOP=[[9,10],[10,15]]; // taxa 9% custa −10 e 10% custa −15 de opinião por turno (§2.9.13)
+const C_EMIGRATION_BANDS=[[10,10],[20,5],[30,2.5],[40,1]]; // [até opinião, % da população de cada povoação que emigra por turno] (§2.9.1)
 const FOUND_BLUEPRINT_COST=500, FOUND_SETTLERS=100, FOUND_CAPITAL_RESERVE_MULT=2;
 const CHAR_HIRE_COST=1000;
 const MARKET_SELL_RATE=0.6;
@@ -1120,7 +1124,7 @@ let STATE = null;
 // APP_VERSION: sobe isto (e o CACHE_NAME correspondente em sw.js) sempre que publicares uma versão nova no GitHub.
 // É o que aparece no canto superior direito da app — se não mudar depois de um deploy, o browser ainda está
 // a servir a cache antiga do service worker.
-const APP_VERSION = 'v4.2 · 2026-10-15';
+const APP_VERSION = 'v4.3 · 2026-10-28';
 document.getElementById('appVersionBadge').textContent = APP_VERSION.split(' · ')[0];
 document.getElementById('appVersionBadge').title = 'Versão do painel: '+APP_VERSION;
 
@@ -1138,6 +1142,7 @@ function loadState(raw){
     const mapHexes = raw.map_state.hexes.filter(h=>h.visibility==='full'||h.visibility==='border');
     s = {
       kingdom_id: kid, kingdom_name: raw.kingdom_name, race: raw.kingdom_race,
+      outdatedPP: (raw.events||[]).some(e=>/outdated player page/i.test(e&&e.title||'')),
       resources: raw.kingdom_state.resources, opinion: raw.kingdom_state.opinion,
       taxRate: raw.kingdom_state.taxRate, characters: raw.kingdom_state.characters,
       candidate_pool: raw.kingdom_state.candidate_pool || [],
@@ -1262,7 +1267,31 @@ function taxPenaltyPct(opinion){
   for(const [maxOp,pen] of C_TAX_PENALTY_BANDS){ if(opinion<=maxOp) return pen; }
   return 0;
 }
-function taxOpinionDelta(rate){ return (5-rate)*2; } // neutral at 5%, +2 opinion per point below, -2 per point above
+function taxOpinionDelta(rate){ // neutro a 5%: +2 por ponto abaixo, −2 por ponto acima até 8%; 9% = −10, 10% = −15 (§2.9.13)
+  for(const [r,d] of C_TAX_OPINION_TOP){ if(rate===r) return -d; }
+  return (5-rate)*2;
+}
+function emigrationPct(opinion){ for(const [top,pct] of C_EMIGRATION_BANDS){ if(opinion<=top) return pct; } return 0; }
+function emigrationLoss(pop,pct){ return pop>0&&pct>0 ? Math.min(pop, Math.max(1, Math.floor(pop*pct/100))) : 0; }
+// população que paga imposto este turno: com opinião ≤40 a emigração sai ANTES de contar o imposto (§2.9.1)
+function popAfterEmigration(hexes,opinion){
+  const pct=emigrationPct(opinion);
+  return hexes.reduce((sum,h)=>{ const p=h.population||0; return sum+(h.construction&&pct>0 ? p-emigrationLoss(p,pct) : p); },0);
+}
+function opinionMood(op){
+  if(op>50) return {label:'Contente',icon:'😊',color:'var(--green2, #6c6)'};
+  if(op>40) return {label:'Inquieto',icon:'😐',color:'var(--gold, #c9a04a)'};
+  if(op>20) return {label:'Descontente',icon:'😤',color:'var(--red2, #e66)'};
+  return {label:'Rebelde',icon:'🔥',color:'var(--red2, #e66)'};
+}
+// quantos turnos aguentas a uma taxa até a opinião entrar na banda de penalização (≤50) e de emigração (≤40)
+function turnsToBand(opinion,rate){
+  const d=taxOpinionDelta(rate); let o=opinion, t50=null, t40=null;
+  if(o<=50) t50=0; if(o<=40) t40=0;
+  if(d>=0) return {t50,t40,d};
+  for(let i=1;i<=60;i++){ o=Math.max(0,o+d); if(t50===null&&o<=50) t50=i; if(t40===null&&o<=40){ t40=i; break; } }
+  return {t50,t40,d};
+}
 
 function farmYield(pop,lv){ const r=C_FARM_ROLL[lv]; return {min:Math.max(1,floor(pop*r.min)), max:Math.max(1,floor(pop*r.max))}; }
 function portYield(pop,lv){
@@ -1465,7 +1494,7 @@ function renderVisaoGeral(){
   const pop = totalPop();
   const portBracketMap = getPortBracketMap(STATE.hexes);
   const taxRate = STATE.taxRate;
-  const rawTax = floor(pop*taxRate/100);
+  const rawTax = floor(popAfterEmigration(STATE.hexes,STATE.opinion)*taxRate/100);
   const pen = taxPenaltyPct(STATE.opinion);
   const netTax = Math.max(0, rawTax - floor(rawTax*pen/100));
   goldTotal += netTax;
@@ -1493,6 +1522,9 @@ function renderVisaoGeral(){
 
   document.getElementById('opinionVal').textContent = STATE.opinion;
   document.getElementById('taxPenaltyVal').textContent = pen+'%';
+  { const _m=opinionMood(STATE.opinion), _e=emigrationPct(STATE.opinion);
+    const mv=document.getElementById('moodVal'); if(mv){ mv.textContent=_m.icon+' '+_m.label; mv.style.color=_m.color; mv.style.fontSize='1.1rem'; }
+    const ev=document.getElementById('emigVal'); if(ev){ ev.textContent=_e+'%'; ev.style.color=_e>0?'var(--red2, #e66)':''; } }
   document.getElementById('taxRateVal').textContent = taxRate+'%';
 
   // Recommendations
@@ -1513,6 +1545,16 @@ function renderVisaoGeral(){
   }
   if(STATE.characters.filter(c=>c.assignment==='none' && !c.dead).length){
     recs.push(`<div class="recommend"><b>Tens personagem(ns) sem atribuição.</b> ${STATE.characters.filter(c=>c.assignment==='none').map(c=>c.name+` (Gestão ${c.management})`).join(', ')} — atribui como Tesoureiro/Mestre (ou Mestre dos Cavalos) para começar a ganhar o bónus de rendimento já no próximo turno (§2.9.7).</div>`);
+  }
+  if(STATE.outdatedPP){
+    recs.push(`<div class="recommend warn"><b>Página do Jogador desatualizada:</b> o motor avisou que as ordens do último turno vieram de uma versão antiga. Usa a <b>Página do Jogador V381 ou superior</b> (regras do manual v767: nova penalização fiscal, emigração, imposto de 9%/10%) — senão as ordens podem ser rejeitadas.</div>`);
+  }
+  if(taxRate>=9){
+    recs.push(`<div class="recommend warn"><b>Taxa ${taxRate}% é perigosa:</b> custa ${taxOpinionDelta(taxRate)} de opinião <i>por turno</i> (a 8% custa −6). Com Opinião ${STATE.opinion} entras na penalização fiscal (≤50) em ${turnsToBand(STATE.opinion,taxRate).t50??'—'} turno(s) e na emigração (≤40) em ${turnsToBand(STATE.opinion,taxRate).t40??'—'}. Considera ficar nos 8% ou menos (§2.9.13).</div>`);
+  }
+  if(STATE.opinion<=40){
+    const _ep=emigrationPct(STATE.opinion);
+    recs.push(`<div class="recommend warn"><b>Emigração:</b> com Opinião ${STATE.opinion} nenhuma povoação cresce e cada uma perde ${_ep}% da população por turno (mínimo 1), antes de contar o imposto (§2.9.1). Baixa a taxa abaixo de 5% — a opinião só recupera assim ou com vitórias em batalha.</div>`);
   }
   if(taxRate>5 && STATE.opinion<=50){
     recs.push(`<div class="recommend warn"><b>Atenção:</b> taxa de imposto (${taxRate}%) acima de 5% com Opinião ${STATE.opinion} — já estás a perder ${pen}% do imposto bruto em penalização, e a opinião vai continuar a cair (${taxOpinionDelta(taxRate)}/turno).</div>`);
@@ -1797,7 +1839,7 @@ function suggestAssignmentsJoint(candidates){
 
 /* ============================== RENDER: IMPOSTOS ============================== */
 function renderImpostos(){
-  const pop = totalPop();
+  const pop = popAfterEmigration(STATE.hexes,STATE.opinion);
   const tbody = document.querySelector('#taxTable tbody');
   let rows='';
   for(let rate=1;rate<=10;rate++){
@@ -1806,7 +1848,7 @@ function renderImpostos(){
     const net = Math.max(0, raw-floor(raw*pen/100));
     const opDelta = taxOpinionDelta(rate);
     const cls = rate===STATE.taxRate?'style="background:rgba(255,255,255,0.07);"':'';
-    rows += `<tr ${cls}><td>${rate}%</td><td>${fmt(raw)}g</td><td>${pen}%</td><td>${fmt(net)}g</td><td class="${opDelta>=0?'good':'bad'}">${opDelta>=0?'+':''}${opDelta}</td></tr>`;
+    rows += `<tr ${cls}><td>${rate}%</td><td>${fmt(raw)}g</td><td>${pen}%</td><td>${fmt(net)}g</td><td class="${opDelta>=0?'good':'bad'}">${opDelta>=0?'+':''}${opDelta}</td><td>${(()=>{const b=turnsToBand(STATE.opinion,rate); if(opDelta>=0) return '<span class="good">estável</span>'; const f=v=>v===null?'>60':(v===0?'já':v); return `<span class="${(b.t50!==null&&b.t50<=3)?'bad':''}">${f(b.t50)} / ${f(b.t40)}</span>`;})()}</td></tr>`;
   }
   tbody.innerHTML = rows;
 }
@@ -1846,7 +1888,7 @@ function simulateCampaign(nTurns){
   const hexes = STATE.hexes.map(h=>({...h, construction: h.construction?{...h.construction}:null, site: h.site?{...h.site}:null}));
   let resources = {...STATE.resources};
   let taxRate = STATE.taxRate;
-  const opinion = STATE.opinion; // assume-se estável durante a projeção (sem guerra ainda)
+  let opinion = STATE.opinion; // evolui turno a turno com o imposto (§2.9.13); sem guerra/batalhas na projeção
   const units = getUnits();
   const combatUnits = units.filter(u=>u.wp>10); // exclui máquinas de cerco
   if(!combatUnits.length) return [];
@@ -1883,7 +1925,7 @@ function simulateCampaign(nTurns){
     combatUnits.forEach(u=>{ upkeepFoodExisting += (standing[u.id]||0)*foodPerHead(u); });
     const foodUpkeepBudget = Math.max(0, RESERVE_RATIO*foodIncomeEstimate - upkeepFoodExisting);
     // estimativa conservadora do ouro que entra este turno (imposto líquido pré-crescimento) — evita recrutar a ponto de a manutenção ficar a descoberto
-    const popPre = hexes.reduce((s,h)=>s+(h.population||0),0);
+    const popPre = popAfterEmigration(hexes,opinion);
     const rawTaxPre = floor(popPre*taxRate/100);
     const goldIncomeEstimate = Math.max(0, rawTaxPre-floor(rawTaxPre*taxPenaltyPct(opinion)/100));
     let upkeepGoldCommitted = 0;
@@ -1908,9 +1950,12 @@ function simulateCampaign(nTurns){
     standing[cheapUnit.id] = (standing[cheapUnit.id]||0)+qtyCheap;
     standing[eliteUnit.id] = (standing[eliteUnit.id]||0)+qtyElite;
 
-    // B. Fase 1 — Crescimento populacional (§2.9.1): máx(1, arred(2%×teto)) por hexágono construído
+    // B. Fase 1 — Crescimento populacional (§2.9.1): máx(1, arred(2%×teto)) por hexágono construído.
+    //    Com opinião ≤40 (lida no início do turno) ninguém cresce e cada povoação perde uma fatia da população (emigração).
+    const emigPctT = emigrationPct(opinion); let emigratedT = 0;
     hexes.forEach(h=>{
       if(!h.construction) return;
+      if(emigPctT>0){ const l=emigrationLoss(h.population||0,emigPctT); h.population=(h.population||0)-l; emigratedT+=l; return; }
       const info = getLevelInfo(h.construction.race, h.construction.level);
       const cap = info ? info.pop : h.population;
       if(h.population<cap){ h.population = Math.min(cap, h.population + Math.max(1, Math.round(0.02*cap))); }
@@ -1939,6 +1984,9 @@ function simulateCampaign(nTurns){
     const foodIncomeThisTurn = farmFood+terrainFood;
     resources.gold += goldIncome; resources.food += foodIncomeThisTurn;
     resources.iron += mineIron; resources.wood += lumberWood; resources.stone += quarryStone;
+    // a opinião move-se logo a seguir ao imposto, à taxa que cobrou este turno (§2.9.13)
+    const opinionEndT = Math.max(0, Math.min(100, opinion + taxOpinionDelta(taxRate))); const penT = pen;
+    opinion = opinionEndT;
 
     // B3. Ações grátis de arranque (só no 1º turno da projeção) — o imposto e o cargo só valem a partir do turno seguinte
     if(t===1){
@@ -1982,7 +2030,7 @@ function simulateCampaign(nTurns){
       capSoldiers, standingTotal,
       goldEnd:Math.round(resources.gold), foodEnd:Math.round(resources.food),
       foodIncomeThisTurn:Math.round(foodIncomeThisTurn), foodUpkeepTotal:Math.round(foodConsumed),
-      hungry, goldShort,
+      hungry, goldShort, opinionEnd:opinionEndT, emigrated:emigratedT,
     });
   }
   return results;
@@ -2097,12 +2145,13 @@ function renderPlano(){
       <td>${r.standingTotal}</td>
       <td>${fmt(r.goldEnd)}g</td>
       <td class="${r.hungry?'bad':''}">${fmt(r.foodEnd)}${r.hungry?' ⚠':''}</td>
+      <td class="${r.opinionEnd<=50?'bad':''}">${r.opinionEnd}${r.emigrated>0?` <span class="small">(−${fmt(r.emigrated)} pop)</span>`:''}</td>
     </tr>
   `).join('');
   const anyHungry = sim.some(r=>r.hungry);
   document.getElementById('recruitPlanWarning').innerHTML = anyHungry
     ? '⚠ A projeção indica turnos onde a comida chegaria a 0 se recrutasses ao ritmo máximo sugerido — considera abrandar o recrutamento ou priorizar outra Quinta mais cedo.'
-    : `Projeção sustentável: em nenhum turno o consumo de comida ultrapassa 85% do rendimento desse turno. Números assumem crescimento populacional médio de 2%/turno e nenhuma guerra ativa — recalcula sempre que carregares um relatório novo.`;
+    : `Projeção sustentável: em nenhum turno o consumo de comida ultrapassa 85% do rendimento desse turno. Números assumem crescimento populacional médio de 2%/turno, nenhuma guerra ativa e a opinião a evoluir com o imposto (com opinião ≤40 há emigração em vez de crescimento) — recalcula sempre que carregares um relatório novo.`;
 
   const notesEl = document.getElementById('planNotes');
   notesEl.value = loadPlanNotes();
@@ -2219,13 +2268,14 @@ function buildAdvisorCandidates(){
   });
 
   // --- 3. Taxa de imposto ---
-  if(taxRate<10){
+  if(taxRate<8){ // acima de 8% a opinião cai −10/−15 por turno: o painel não recomenda subir para 9% ou 10%
     const rawUp = floor(pop*(taxRate+1)/100);
     const penUp = taxPenaltyPct(opinion); // penalização não muda no turno da alteração
     const netUp = Math.max(0, rawUp-floor(rawUp*penUp/100));
     const gain = netUp-netTax;
-    const opinionCost = 2; // por ponto acima de 5%, por turno
-    const turnsBuffer = Math.max(0, Math.floor((opinion-50)/2));
+    const opinionCost = Math.abs(Math.min(0,taxOpinionDelta(taxRate+1))); // custo de opinião por turno à nova taxa (9%=10, 10%=15)
+    const _tb = turnsToBand(opinion,taxRate+1);
+    const turnsBuffer = _tb.t50===null ? 99 : _tb.t50;
     if(gain>0){
       cands.push({
         title:`Subir a taxa de imposto de ${taxRate}% para ${taxRate+1}%`,
@@ -2233,20 +2283,20 @@ function buildAdvisorCandidates(){
         valuePerTurn:gain, valueLabel:`+${fmt(gain)}g/turno`,
         category:'Impostos',
         detail: turnsBuffer>=10
-          ? `Tens Opinião ${opinion} — margem para cerca de ${turnsBuffer} turnos antes de entrares na banda de penalização (≤50). Ganho essencialmente grátis a curto prazo.`
-          : `⚠ Tens apenas ${turnsBuffer} turnos de margem antes da penalização fiscal começar a morder — considera com cautela.`
+          ? `Tens Opinião ${opinion} — a ${taxRate+1}% (−${opinionCost}/turno) tens margem para ${turnsBuffer>=99?'muitos':'cerca de '+turnsBuffer} turnos antes da banda de penalização (≤50). Ganho essencialmente grátis a curto prazo.`
+          : `⚠ A ${taxRate+1}% (−${opinionCost}/turno) tens apenas ${turnsBuffer} turno(s) até à penalização fiscal (≤50) e ${_tb.t40===null?'—':_tb.t40} até à emigração (≤40) — considera com cautela.`
       });
     }
   }
-  if(taxRate>1 && pen>0){
+  if(taxRate>1 && (pen>0 || taxRate>=9)){
     const rawDown = floor(pop*(taxRate-1)/100);
     const netDown = Math.max(0, rawDown-floor(rawDown*taxPenaltyPct(opinion)/100));
     cands.push({
       title:`Baixar a taxa de imposto de ${taxRate}% para ${taxRate-1}%`,
       cost:0, costLabel:'Sem custo em ouro — recupera opinião',
-      valuePerTurn: -(netTax-netDown), valueLabel:`Opinião +2/turno em vez de imposto`,
+      valuePerTurn: -(netTax-netDown), valueLabel:`Opinião ${(()=>{const d=taxOpinionDelta(taxRate-1);return (d>=0?'+':'')+d;})()}/turno em vez de imposto`,
       category:'Impostos',
-      detail:`Estás a perder ${pen}% do imposto bruto em penalização com Opinião ${opinion}. Baixar a taxa reduz essa sangria e começa a recuperar opinião.`
+      detail:pen>0 ? `Estás a perder ${pen}% do imposto bruto em penalização com Opinião ${opinion}${emigrationPct(opinion)>0?` e ${emigrationPct(opinion)}% da população emigra por turno`:''}. Baixar a taxa reduz essa sangria e começa a recuperar opinião.` : `A ${taxRate}% a opinião cai ${taxOpinionDelta(taxRate)} por turno (a 8% cai só −6). Descer um ponto trava a queda antes de chegares à penalização fiscal.`
     });
   }
 
@@ -2894,7 +2944,7 @@ function renderBalanco(){
 
   // --- Produção (valor garantido) ---
   const pop = totalPop();
-  const rawTax = floor(pop*STATE.taxRate/100);
+  const rawTax = floor(popAfterEmigration(STATE.hexes,STATE.opinion)*STATE.taxRate/100);
   const pen = taxPenaltyPct(STATE.opinion);
   const netTax = Math.max(0, rawTax-floor(rawTax*pen/100));
   let farmFood=0, terrainFood=0, portGold=0, mineIron=0, lumberWood=0, quarryStone=0;

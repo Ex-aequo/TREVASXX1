@@ -45,11 +45,17 @@
   /* hosted by a page that pushes its own data (window.show3D): no drop target, no file button, no legend (the host has its own) */
   body.embedded #drop, body.embedded .btn:has(#file), body.embedded #legend{display:none !important}
   .mute{color:var(--mute);font-size:12px}
+  /* ROSE-3D (owner 2026-10-15): the 2D map's compass rose, turned with the camera so N always points at the map's north;
+     bottom-left (the control pad holds bottom-right). Decoration only — clicks pass through. */
+  #rose3d{position:fixed;left:16px;bottom:16px;width:150px;pointer-events:none;z-index:1;opacity:.9;filter:drop-shadow(0 2px 4px rgba(0,0,0,.6))}
+  #rose3d svg{display:block;width:100%;height:auto;will-change:transform}
+  @media (max-width:520px){ #rose3d{width:84px;left:10px;bottom:10px} }
 </style>
 </head>
 <body class="embedded">
 <div id="view"></div>
 <div id="overlay"></div>
+<div id="rose3d" aria-hidden="true"><svg id="rose3d-svg" viewBox="-142 -142 284 284" aria-hidden="true" focusable="false"><circle r="84" fill="rgba(18,12,6,.42)"/><g fill="none" stroke="#c9a46a" stroke-width="1"><circle r="80"/><circle r="76"/><circle r="62"/><circle r="48"/><circle r="32"/><circle r="20"/></g><g stroke="#c9a46a" stroke-width=".8"><line x1="0.0" y1="-76.0" x2="0.0" y2="-84.0"/><line x1="7.4" y1="-75.6" x2="7.8" y2="-79.6"/><line x1="14.8" y1="-74.5" x2="15.6" y2="-78.5"/><line x1="22.1" y1="-72.7" x2="23.2" y2="-76.6"/><line x1="29.1" y1="-70.2" x2="32.1" y2="-77.6"/><line x1="35.8" y1="-67.0" x2="37.7" y2="-70.6"/><line x1="42.2" y1="-63.2" x2="44.4" y2="-66.5"/><line x1="48.2" y1="-58.7" x2="50.8" y2="-61.8"/><line x1="53.7" y1="-53.7" x2="59.4" y2="-59.4"/><line x1="58.7" y1="-48.2" x2="61.8" y2="-50.8"/><line x1="63.2" y1="-42.2" x2="66.5" y2="-44.4"/><line x1="67.0" y1="-35.8" x2="70.6" y2="-37.7"/><line x1="70.2" y1="-29.1" x2="77.6" y2="-32.1"/><line x1="72.7" y1="-22.1" x2="76.6" y2="-23.2"/><line x1="74.5" y1="-14.8" x2="78.5" y2="-15.6"/><line x1="75.6" y1="-7.4" x2="79.6" y2="-7.8"/><line x1="76.0" y1="-0.0" x2="84.0" y2="-0.0"/><line x1="75.6" y1="7.4" x2="79.6" y2="7.8"/><line x1="74.5" y1="14.8" x2="78.5" y2="15.6"/><line x1="72.7" y1="22.1" x2="76.6" y2="23.2"/><line x1="70.2" y1="29.1" x2="77.6" y2="32.1"/><line x1="67.0" y1="35.8" x2="70.6" y2="37.7"/><line x1="63.2" y1="42.2" x2="66.5" y2="44.4"/><line x1="58.7" y1="48.2" x2="61.8" y2="50.8"/><line x1="53.7" y1="53.7" x2="59.4" y2="59.4"/><line x1="48.2" y1="58.7" x2="50.8" y2="61.8"/><line x1="42.2" y1="63.2" x2="44.4" y2="66.5"/><line x1="35.8" y1="67.0" x2="37.7" y2="70.6"/><line x1="29.1" y1="70.2" x2="32.1" y2="77.6"/><line x1="22.1" y1="72.7" x2="23.2" y2="76.6"/><line x1="14.8" y1="74.5" x2="15.6" y2="78.5"/><line x1="7.4" y1="75.6" x2="7.8" y2="79.6"/><line x1="0.0" y1="76.0" x2="0.0" y2="84.0"/><line x1="-7.4" y1="75.6" x2="-7.8" y2="79.6"/><line x1="-14.8" y1="74.5" x2="-15.6" y2="78.5"/><line x1="-22.1" y1="72.7" x2="-23.2" y2="76.6"/><line x1="-29.1" y1="70.2" x2="-32.1" y2="77.6"/><line x1="-35.8" y1="67.0" x2="-37.7" y2="70.6"/><line x1="-42.2" y1="63.2" x2="-44.4" y2="66.5"/><line x1="-48.2" y1="58.7" x2="-50.8" y2="61.8"/><line x1="-53.7" y1="53.7" x2="-59.4" y2="59.4"/><line x1="-58.7" y1="48.2" x2="-61.8" y2="50.8"/><line x1="-63.2" y1="42.2" x2="-66.5" y2="44.4"/><line x1="-67.0" y1="35.8" x2="-70.6" y2="37.7"/><line x1="-70.2" y1="29.1" x2="-77.6" y2="32.1"/><line x1="-72.7" y1="22.1" x2="-76.6" y2="23.2"/><line x1="-74.5" y1="14.8" x2="-78.5" y2="15.6"/><line x1="-75.6" y1="7.4" x2="-79.6" y2="7.8"/><line x1="-76.0" y1="0.0" x2="-84.0" y2="0.0"/><line x1="-75.6" y1="-7.4" x2="-79.6" y2="-7.8"/><line x1="-74.5" y1="-14.8" x2="-78.5" y2="-15.6"/><line x1="-72.7" y1="-22.1" x2="-76.6" y2="-23.2"/><line x1="-70.2" y1="-29.1" x2="-77.6" y2="-32.1"/><line x1="-67.0" y1="-35.8" x2="-70.6" y2="-37.7"/><line x1="-63.2" y1="-42.2" x2="-66.5" y2="-44.4"/><line x1="-58.7" y1="-48.2" x2="-61.8" y2="-50.8"/><line x1="-53.7" y1="-53.7" x2="-59.4" y2="-59.4"/><line x1="-48.2" y1="-58.7" x2="-50.8" y2="-61.8"/><line x1="-42.2" y1="-63.2" x2="-44.4" y2="-66.5"/><line x1="-35.8" y1="-67.0" x2="-37.7" y2="-70.6"/><line x1="-29.1" y1="-70.2" x2="-32.1" y2="-77.6"/><line x1="-22.1" y1="-72.7" x2="-23.2" y2="-76.6"/><line x1="-14.8" y1="-74.5" x2="-15.6" y2="-78.5"/><line x1="-7.4" y1="-75.6" x2="-7.8" y2="-79.6"/></g><g stroke="#c9a46a" stroke-width=".5" opacity=".7"><line x1="0.0" y1="-62.0" x2="0.0" y2="-64.5"/><line x1="3.0" y1="-61.9" x2="3.2" y2="-64.4"/><line x1="6.1" y1="-61.7" x2="6.3" y2="-64.2"/><line x1="9.1" y1="-61.3" x2="9.5" y2="-63.8"/><line x1="12.1" y1="-60.8" x2="12.6" y2="-63.3"/><line x1="15.1" y1="-60.1" x2="15.7" y2="-62.6"/><line x1="18.0" y1="-59.3" x2="18.7" y2="-61.7"/><line x1="20.9" y1="-58.4" x2="21.7" y2="-60.7"/><line x1="23.7" y1="-57.3" x2="24.7" y2="-59.6"/><line x1="26.5" y1="-56.0" x2="27.6" y2="-58.3"/><line x1="29.2" y1="-54.7" x2="30.4" y2="-56.9"/><line x1="31.9" y1="-53.2" x2="33.2" y2="-55.3"/><line x1="34.4" y1="-51.6" x2="35.8" y2="-53.6"/><line x1="36.9" y1="-49.8" x2="38.4" y2="-51.8"/><line x1="39.3" y1="-47.9" x2="40.9" y2="-49.9"/><line x1="41.6" y1="-45.9" x2="43.3" y2="-47.8"/><line x1="43.8" y1="-43.8" x2="45.6" y2="-45.6"/><line x1="45.9" y1="-41.6" x2="47.8" y2="-43.3"/><line x1="47.9" y1="-39.3" x2="49.9" y2="-40.9"/><line x1="49.8" y1="-36.9" x2="51.8" y2="-38.4"/><line x1="51.6" y1="-34.4" x2="53.6" y2="-35.8"/><line x1="53.2" y1="-31.9" x2="55.3" y2="-33.2"/><line x1="54.7" y1="-29.2" x2="56.9" y2="-30.4"/><line x1="56.0" y1="-26.5" x2="58.3" y2="-27.6"/><line x1="57.3" y1="-23.7" x2="59.6" y2="-24.7"/><line x1="58.4" y1="-20.9" x2="60.7" y2="-21.7"/><line x1="59.3" y1="-18.0" x2="61.7" y2="-18.7"/><line x1="60.1" y1="-15.1" x2="62.6" y2="-15.7"/><line x1="60.8" y1="-12.1" x2="63.3" y2="-12.6"/><line x1="61.3" y1="-9.1" x2="63.8" y2="-9.5"/><line x1="61.7" y1="-6.1" x2="64.2" y2="-6.3"/><line x1="61.9" y1="-3.0" x2="64.4" y2="-3.2"/><line x1="62.0" y1="-0.0" x2="64.5" y2="-0.0"/><line x1="61.9" y1="3.0" x2="64.4" y2="3.2"/><line x1="61.7" y1="6.1" x2="64.2" y2="6.3"/><line x1="61.3" y1="9.1" x2="63.8" y2="9.5"/><line x1="60.8" y1="12.1" x2="63.3" y2="12.6"/><line x1="60.1" y1="15.1" x2="62.6" y2="15.7"/><line x1="59.3" y1="18.0" x2="61.7" y2="18.7"/><line x1="58.4" y1="20.9" x2="60.7" y2="21.7"/><line x1="57.3" y1="23.7" x2="59.6" y2="24.7"/><line x1="56.0" y1="26.5" x2="58.3" y2="27.6"/><line x1="54.7" y1="29.2" x2="56.9" y2="30.4"/><line x1="53.2" y1="31.9" x2="55.3" y2="33.2"/><line x1="51.6" y1="34.4" x2="53.6" y2="35.8"/><line x1="49.8" y1="36.9" x2="51.8" y2="38.4"/><line x1="47.9" y1="39.3" x2="49.9" y2="40.9"/><line x1="45.9" y1="41.6" x2="47.8" y2="43.3"/><line x1="43.8" y1="43.8" x2="45.6" y2="45.6"/><line x1="41.6" y1="45.9" x2="43.3" y2="47.8"/><line x1="39.3" y1="47.9" x2="40.9" y2="49.9"/><line x1="36.9" y1="49.8" x2="38.4" y2="51.8"/><line x1="34.4" y1="51.6" x2="35.8" y2="53.6"/><line x1="31.9" y1="53.2" x2="33.2" y2="55.3"/><line x1="29.2" y1="54.7" x2="30.4" y2="56.9"/><line x1="26.5" y1="56.0" x2="27.6" y2="58.3"/><line x1="23.7" y1="57.3" x2="24.7" y2="59.6"/><line x1="20.9" y1="58.4" x2="21.7" y2="60.7"/><line x1="18.0" y1="59.3" x2="18.7" y2="61.7"/><line x1="15.1" y1="60.1" x2="15.7" y2="62.6"/><line x1="12.1" y1="60.8" x2="12.6" y2="63.3"/><line x1="9.1" y1="61.3" x2="9.5" y2="63.8"/><line x1="6.1" y1="61.7" x2="6.3" y2="64.2"/><line x1="3.0" y1="61.9" x2="3.2" y2="64.4"/><line x1="0.0" y1="62.0" x2="0.0" y2="64.5"/><line x1="-3.0" y1="61.9" x2="-3.2" y2="64.4"/><line x1="-6.1" y1="61.7" x2="-6.3" y2="64.2"/><line x1="-9.1" y1="61.3" x2="-9.5" y2="63.8"/><line x1="-12.1" y1="60.8" x2="-12.6" y2="63.3"/><line x1="-15.1" y1="60.1" x2="-15.7" y2="62.6"/><line x1="-18.0" y1="59.3" x2="-18.7" y2="61.7"/><line x1="-20.9" y1="58.4" x2="-21.7" y2="60.7"/><line x1="-23.7" y1="57.3" x2="-24.7" y2="59.6"/><line x1="-26.5" y1="56.0" x2="-27.6" y2="58.3"/><line x1="-29.2" y1="54.7" x2="-30.4" y2="56.9"/><line x1="-31.9" y1="53.2" x2="-33.2" y2="55.3"/><line x1="-34.4" y1="51.6" x2="-35.8" y2="53.6"/><line x1="-36.9" y1="49.8" x2="-38.4" y2="51.8"/><line x1="-39.3" y1="47.9" x2="-40.9" y2="49.9"/><line x1="-41.6" y1="45.9" x2="-43.3" y2="47.8"/><line x1="-43.8" y1="43.8" x2="-45.6" y2="45.6"/><line x1="-45.9" y1="41.6" x2="-47.8" y2="43.3"/><line x1="-47.9" y1="39.3" x2="-49.9" y2="40.9"/><line x1="-49.8" y1="36.9" x2="-51.8" y2="38.4"/><line x1="-51.6" y1="34.4" x2="-53.6" y2="35.8"/><line x1="-53.2" y1="31.9" x2="-55.3" y2="33.2"/><line x1="-54.7" y1="29.2" x2="-56.9" y2="30.4"/><line x1="-56.0" y1="26.5" x2="-58.3" y2="27.6"/><line x1="-57.3" y1="23.7" x2="-59.6" y2="24.7"/><line x1="-58.4" y1="20.9" x2="-60.7" y2="21.7"/><line x1="-59.3" y1="18.0" x2="-61.7" y2="18.7"/><line x1="-60.1" y1="15.1" x2="-62.6" y2="15.7"/><line x1="-60.8" y1="12.1" x2="-63.3" y2="12.6"/><line x1="-61.3" y1="9.1" x2="-63.8" y2="9.5"/><line x1="-61.7" y1="6.1" x2="-64.2" y2="6.3"/><line x1="-61.9" y1="3.0" x2="-64.4" y2="3.2"/><line x1="-62.0" y1="0.0" x2="-64.5" y2="0.0"/><line x1="-61.9" y1="-3.0" x2="-64.4" y2="-3.2"/><line x1="-61.7" y1="-6.1" x2="-64.2" y2="-6.3"/><line x1="-61.3" y1="-9.1" x2="-63.8" y2="-9.5"/><line x1="-60.8" y1="-12.1" x2="-63.3" y2="-12.6"/><line x1="-60.1" y1="-15.1" x2="-62.6" y2="-15.7"/><line x1="-59.3" y1="-18.0" x2="-61.7" y2="-18.7"/><line x1="-58.4" y1="-20.9" x2="-60.7" y2="-21.7"/><line x1="-57.3" y1="-23.7" x2="-59.6" y2="-24.7"/><line x1="-56.0" y1="-26.5" x2="-58.3" y2="-27.6"/><line x1="-54.7" y1="-29.2" x2="-56.9" y2="-30.4"/><line x1="-53.2" y1="-31.9" x2="-55.3" y2="-33.2"/><line x1="-51.6" y1="-34.4" x2="-53.6" y2="-35.8"/><line x1="-49.8" y1="-36.9" x2="-51.8" y2="-38.4"/><line x1="-47.9" y1="-39.3" x2="-49.9" y2="-40.9"/><line x1="-45.9" y1="-41.6" x2="-47.8" y2="-43.3"/><line x1="-43.8" y1="-43.8" x2="-45.6" y2="-45.6"/><line x1="-41.6" y1="-45.9" x2="-43.3" y2="-47.8"/><line x1="-39.3" y1="-47.9" x2="-40.9" y2="-49.9"/><line x1="-36.9" y1="-49.8" x2="-38.4" y2="-51.8"/><line x1="-34.4" y1="-51.6" x2="-35.8" y2="-53.6"/><line x1="-31.9" y1="-53.2" x2="-33.2" y2="-55.3"/><line x1="-29.2" y1="-54.7" x2="-30.4" y2="-56.9"/><line x1="-26.5" y1="-56.0" x2="-27.6" y2="-58.3"/><line x1="-23.7" y1="-57.3" x2="-24.7" y2="-59.6"/><line x1="-20.9" y1="-58.4" x2="-21.7" y2="-60.7"/><line x1="-18.0" y1="-59.3" x2="-18.7" y2="-61.7"/><line x1="-15.1" y1="-60.1" x2="-15.7" y2="-62.6"/><line x1="-12.1" y1="-60.8" x2="-12.6" y2="-63.3"/><line x1="-9.1" y1="-61.3" x2="-9.5" y2="-63.8"/><line x1="-6.1" y1="-61.7" x2="-6.3" y2="-64.2"/><line x1="-3.0" y1="-61.9" x2="-3.2" y2="-64.4"/></g><g stroke="#c9a46a" stroke-width=".55" opacity=".55"><line x1="0.0" y1="-20.0" x2="0.0" y2="-76.0"/><line x1="3.9" y1="-19.6" x2="14.8" y2="-74.5"/><line x1="7.7" y1="-18.5" x2="29.1" y2="-70.2"/><line x1="11.1" y1="-16.6" x2="42.2" y2="-63.2"/><line x1="14.1" y1="-14.1" x2="53.7" y2="-53.7"/><line x1="16.6" y1="-11.1" x2="63.2" y2="-42.2"/><line x1="18.5" y1="-7.7" x2="70.2" y2="-29.1"/><line x1="19.6" y1="-3.9" x2="74.5" y2="-14.8"/><line x1="20.0" y1="-0.0" x2="76.0" y2="-0.0"/><line x1="19.6" y1="3.9" x2="74.5" y2="14.8"/><line x1="18.5" y1="7.7" x2="70.2" y2="29.1"/><line x1="16.6" y1="11.1" x2="63.2" y2="42.2"/><line x1="14.1" y1="14.1" x2="53.7" y2="53.7"/><line x1="11.1" y1="16.6" x2="42.2" y2="63.2"/><line x1="7.7" y1="18.5" x2="29.1" y2="70.2"/><line x1="3.9" y1="19.6" x2="14.8" y2="74.5"/><line x1="0.0" y1="20.0" x2="0.0" y2="76.0"/><line x1="-3.9" y1="19.6" x2="-14.8" y2="74.5"/><line x1="-7.7" y1="18.5" x2="-29.1" y2="70.2"/><line x1="-11.1" y1="16.6" x2="-42.2" y2="63.2"/><line x1="-14.1" y1="14.1" x2="-53.7" y2="53.7"/><line x1="-16.6" y1="11.1" x2="-63.2" y2="42.2"/><line x1="-18.5" y1="7.7" x2="-70.2" y2="29.1"/><line x1="-19.6" y1="3.9" x2="-74.5" y2="14.8"/><line x1="-20.0" y1="0.0" x2="-76.0" y2="0.0"/><line x1="-19.6" y1="-3.9" x2="-74.5" y2="-14.8"/><line x1="-18.5" y1="-7.7" x2="-70.2" y2="-29.1"/><line x1="-16.6" y1="-11.1" x2="-63.2" y2="-42.2"/><line x1="-14.1" y1="-14.1" x2="-53.7" y2="-53.7"/><line x1="-11.1" y1="-16.6" x2="-42.2" y2="-63.2"/><line x1="-7.7" y1="-18.5" x2="-29.1" y2="-70.2"/><line x1="-3.9" y1="-19.6" x2="-14.8" y2="-74.5"/></g><polygon points="0,0 22.2,-53.6 -6.0,-2.5" fill="#e8d4a6"/><polygon points="0,0 22.2,-53.6 6.0,2.5" fill="#6e4826"/><polygon points="-6.0,-2.5 22.2,-53.6 6.0,2.5 0,0" fill="none" stroke="#1e1208" stroke-width=".9" stroke-linejoin="round"/><polygon points="0,0 53.6,-22.2 -2.5,-6.0" fill="#e8d4a6"/><polygon points="0,0 53.6,-22.2 2.5,6.0" fill="#6e4826"/><polygon points="-2.5,-6.0 53.6,-22.2 2.5,6.0 0,0" fill="none" stroke="#1e1208" stroke-width=".9" stroke-linejoin="round"/><polygon points="0,0 53.6,22.2 2.5,-6.0" fill="#e8d4a6"/><polygon points="0,0 53.6,22.2 -2.5,6.0" fill="#6e4826"/><polygon points="2.5,-6.0 53.6,22.2 -2.5,6.0 0,0" fill="none" stroke="#1e1208" stroke-width=".9" stroke-linejoin="round"/><polygon points="0,0 22.2,53.6 6.0,-2.5" fill="#e8d4a6"/><polygon points="0,0 22.2,53.6 -6.0,2.5" fill="#6e4826"/><polygon points="6.0,-2.5 22.2,53.6 -6.0,2.5 0,0" fill="none" stroke="#1e1208" stroke-width=".9" stroke-linejoin="round"/><polygon points="0,0 -22.2,53.6 6.0,2.5" fill="#e8d4a6"/><polygon points="0,0 -22.2,53.6 -6.0,-2.5" fill="#6e4826"/><polygon points="6.0,2.5 -22.2,53.6 -6.0,-2.5 0,0" fill="none" stroke="#1e1208" stroke-width=".9" stroke-linejoin="round"/><polygon points="0,0 -53.6,22.2 2.5,6.0" fill="#e8d4a6"/><polygon points="0,0 -53.6,22.2 -2.5,-6.0" fill="#6e4826"/><polygon points="2.5,6.0 -53.6,22.2 -2.5,-6.0 0,0" fill="none" stroke="#1e1208" stroke-width=".9" stroke-linejoin="round"/><polygon points="0,0 -53.6,-22.2 -2.5,6.0" fill="#e8d4a6"/><polygon points="0,0 -53.6,-22.2 2.5,-6.0" fill="#6e4826"/><polygon points="-2.5,6.0 -53.6,-22.2 2.5,-6.0 0,0" fill="none" stroke="#1e1208" stroke-width=".9" stroke-linejoin="round"/><polygon points="0,0 -22.2,-53.6 -6.0,2.5" fill="#e8d4a6"/><polygon points="0,0 -22.2,-53.6 6.0,-2.5" fill="#6e4826"/><polygon points="-6.0,2.5 -22.2,-53.6 6.0,-2.5 0,0" fill="none" stroke="#1e1208" stroke-width=".9" stroke-linejoin="round"/><polygon points="0,0 60.8,-60.8 -7.1,-7.1" fill="#e8d4a6"/><polygon points="0,0 60.8,-60.8 7.1,7.1" fill="#6e4826"/><polygon points="-7.1,-7.1 60.8,-60.8 7.1,7.1 0,0" fill="none" stroke="#1e1208" stroke-width=".9" stroke-linejoin="round"/><polygon points="0,0 60.8,60.8 7.1,-7.1" fill="#e8d4a6"/><polygon points="0,0 60.8,60.8 -7.1,7.1" fill="#6e4826"/><polygon points="7.1,-7.1 60.8,60.8 -7.1,7.1 0,0" fill="none" stroke="#1e1208" stroke-width=".9" stroke-linejoin="round"/><polygon points="0,0 -60.8,60.8 7.1,7.1" fill="#e8d4a6"/><polygon points="0,0 -60.8,60.8 -7.1,-7.1" fill="#6e4826"/><polygon points="7.1,7.1 -60.8,60.8 -7.1,-7.1 0,0" fill="none" stroke="#1e1208" stroke-width=".9" stroke-linejoin="round"/><polygon points="0,0 -60.8,-60.8 -7.1,7.1" fill="#e8d4a6"/><polygon points="0,0 -60.8,-60.8 7.1,-7.1" fill="#6e4826"/><polygon points="-7.1,7.1 -60.8,-60.8 7.1,-7.1 0,0" fill="none" stroke="#1e1208" stroke-width=".9" stroke-linejoin="round"/><polygon points="0,0 0.0,-116.0 -13.0,-0.0" fill="#e8d4a6"/><polygon points="0,0 0.0,-116.0 13.0,-0.0" fill="#6e4826"/><polygon points="-13.0,-0.0 0.0,-116.0 13.0,-0.0 0,0" fill="none" stroke="#1e1208" stroke-width=".9" stroke-linejoin="round"/><polygon points="0,0 116.0,-0.0 0.0,-13.0" fill="#e8d4a6"/><polygon points="0,0 116.0,-0.0 0.0,13.0" fill="#6e4826"/><polygon points="0.0,-13.0 116.0,-0.0 0.0,13.0 0,0" fill="none" stroke="#1e1208" stroke-width=".9" stroke-linejoin="round"/><polygon points="0,0 0.0,116.0 13.0,-0.0" fill="#e8d4a6"/><polygon points="0,0 0.0,116.0 -13.0,0.0" fill="#6e4826"/><polygon points="13.0,-0.0 0.0,116.0 -13.0,0.0 0,0" fill="none" stroke="#1e1208" stroke-width=".9" stroke-linejoin="round"/><polygon points="0,0 -116.0,0.0 0.0,13.0" fill="#e8d4a6"/><polygon points="0,0 -116.0,0.0 -0.0,-13.0" fill="#6e4826"/><polygon points="0.0,13.0 -116.0,0.0 -0.0,-13.0 0,0" fill="none" stroke="#1e1208" stroke-width=".9" stroke-linejoin="round"/><circle r="6" fill="#e8d4a6" stroke="#1e1208" stroke-width="1"/><circle r="2.2" fill="#6e4826"/><g fill="#e8d4a6" stroke="#1e1208" stroke-width="2.6" paint-order="stroke" font-family="'IM Fell English',Georgia,serif" font-size="26" text-anchor="middle" dominant-baseline="central"><text x="0" y="-124">N</text><text x="126" y="0">E</text><text x="0" y="126">S</text><text x="-126" y="0">W</text></g></svg></div>
 <div id="drop">Drop a gm_state_turnN.json or report_*.json here</div>
 <div id="top" class="panel">
   <h1>⚔ KINGDOM MAP — 3D</h1>
@@ -88,6 +94,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 const SQ3 = Math.sqrt(3), SEA_Y = .10;
+const TRAIL_RED = 0xa51919;   // ARMY-LOOKS: the flat map's march trail red (the Player Page's drawTrailLineSegmented, rgba(165,25,25))
 // From the TP roster (mounted:true) and archer units — figure style only.
 const ENGINE_ID = /_siege_engine$/;   // ENGINE-MODELS: these units are machines, drawn as G.eng[id]
 const FIG_SIZE = {goblin:.78, uruk_hai:1.12};   // ORC-WARBAND: a goblin stands a head shorter than an orc, an Uruk taller
@@ -220,6 +227,10 @@ function makeGeos(){
     G.mound.computeVertexNormals(); }
   G.puddle = new THREE.CircleGeometry(.12,14); G.puddle.rotateX(-Math.PI/2);
   G.ring = new THREE.RingGeometry(.86,.96,6,1,Math.PI/6); G.ring.rotateX(-Math.PI/2);
+  // ARMY-LOOKS: the plate's relation rim, the mist round an army of unknown strength, the trail's arrowhead (pointing +z, flat on the ground)
+  G.lkTorus = new THREE.TorusGeometry(1,.05,6,48); G.lkTorus.rotateX(Math.PI/2);
+  G.lkMist = new THREE.SphereGeometry(1,10,8);
+  G.lkArrow = new THREE.ConeGeometry(.07,.16,3); G.lkArrow.rotateX(Math.PI/2); G.lkArrow.translate(0,0,.08);
   // mountain peak variants: noise-displaced icosahedra, snow by height (vertex colour)
   G.peaks = [0,1,2].map(s=>{
     const g = new THREE.IcosahedronGeometry(1,3), p = g.attributes.position, col = [];
@@ -923,6 +934,7 @@ function disposeWorld(w){
   });
 }
 const home = {pos:V3(0,0,0), target:V3(0,0,0)};
+const GRAT_STEP = 5;   // GRATICULE-3D: the flat map's KM_GRAT_STEP
 const hexXZ = (col,row) => ({x:SQ3*(col+0.5*(row&1)), z:1.5*row});
 const rnd = (a,b,i) => hash(a,b,i+500);
 // distance from a local point to the edge of a pointy-top hex prism (circumradius .97); < 0 means outside
@@ -1011,13 +1023,13 @@ function normalise(d){
       for (const a of ks.armies||[]) forces.push({type:'army',kid,f:a});
       for (const f of ks.fleets||[]) forces.push({type:'fleet',kid,f});
     }
-    return {mode:`GM state · turn ${d.turn}`, cols:d.cols, rows:d.rows, hexes:d.hexes, kingdoms:d.kingdoms, forces};
+    return {mode:`GM state · turn ${d.turn}`, cols:d.cols, rows:d.rows, wrap:d.wrap, hexes:d.hexes, kingdoms:d.kingdoms, forces};
   }
   if (d.map_state){
     const ks = d.kingdom_state||{}, kid = d.kingdom_id, kingdoms = [...(d.map_state.kingdoms||[])];
     if (!kingdoms.some(k=>k.id===kid)) kingdoms.push({id:kid,name:d.kingdom_name,color:d.kingdom_color,race:d.kingdom_race});
     const forces = [...(ks.armies||[]).map(f=>({type:'army',kid,f})), ...(ks.fleets||[]).map(f=>({type:'fleet',kid,f}))];
-    return {mode:`Report · ${d.kingdom_name} · turn ${d.turn}`, cols:d.map_state.cols, rows:d.map_state.rows, hexes:d.map_state.hexes, kingdoms, forces};
+    return {mode:`Report · ${d.kingdom_name} · turn ${d.turn}`, cols:d.map_state.cols, rows:d.map_state.rows, wrap:d.map_state.wrap, hexes:d.map_state.hexes, kingdoms, forces};
   }
   throw new Error('Not a gm_state or report JSON');
 }
@@ -1034,19 +1046,23 @@ function batch(geo, material, castShadow=true){
 // ── build ─────────────────────────────────────────────────────────────
 // Detail: 'low' = no shadows, thinner forests and companies, pixel ratio 1 — for weak laptops. Remembered per browser.
 const DETAIL_KEY = 'trevas3d.detail';
-const MONSTER_ODDS = 0.2;
-const MONSTER_REACH = 3.2, MONSTER_TALL = 2.4;   // the creature's envelope in world units (scale 2.1): kraken arm reach and height   // SEA MONSTER (owner 2026-10-01): "only show up 1 in 5 times"
-// the third creature (owner 2026-10-12: "a cthulhu like the kraken and serpent, but rarer"): of the loads that show a creature, this
-// share shows it (owner 2026-10-12: "rarer, like 1 to 20"); the rest split evenly between serpent and kraken — one load in 100 overall.
-// Read from the load's own seed only.
-const MONSTER_ELDER = 0.05;
-const monsterKind = window.__monsterKind = seed => { const r = hash(seed,11,4243); return r < MONSTER_ELDER ? 'cthulhu' : r < (1+MONSTER_ELDER)/2 ? 'kraken' : 'serpent'; };
+const MONSTER_REACH = 3.2, MONSTER_TALL = 2.4;   // the creature's envelope in world units (scale 2.1): kraken arm reach and height
+// five creatures, each on one page load in MONSTER_EACH_LOADS (owner 2026-10-18: "all monsters on a 1/40 rule") — so one load in 8 shows one
+// (5 × 1/40); which one is an even pick from the load's own seed. History: 2026-10-01 one load in five, serpent or kraken; 2026-10-12 the cthulhu
+// rarer (1 in 20 of the creatures); 2026-10-18 adamastor + kaiju, then all five equal.
+const MONSTER_KINDS = ['serpent','kraken','cthulhu','adamastor','kaiju'];
+const MONSTER_EACH_LOADS = 40;   // owner 2026-10-18: each creature shows on one page load in 40
+const MONSTER_ODDS = MONSTER_KINDS.length / MONSTER_EACH_LOADS;   // 5/40 = one load in 8 shows a creature
+const monsterKind = window.__monsterKind = seed => MONSTER_KINDS[Math.min(MONSTER_KINDS.length-1, Math.floor(hash(seed,11,4243)*MONSTER_KINDS.length))];
 const MONSTER_ROLL = window.__monsterRoll = {odds: MONSTER_ODDS, show: Math.random() < MONSTER_ODDS, seed: Math.random()*1e9|0};   // once per load; the harness may set .show
 // MOBILE-3D (2026-10-06): with no saved choice, a device whose MAIN input is touch (phones, tablets) starts on low detail — shadows off,
 // 1× pixels, thinner forests and companies; the Detail button and a saved choice still decide. Not screen size: a small laptop screen
 // (or a headless browser's 800×600) is not a phone, and a touchscreen laptop's main pointer is its trackpad.
 const PHONE = (()=>{ try { return matchMedia('(pointer: coarse)').matches; } catch(e){ return false; } })();
 let LOW = PHONE; try { const v = localStorage.getItem(DETAIL_KEY); if (v==='low' || v==='high') LOW = v==='low'; } catch(e){}
+// harness hook (ARMY-LOOKS shots, 2026-10-21): aim the camera at a hex from a distance and bearing — screenshots of a real page's armies
+window.__aim3d = (col,row,dist=3,bearing=0,pitch=.85) => { const p = hexXZ(col,row); controls.target.set(p.x,.4,p.z);
+  camera.position.set(p.x+Math.sin(bearing)*dist*Math.cos(pitch), .4+dist*Math.sin(pitch), p.z+Math.cos(bearing)*dist*Math.cos(pitch)); controls.update(); turnRose(); forceDraw = true; };
 window.__detail3d = () => ({phone: PHONE, low: LOW, pr: renderer.getPixelRatio(), shadows: renderer.shadowMap.enabled, cam: camera.position.toArray().map(v=>+v.toFixed(3)), tip: document.getElementById('tip').style.display, ctx: !document.getElementById('ctxmsg').hidden, touches: touchPts.size, tapOpen: !!touchTip});   // read by tools/smoke_pp_mobile.mjs
 // LOOKS-REGISTER (review 2026-10-03): what each build drew — one record per settlement and per fleet, STAMPED by the builders that ran (tags, wall kind) before the per-material merge
 // dissolves the groups. Read only by tools/smoke_pp_3d.mjs (PP3D14), like window.__monster: a typo in one people's builder used to stay
@@ -1110,7 +1126,7 @@ function build(data){
     world.add(im); hexMeshes.push(im);
   }
 
-  // ── SEA MONSTER (owner 2026-10-01): at most ONE creature, a serpent, a kraken or (rarer, MONSTER_ELDER) a cthulhu, in the unexplored waters — and only on one
+  // ── SEA MONSTER (owner 2026-10-01): at most ONE creature — a serpent, a kraken, a cthulhu, an adamastor or a kaiju, equally likely — in the unexplored waters — and only on one
   // page load in MONSTER_ODDS (rolled once per load in MONSTER_ROLL, so a rebuild never makes it pop in or out or move).
   // Fog-honest: placed only on fog hexes (the page knows nothing under them) 3–5 hexes from the known world (distance from the
   // KNOWN, never from anything hidden), picked by the load's own random seed — never relative to anything real, so it can reveal
@@ -1216,6 +1232,108 @@ function build(data){
           M.add(g); parts.push({g, phase:k*.9, amp:k%2?.35:.45}); }
         animated.push({kind:'fn', fn:t=>{ for (const p of parts){ p.g.rotation.z = Math.sin(t*1.9+p.phase)*p.amp*.6; p.g.rotation.x = Math.sin(t*1.3+p.phase*1.7)*.18; }
           mantle.position.y = Math.sin(t*1.1)*.03; }});
+      } else if (kind==='adamastor'){   // ADAMASTOR (Os Lusíadas, canto V): the giant of the Cape of Storms risen to the waist — earthen pale
+                      // rock for skin, clay-thick hair and a squalid beard, sunken eyes, a black mouth with yellow teeth; one fist raised over the
+                      // ships, the other hand braced on the sea — inside the same envelope as the kraken
+        const rock = new THREE.MeshStandardMaterial({color:0x9a8f7a, roughness:.95, flatShading:true}), hair = new THREE.MeshStandardMaterial({color:0xe9e6dc, roughness:.95, flatShading:true});   // white hair and beard (owner 2026-10-18)
+        const mouthM = new THREE.MeshBasicMaterial({color:0x040302}), teethM = new THREE.MeshStandardMaterial({color:0xc9a63a, roughness:.6}), eyeM = new THREE.MeshBasicMaterial({color:0xffc23a});
+        const rise = new THREE.Group(); M.add(rise);
+        const waist = new THREE.Mesh(new THREE.CylinderGeometry(.19,.21,.16,8), rock); waist.scale.set(.85,1,1); waist.position.y = .04; rise.add(waist);
+        const chest = new THREE.Mesh(new THREE.CylinderGeometry(.3,.19,.44,8), rock); chest.scale.set(.62,1,1.08); chest.position.set(0,.32,0); rise.add(chest);   // a V: shoulders wider than the waist
+        const traps = new THREE.Mesh(new THREE.SphereGeometry(.2,8,6), rock); traps.scale.set(.85,.45,1.45); traps.position.set(-.01,.54,0); rise.add(traps);   // rounds the shoulders over the V
+        for (const sz of [-1,1]){ const sh = new THREE.Mesh(new THREE.SphereGeometry(.105,7,5), rock); sh.position.set(-.01,.52,sz*.3); rise.add(sh); }
+        for (let k=0;k<6;k++){ const c = new THREE.Mesh(new THREE.SphereGeometry(.035+hash(k,3,4400)*.03,5,4), rock); const sz = k%2?1:-1;   // crags on the shoulders and back
+          c.position.set(-.12-hash(k,5,4401)*.08, .42+hash(k,7,4402)*.14, sz*(.14+hash(k,9,4405)*.16)); rise.add(c); }
+        const neck = new THREE.Mesh(new THREE.CylinderGeometry(.07,.09,.12,8), rock); neck.position.set(.01,.63,0); rise.add(neck);
+        foam(0,0,9,.11);
+        const hd = new THREE.Group(); hd.position.set(.03,.76,0); rise.add(hd);
+        const skull = new THREE.Mesh(new THREE.SphereGeometry(.12,9,7), rock); skull.scale.set(1.05,1.2,.95); hd.add(skull);
+        for (const sz of [-1,1]){ const brow = new THREE.Mesh(new THREE.BoxGeometry(.05,.032,.1), rock); brow.position.set(.1,.05,sz*.046); brow.rotation.set(-sz*.5,0,-.3); hd.add(brow); }   // angry: down toward the middle (owner 2026-10-18)
+        const furrow = new THREE.Mesh(new THREE.BoxGeometry(.02,.03,.012), rock); furrow.position.set(.115,.04,0); hd.add(furrow);
+        const nose = new THREE.Mesh(new THREE.ConeGeometry(.026,.07,5), rock); nose.rotation.z = -Math.PI/2+.5; nose.position.set(.12,-.005,0); hd.add(nose);
+        for (const sz of [-1,1]){ const sock = new THREE.Mesh(new THREE.SphereGeometry(.024,8,6), mouthM); sock.position.set(.1,.02,sz*.044); hd.add(sock);   // sunken sockets
+          const e = new THREE.Mesh(new THREE.SphereGeometry(.012,8,6), eyeM); e.scale.set(.8,.45,1.2); e.rotation.x = -sz*.4; e.position.set(.117,.022,sz*.044); hd.add(e); }
+        const jaw = new THREE.Group(); jaw.position.set(.075,-.06,0); hd.add(jaw);
+        const mouth = new THREE.Mesh(new THREE.SphereGeometry(.04,10,8), mouthM); mouth.scale.set(.5,.85,1.2); mouth.position.set(.04,-.005,0); jaw.add(mouth);   // an open snarl
+        for (let k=0;k<5;k++){ const t = new THREE.Mesh(new THREE.ConeGeometry(.007,.022,4), teethM); t.position.set(.056,.022,(k-2)*.013); t.rotation.z = Math.PI; jaw.add(t);
+          const b2 = new THREE.Mesh(new THREE.ConeGeometry(.006,.018,4), teethM); b2.position.set(.056,-.03,(k-2)*.013+.006); jaw.add(b2); }
+        // the beard spilling onto the chest; the hair hanging behind, heavy with clay
+        for (let k=0;k<9;k++){ const zz = (k-4)*.02, len = .17+hash(k,9,4403)*.1;
+          const bc = new THREE.CatmullRomCurve3([V3(0,0,0),V3(.025,-len*.45,zz*.3),V3(.0,-len*.8,zz*.7),V3(.03,-len,zz)]);
+          const st = taper(bc, 8, .022, .006, hair); st.position.set(.075,-.075,zz); hd.add(st); }
+        for (let k=0;k<11;k++){ const a = (k/10-.5)*2.6, len = .22+hash(k,11,4404)*.12;
+          const hc = new THREE.CatmullRomCurve3([V3(0,0,0),V3(-.07,.01,0),V3(-.14,-.07,0),V3(-.17,-len,0)]);
+          const st = taper(hc, 8, .03, .008, hair); st.position.set(-.02,.09,Math.sin(a)*.1); st.rotation.y = a*.5; hd.add(st); }
+        // the arms: upper arm, elbow, forearm, a hand with fingers — one clawed hand raised over the ships, the other spread on the waves
+        const limb = (g, p0, p1, p2, r0, r1) => {   // shoulder → elbow → wrist, a muscle bulge on the upper arm, crags along the forearm
+          const m01 = p0.clone().lerp(p1,.5), m12 = p1.clone().lerp(p2,.5);
+          g.add(taper(new THREE.CatmullRomCurve3([p0, m01, p1]), 8, r0, r0*.78, rock));
+          g.add(taper(new THREE.CatmullRomCurve3([p1, m12, p2]), 8, r0*.82, r1, rock));
+          const el = new THREE.Mesh(new THREE.SphereGeometry(r0*.8,6,5), rock); el.position.copy(p1); g.add(el);
+          const bi = new THREE.Mesh(new THREE.SphereGeometry(r0*.95,6,5), rock); bi.position.copy(p0.clone().lerp(p1,.45)); bi.scale.set(1.15,1.15,1.15); g.add(bi);
+          for (let k=0;k<3;k++){ const c = new THREE.Mesh(new THREE.SphereGeometry(r0*(.35+hash(k,p2.x*99|0,4410)*.2),5,4), rock); c.position.copy(p1.clone().lerp(p2,.25+k*.25)).add(V3(0,r0*.55,0)); g.add(c); } };
+        const hand = (g, wrist, dir, curlTo, spread, curl) => {   // a palm and four fingers + thumb, each finger two bends curling toward curlTo
+          dir = dir.clone().normalize(); const side = new THREE.Vector3().crossVectors(dir, curlTo).normalize(), cu = curlTo.clone().normalize();
+          const palm = new THREE.Mesh(new THREE.SphereGeometry(.045,6,5), rock); palm.position.copy(wrist.clone().addScaledVector(dir,.03)); palm.scale.set(1.1,1.1,1.1); g.add(palm);
+          for (let f=0; f<5; f++){ const thumb = f===4, o = thumb ? -2.6 : f-1.5;
+            const base = wrist.clone().addScaledVector(dir, thumb ? .02 : .055).addScaledVector(side, o*.018);
+            const len = thumb ? .05 : .075-Math.abs(o)*.008, out = side.clone().multiplyScalar(o*spread);
+            const k1 = base.clone().addScaledVector(dir, len*.5).add(out.clone().multiplyScalar(.5)), k2 = k1.clone().addScaledVector(dir, len*.35).addScaledVector(cu, len*curl*.4).add(out.clone().multiplyScalar(.3));
+            const tip = k2.clone().addScaledVector(dir, len*.15).addScaledVector(cu, len*curl*.6);
+            g.add(taper(new THREE.CatmullRomCurve3([base,k1,k2,tip]), 8, .014, .006, rock)); } };
+        const armR = new THREE.Group(); armR.position.set(-.01,.53,.31); rise.add(armR);
+        limb(armR, V3(0,0,0), V3(.03,.19,.14), V3(.12,.36,.11), .07, .05);
+        hand(armR, V3(.12,.36,.11), V3(.25,1,-.05), V3(1,0,0), .012, 1.1);   // raised, fingers hooked forward over the ships
+        const armL = new THREE.Group(); armL.position.set(-.01,.53,-.31); rise.add(armL);
+        limb(armL, V3(0,0,0), V3(.12,-.17,-.1), V3(.3,-.43,-.1), .07, .05);
+        hand(armL, V3(.3,-.43,-.1), V3(1,-.35,0), V3(0,-1,0), .022, .7);   // braced, fingers spread on the waves
+        foam(.36,-.38,5,.05);
+        animated.push({kind:'fn', fn:t=>{ rise.position.y = Math.sin(t*.6)*.025; hd.rotation.y = Math.sin(t*.35)*.3; hd.rotation.z = Math.sin(t*.5)*.05;
+          jaw.position.y = -.06-Math.abs(Math.sin(t*.9))*.012; armR.rotation.x = Math.sin(t*.8)*.12; armR.rotation.z = Math.sin(t*1.1)*.08; }});
+      } else if (kind==='kaiju'){   // KAIJU: a scaled giant reptile wading up to the hips — leaning forward, jagged bone plates down its back,
+                      // small clawed arms, a roaring jaw, amber eyes, its tail breaking the surface behind it
+        const skin = new THREE.MeshStandardMaterial({color:0x3d4638, roughness:.55, metalness:.08}), belly = new THREE.MeshStandardMaterial({color:0x6a6650, roughness:.7});   // smooth: flat shading read as boxes (owner 2026-10-18)
+        const plateM = new THREE.MeshStandardMaterial({color:0xd6cfbb, roughness:.5, flatShading:true}), teethM = new THREE.MeshStandardMaterial({color:0xefe8d6, roughness:.4});
+        const gullet = new THREE.MeshBasicMaterial({color:0x2a0606}), eyeM = new THREE.MeshBasicMaterial({color:0xffa418});
+        const body = new THREE.Group(); body.rotation.z = -.3; M.add(body);
+        const torso = new THREE.Mesh(new THREE.CapsuleGeometry(.2,.36,6,12), skin); torso.position.set(0,.26,0); torso.scale.set(1.05,1,1.2); body.add(torso);
+        const chest = new THREE.Mesh(new THREE.SphereGeometry(.2,12,9), skin); chest.position.set(.03,.52,0); chest.scale.set(1,1,1.2); body.add(chest);
+        const front = new THREE.Mesh(new THREE.CapsuleGeometry(.15,.34,6,10), belly); front.position.set(.1,.32,0); front.scale.set(.55,1,1.15); body.add(front);
+        foam(0,0,9,.11);
+        const neck = new THREE.Mesh(new THREE.CylinderGeometry(.11,.16,.18,10), skin); neck.position.set(.06,.7,0); body.add(neck);
+        const hd = new THREE.Group(); hd.position.set(.11,.82,0); body.add(hd);
+        const skull = new THREE.Mesh(new THREE.SphereGeometry(.115,16,12), skin); skull.scale.set(1.15,.92,.95); hd.add(skull);
+        // a long tapered muzzle (an elongated sphere), heavy brow ridges over sunk eyes, a cheek on each side, nostrils at the tip
+        const muzzle = new THREE.Mesh(new THREE.SphereGeometry(.1,18,12), skin); muzzle.scale.set(1.3,.72,.78); muzzle.position.set(.1,-.02,0); hd.add(muzzle);
+        for (const sz of [-1,1]){
+          const ridge = new THREE.Mesh(new THREE.SphereGeometry(.032,12,8), skin); ridge.scale.set(1.7,.38,.5); ridge.position.set(.075,.052,sz*.058); ridge.rotation.set(sz*.2,sz*-.15,-.35); hd.add(ridge);
+          const e = new THREE.Mesh(new THREE.SphereGeometry(.013,8,6), eyeM); e.scale.set(1.3,.7,1); e.position.set(.075,.036,sz*.072); hd.add(e);
+          const cheek = new THREE.Mesh(new THREE.SphereGeometry(.04,12,8), skin); cheek.scale.set(1.4,.75,.6); cheek.position.set(.03,-.035,sz*.065); hd.add(cheek);
+          const nos = new THREE.Mesh(new THREE.SphereGeometry(.009,6,5), gullet); nos.position.set(.226,.012,sz*.022); hd.add(nos); }
+        const inner = new THREE.Mesh(new THREE.SphereGeometry(.08,14,8), gullet); inner.scale.set(1.3,.28,.62); inner.position.set(.1,-.055,0); hd.add(inner);
+        for (let k=0;k<6;k++) for (const sz of [-1,1]){ const w = .056-k*.005; const t = new THREE.Mesh(new THREE.ConeGeometry(.008,.028-k*.002,5), teethM); t.position.set(.04+k*.028,-.052,sz*w); t.rotation.z = Math.PI; hd.add(t); }
+        const jaw = new THREE.Group(); jaw.position.set(.02,-.05,0); hd.add(jaw);
+        const lower = new THREE.Mesh(new THREE.SphereGeometry(.09,16,10), belly); lower.scale.set(1.3,.4,.68); lower.position.set(.085,-.022,0); jaw.add(lower);
+        for (let k=0;k<6;k++) for (const sz of [-1,1]){ const w = .05-k*.005; const t = new THREE.Mesh(new THREE.ConeGeometry(.007,.024-k*.002,5), teethM); t.position.set(.03+k*.027,.01,sz*w); jaw.add(t); }
+        // the dorsal plates: three rows of jagged bone, biggest between the shoulders, down the back into the water
+        const backPts = [[-.08,.84],[-.15,.72],[-.2,.58],[-.23,.44],[-.24,.3],[-.23,.17],[-.21,.05]];
+        backPts.forEach(([px,py],i)=>{ const sz = .1+Math.sin((i+1)/backPts.length*Math.PI)*.12;
+          for (const row of [-1,0,1]){ const s2 = row ? sz*.7 : sz;
+            const p = new THREE.Mesh(new THREE.ConeGeometry(s2*.42,s2,4), plateM); p.scale.z = .3; p.position.set(px-.02,py,row*.07); p.rotation.z = Math.PI/2-.35+i*.07; body.add(p); } });
+        // little arms with three claws each
+        for (const sz of [-1,1]){ const ag = new THREE.Group(); ag.position.set(.15,.52,sz*.21); body.add(ag);
+          ag.add(taper(new THREE.CatmullRomCurve3([V3(0,0,0),V3(.08,-.05,sz*.03),V3(.15,-.1,sz*.04)]), 8, .045, .03, skin));
+          for (let k=0;k<3;k++){ const c = new THREE.Mesh(new THREE.ConeGeometry(.009,.05,4), teethM); c.position.set(.18,-.12,sz*(.04+(k-1)*.018)); c.rotation.z = -2.3; ag.add(c); } }
+        // the tail, breaking the surface behind, plated too
+        const tailG = new THREE.Group(); tailG.position.set(-.4,0,0); M.add(tailG);
+        const tc = new THREE.CatmullRomCurve3([V3(0,-.02,0),V3(-.25,.14,.1),V3(-.55,.2,.18),V3(-.82,.1,.12),V3(-1.0,-.02,0)]);
+        tailG.add(taper(tc, 20, .12, .02, skin));
+        for (let q=1;q<6;q++){ const pt = tc.getPointAt(q/7), s2 = .1*(1-q/8); const p = new THREE.Mesh(new THREE.ConeGeometry(s2*.42,s2,4), plateM);
+          p.scale.z = .3; p.position.set(pt.x,pt.y+.07*(1-q/8)+.03,pt.z); tailG.add(p); }
+        foam(-.4,0,5,.06); foam(-1.4,0,4,.045);
+        animated.push({kind:'fn', fn:t=>{ const roar = Math.pow(Math.max(0,Math.sin(t*.7)),3);
+          jaw.rotation.z = -.05-roar*.55; hd.rotation.z = roar*.35; hd.rotation.y = Math.sin(t*.4)*.35*(1-roar);
+          body.position.y = Math.sin(t*.9)*.02; tailG.rotation.y = Math.sin(t*.8)*.25; }});
       } else {        // CTHULHU, rising: a hunched green body breaking the water, an octopus head with a beard of feelers and glowing eyes,
                       // two clawed arms reaching forward, bat wings half spread behind — inside the same envelope as the kraken
         const skin = new THREE.MeshStandardMaterial({color:0x1e3123, roughness:.42, metalness:.15}), wingM = new THREE.MeshStandardMaterial({color:0x142118, emissive:0x060c08, roughness:.7, side:THREE.DoubleSide});   // darker, wet sheen (owner 2026-10-12)
@@ -1456,6 +1574,78 @@ function build(data){
       const g = new THREE.Group(); b.into(g); g.position.set(x,0,z); g.rotation.y = Math.atan2(-dx,-dz); world.add(g);
     });
   }
+  // ── ARMY-LOOKS (owner 2026-10-21; picked from MOCKUPS/army_looks_compare.html) ───────────────────────────────────────────────
+  // (1) a base plate in the kingdom colour under every army, its rim in the viewer's relation — gold own · green ally · red enemy ·
+  //     grey neutral (data.viewer + data.relations from the host; a host with no viewer, the GM's TP view, draws no rim);
+  // (2) the strength tier (ARMY_TIERS: under 100 · 500 · 1,500 · more): gold pips on the plate's front edge, a taller standard, a wider margin;
+  // (3) the stance as a formation — Moving (a queued march) a column facing it · Defensive a shield line · Garrison a tight square · Siege
+  //     facing the walls with tents · Assault a wedge with ladders · Ambush (the owner's view only) crouched and scattered in cover, no plate,
+  //     a dashed gold rim, the standard lowered;
+  // (4) strength unknown (a foreign marker with no unit list — every foreign army on the Player Page): hooded grey figures, a "?" standard,
+  //     a dashed grey rim and a low mist (no shadow: the static shadow map would freeze it; none inside walls, where it hid the next company);
+  // (5) after the forces: an own army's queued march (f._trail, origin first, ending on the hex the army is drawn on) as red dashes on the
+  //     ground in the flat map's trail red (TRAIL_RED), a dot on each hex it passes and an arrowhead into the last one.
+  const ARMY_TIERS = [100, 500, 1500];
+  const REL_COL = {own:0xf2c443, ally:0x3fb950, enemy:0xe5484d, neutral:0xb8bcc4};
+  const REL_WORD = {own:'', ally:'ally', enemy:'enemy', neutral:'neutral'};
+  const STANCE_WORD = {defensive:'Defensive', garrison:'Garrison', siege:'Siege', siege_march:'Siege', assault:'Assault', ambush:'Ambush', sally:'Sally'};
+  const relOf = kid => !data.viewer ? null : kid===data.viewer ? 'own' : (data.relations||{})[kid] || 'neutral';
+  const tierOf = n => 1 + ARMY_TIERS.filter(t=>n>=t).length;
+  const trails = [];
+  const relMat = rel => mat('rel'+rel, ()=>std({color:REL_COL[rel], emissive:REL_COL[rel], emissiveIntensity:.35, roughness:.5}));
+  const pipMat = mat('lkPip', ()=>std({color:0xe8c24a, metalness:.7, roughness:.3, emissive:0x5a4410}));
+  const mistMat = mat('lkMist', ()=>new THREE.MeshStandardMaterial({color:0xdfe4ea, transparent:true, opacity:.26, depthWrite:false, roughness:1}));
+  const hideMat = mat('lkHide', ()=>std({map:TEX.felt, color:0xb59a74})), bushMat = mat('lkBush', ()=>std({color:0x3d6b2e, flatShading:true}));
+  const ladderMat = mat('lkLadder', ()=>std({color:0xb08a58, roughness:.8})), dashGrey = mat('lkDash', ()=>std({color:0x9a9ea6, roughness:.6}));
+  const armyLookOf = (fo, h, ax, az, n, cols, sp, count, known) => {
+    const rel = relOf(fo.kid), unknown = !known, tier = unknown ? 0 : tierOf(count);
+    const trail = (fo.f._trail||[]).length > 1 ? fo.f._trail : null;
+    const st = fo.f.stance && fo.f.stance!=='moving' ? fo.f.stance : null;
+    const stance = trail ? 'moving' : st==='ambush' && rel && rel!=='own' ? null : st==='siege_march' ? 'siege' : st;   // a foreign ambush is never seen
+    let face = 0;   // where the block looks: along the last leg of its march, at the walls, else out over the hex edge it stands by
+    if (trail){ const o = hexXZ(h.col,h.row), p = trail[trail.length-2], q = hexXZ(p.col,p.row); if (Math.hypot(o.x-q.x, o.z-q.z) < 2.5) face = Math.atan2(o.x-q.x, o.z-q.z); }
+    else if (stance==='siege' || stance==='assault') face = Math.atan2(-ax, -az);
+    else if (Math.hypot(ax,az) > .2) face = Math.atan2(ax, az);
+    const s2 = sp;
+    const slot = q => {
+      if (stance==='moving') return [((q%2)-.5)*s2*.9, -Math.floor(q/2)*s2*.8 + s2*1.1];   // a column two abreast, the head forward
+      if (stance==='defensive'){ const w = Math.min(n,6), row = Math.floor(q/w), inRow = Math.min(w, n-row*w); return [((q%w)-(inRow-1)/2)*s2*.7, -row*s2*.72]; }   // shoulder to shoulder
+      if (stance==='garrison'){ const w = Math.ceil(Math.sqrt(n)); return [((q%w)-(w-1)/2)*s2*.68, -(Math.floor(q/w)-(Math.ceil(n/w)-1)/2)*s2*.68]; }   // a tight square by the keep
+      if (stance==='assault'){ const row = Math.floor(q/3); return [((q%3)-1)*s2*.75*(1+row*.3), -row*s2*.75 + s2*.8]; }   // a wedge pushed at the gate
+      if (stance==='ambush') return [((q%3)-1)*s2*1.35+(rnd(h.col,h.row,q+300)-.5)*s2*.5, -(Math.floor(q/3)-.5)*s2*1.4+(rnd(h.col,h.row,q+310)-.5)*s2*.5];   // loose and low
+      return [((q%cols)-(cols-1)/2)*s2, -(Math.floor(q/cols)-.5)*s2*1.3];
+    };
+    const pts = Array.from({length:Math.max(n,1)}, (_,q)=>slot(q));
+    const minX = Math.min(...pts.map(p=>p[0])), maxX = Math.max(...pts.map(p=>p[0])), minZ = Math.min(...pts.map(p=>p[1])), maxZ = Math.max(...pts.map(p=>p[1]));
+    const cx = (minX+maxX)/2, cz = (minZ+maxZ)/2, margin = .035 + .012*tier, rx = (maxX-minX)/2 + margin, rz = (maxZ-minZ)/2 + margin;
+    const labelExtra = rel==='own' ? (STANCE_WORD[stance] ? ' · '+STANCE_WORD[stance] : '') : rel ? ' · '+REL_WORD[rel] : '';
+    const decorate = (bearer, px, y, pz, kc) => {
+      const g = new THREE.Group(); g.position.set(px, y, pz); g.rotation.y = face; world.add(g);
+      const add = (geo, m, mx, shadow=true) => { const o = new THREE.Mesh(geo, m); o.applyMatrix4(mx); o.castShadow = shadow; o.receiveShadow = true; g.add(o); return o; };
+      const hidden = stance==='ambush';   // no plate in Ambush: it would give the hiding place away — a dashed gold rim, in the owner's view alone
+      if (!hidden) add(G.cyl, mat('lkPlate'+kc, ()=>std({color:kc, roughness:.95})), M(cx,.001,cz,0,rx,.012,rz), false);
+      if (unknown || hidden){ const dm = hidden ? relMat('own') : dashGrey;
+        for (let k=0;k<20;k+=2){ const a = k/20*Math.PI*2; add(G.box, dm, M(cx+Math.sin(a)*rx, .006, cz+Math.cos(a)*rz, a+Math.PI/2, .06, .014, .016), false); } }
+      else if (rel) add(G.lkTorus, relMat(rel), M(cx,.014,cz,0,rx,(rx+rz)/2*.6,rz), false);
+      for (let k=0;k<tier;k++) add(G.cyl, pipMat, M(cx+(k-(tier-1)/2)*.065, .006, cz+rz+.035, 0, .026, .04, .026));
+      g.add(bearer); bearer.position.set(minX-.06, 0, minZ-.02); bearer.scale.setScalar([.95,.9,1,1.15,1.32][tier]);   // left rear of the block
+      if (hidden) bearer.rotation.set(0,0,1.05);   // the standard lowered
+      if (stance==='siege'){
+        [[minX-.12,minZ+.04],[maxX+.12,minZ+.04],[cx,minZ-.14]].forEach(([tx,tz],k)=>add(G.cone5, k===2 ? mat('lkTent'+kc,()=>std({color:kc, roughness:.9})) : hideMat, M(tx, 0, tz, k, .085, .13, .085)));
+        for (let k=0;k<9;k++) add(G.cyl, wood, M(cx+(k-4)*.055, 0, maxZ+.1, 0, .007, .075+rnd(h.col,h.row,k+400)*.025, .007, -.35));   // stakes before the walls
+      }
+      if (stance==='assault') for (const sd of [-1,1]){
+        const L = new THREE.Group(); L.position.set(cx+sd*.1, 0, maxZ+.1); L.rotation.x = .5; g.add(L);
+        for (const lx of [-.025,.025]){ const rail = new THREE.Mesh(G.box, ladderMat); rail.applyMatrix4(M(lx,0,0,0,.009,.44,.009)); rail.castShadow = true; L.add(rail); }
+        for (let k=1;k<9;k++){ const rung = new THREE.Mesh(G.box, ladderMat); rung.applyMatrix4(M(0,k*.05,0,0,.058,.007,.007)); L.add(rung); }
+      }
+      if (hidden) for (let k=0;k<7;k++){ const a = k/7*Math.PI*2+rnd(h.col,h.row,k+500), d = .55+rnd(h.col,h.row,k+510)*.35;
+        add(G.crown, bushMat, M(cx+Math.sin(a)*rx*d, -.12, cz+Math.cos(a)*rz*d, a, .55+rnd(h.col,h.row,k+520)*.3, .6, .55)); }
+      if (unknown && !(fo.f._inside ?? fo.f.stance==='garrison')) for (let k=0;k<7;k++){ const a = k/7*Math.PI*2, o = add(G.lkMist, mistMat, M(cx+Math.sin(a)*rx*.8, .06+(k%3)*.03, cz+Math.cos(a)*rz*.8, 0, .12+(k%3)*.03, .07, .12+(k%2)*.03), false); o.userData.keep = true; }
+      if (trail) trails.push({trail, x:px, y, z:pz});
+    };
+    return {rel, tier, unknown, stance, face, slot, crouch: stance==='ambush' ? .62 : 1, labelExtra, decorate};
+  };
   for (const [key,list] of perHex){
     const [c,r] = key.split(',').map(Number), {x,z} = hexXZ(c,r), h = byKey.get(key), y = standY(h);
     const labels = [];
@@ -1463,6 +1653,7 @@ function build(data){
       const px = x+ax, pz = z+az;
       const kc = kCol[fo.kid]||'#999', kC = new THREE.Color(kc), items = (fo.type==='army' ? fo.f.units : fo.f.ships)||[];
       const count = items.reduce((s,u)=>s+(u.count||0),0);
+      let LK = null;   // ARMY-LOOKS
       if (fo.type==='army'){
         // FIG-COUNT (owner 2026-10-04): 1 soldier → 1 figure, 2 → 2, from 3 up at least 3, growing ~1 per 10 to the cap (6 on low detail, 12 on high)
         // FIG-SHARE (review 2026-10-05): every unit type present draws at least one figure — engines first, then the larger types — and the rest of the
@@ -1481,11 +1672,15 @@ function build(data){
         const cols = kinds.length>6 ? 4 : 3, sp = .085*FIG;
         const legion = kRace[fo.kid]==='Imperial', viking = kRace[fo.kid]==='Aesir', orcish = kRace[fo.kid]==='Orc', nomad = kRace[fo.kid]==='Nomad', elven = kRace[fo.kid]==='Elf', dwarven = kRace[fo.kid]==='Dwarf', barbarian = kRace[fo.kid]==='Barbarian', pirateCrew = !!kPirate[fo.kid];   // PIRATE-CREW: a pirate realm's crews (the flag wins over the Barbarian kit, as with its ships)   // BARBARIAN-SWORD: the warrior kit, own and foreign (pirate realms too)   // DWARF-HOLD-ARMY: the dwarven kit, own and foreign companies alike   // ELF-HOST: the elven kit, own and foreign companies alike   // NOMAD-AYYUBID: the Ayyubid kit, own and foreign companies alike   // ORC-WARBAND: the orc kit, own and foreign companies alike   // AESIR-VIKING: the Norse kit, own and foreign companies alike   // IMPERIAL-LEGION: the legion kit, own and foreign companies alike (the crest already names the realm)
         const engines = [];   // ENGINE-MODELS: engine types drawn for this army (looks register)
+        LK = armyLookOf(fo, h, ax, az, kinds.length, cols, sp, count, items.length>0 || !fo.f._foreign);
+        if (LK.unknown){ F.uBody ||= batch(G.body, mat('lkCloak',()=>std({color:0x34363c, roughness:1}))); F.uHead ||= batch(G.head, mat('lkHood',()=>std({color:0x23252a, roughness:1}))); F.uHelm ||= batch(G.helm, mat('lkHood',()=>std({color:0x23252a, roughness:1}))); }
         kinds.forEach((kd,q)=>{
-          const gx = (q%cols-(cols-1)/2)*sp*(kd.startsWith('h')?1.2:1), gz = (Math.floor(q/cols)-.5)*sp*1.3;
-          const fs = FIG*(size[q]||1), m = M(px+gx+(rnd(c,r,q)-.5)*.02, y, pz+gz, (rnd(c,r,q+7)-.5)*.3, elven&&!kd.startsWith('h')?fs*.92:dwarven?fs*1.16:fs, elven&&!kd.startsWith('h')?fs*1.1:dwarven?fs*.8:fs, elven&&!kd.startsWith('h')?fs*.92:dwarven?fs*1.16:fs);   // ELF-HOST: taller, slimmer · DWARF-HOLD-ARMY: short and broad   // FIG_SIZE: goblins smaller, Uruks bigger
+          const [lx,lz] = LK.slot(q), gx = lx*Math.cos(LK.face)+lz*Math.sin(LK.face), gz = -lx*Math.sin(LK.face)+lz*Math.cos(LK.face);   // ARMY-LOOKS: the stance formation, turned to face
+          const fs = FIG*(size[q]||1), m = M(px+gx+(rnd(c,r,q)-.5)*.02, y, pz+gz, (rnd(c,r,q+7)-.5)*.15+LK.face, elven&&!kd.startsWith('h')?fs*.92:dwarven?fs*1.16:fs, elven&&!kd.startsWith('h')?fs*1.1:dwarven?fs*.8:fs, elven&&!kd.startsWith('h')?fs*.92:dwarven?fs*1.16:fs);   // ELF-HOST: taller, slimmer · DWARF-HOLD-ARMY: short and broad   // FIG_SIZE: goblins smaller, Uruks bigger
+          if (LK.crouch!==1) m.multiply(new THREE.Matrix4().makeScale(1,LK.crouch,1));   // ARMY-LOOKS: Ambush crouches
+          if (LK.unknown){ F.uBody.push(m); F.uHead.push(m); F.uHelm.push(m); return; }   // ARMY-LOOKS: strength unknown — hooded figures, no kit
           if (kd.startsWith('eng:')){   // ENGINE-MODELS: the machine of that engine type, its pennant in the kingdom colour
-            const id = kd.slice(4), eg = G.eng[id] || G.eng.imperial_siege_engine, em = M(px+gx, y, pz+gz, (rnd(c,r,q+7)-.5)*.3, FIG*.9,FIG*.9,FIG*.9);
+            const id = kd.slice(4), eg = G.eng[id] || G.eng.imperial_siege_engine, em = M(px+gx, y, pz+gz, (rnd(c,r,q+7)-.5)*.3+LK.face, FIG*.9,FIG*.9,FIG*.9);
             (F['engW_'+id] ||= batch(eg.wood, wood)).push(em);
             if (eg.metal) (F['engM_'+id] ||= batch(eg.metal, id==='elf_siege_engine' ? mat('elfGold',()=>std({color:0xd8c98a, metalness:.6, roughness:.35})) : id==='barbarian_siege_engine' ? mat('engStone',()=>std({color:0x8a8680, roughness:.95})) : mat('engIron',()=>std({color:0x5e6268, metalness:.6, roughness:.45})))).push(em);
             (F.engPennant ||= batch(G.engPennant, cloth)).push(em, kC);
@@ -1510,7 +1705,10 @@ function build(data){
         });
         const bearer = new THREE.Group(); bearer.position.set(px-((cols+1)/2)*sp, y, pz-sp);
         const pole = new THREE.Mesh(G.flagPole, wood); pole.scale.set(1,1.6,1);
-        if (legion){   // IMPERIAL-LEGION: an eagle standard — a gilt eagle with spread wings atop the pole, a square banner in the kingdom colour hanging from a crossbar
+        if (LK.unknown){   // ARMY-LOOKS: a "?" standard — a still mesh (the waving-flag merger keeps a colour only, the mark would be lost)
+          const fl = new THREE.Mesh(G.flag, mat('lkQ', ()=>{ const cv = document.createElement('canvas'); cv.width = cv.height = 64; const g2 = cv.getContext('2d'); g2.fillStyle = '#4a4d55'; g2.fillRect(0,0,64,64); g2.fillStyle = '#f0f0f0'; g2.font = 'bold 50px serif'; g2.textAlign = 'center'; g2.textBaseline = 'middle'; g2.fillText('?',32,35); return std({map:tex(cv), side:THREE.DoubleSide}); }));
+          fl.position.y = .49; fl.scale.setScalar(1.4); bearer.add(pole,fl); pole.castShadow = fl.castShadow = true; bearer.userData.look = 'unknown';
+        } else if (legion){   // IMPERIAL-LEGION: an eagle standard — a gilt eagle with spread wings atop the pole, a square banner in the kingdom colour hanging from a crossbar
           const bar = new THREE.Mesh(G.box, gilt); bar.applyMatrix4(M(0,.43,0,0,.11,.008,.008));
           const ban = new THREE.Mesh(G.box, kMat(kc)); ban.applyMatrix4(M(0,.385,0,0,.08,.085,.004));
           const eb = new THREE.Mesh(G.head, gilt); eb.applyMatrix4(M(0,.415,0,0,.5,.6,.5));   // G.head sits at y .106: a small body at ≈ .48
@@ -1554,8 +1752,8 @@ function build(data){
           const flag = new THREE.Mesh(G.flag, kMat(kc)); flag.position.y = .49; flag.scale.setScalar(1.4); flag.userData.flag = true;
           bearer.add(pole,flag); pole.castShadow = flag.castShadow = true;
         }
-        world.add(bearer);
-        looks.push({kind:'army', col:c, row:r, kid:fo.kid, look:legion ? 'legion' : viking ? 'viking' : orcish ? 'orc' : nomad ? 'ayyubid' : elven ? 'elven' : dwarven ? 'dwarven' : pirateCrew ? 'pirate' : barbarian ? 'barbarian' : 'company', figs:kinds.length, engines, kinds:kinds.reduce((t,k)=>(t[k.startsWith('eng:')?'eng':k]=(t[k.startsWith('eng:')?'eng':k]||0)+1,t),{})});   // LOOKS-REGISTER (figs: FIG-COUNT; engines: ENGINE-MODELS; kinds: FIG-SHARE)
+        world.add(bearer); LK.decorate(bearer, px, y, pz, kc);
+        looks.push({kind:'army', col:c, row:r, kid:fo.kid, rel:LK.rel, tier:LK.tier, stance:LK.stance, unknown:LK.unknown, face:+LK.face.toFixed(3), trail:(fo.f._trail||[]).length, look:LK.unknown ? 'unknown' : legion ? 'legion' : viking ? 'viking' : orcish ? 'orc' : nomad ? 'ayyubid' : elven ? 'elven' : dwarven ? 'dwarven' : pirateCrew ? 'pirate' : barbarian ? 'barbarian' : 'company', figs:kinds.length, engines, kinds:kinds.reduce((t,k)=>(t[k.startsWith('eng:')?'eng':k]=(t[k.startsWith('eng:')?'eng':k]||0)+1,t),{})});   // LOOKS-REGISTER (figs: FIG-COUNT; engines: ENGINE-MODELS; kinds: FIG-SHARE)
       } else {
         const g = new THREE.Group(); g.position.set(px,SEA_Y,pz); g.rotation.y = moor ? moor.rot : -Math.PI/2+rnd(c,r,i)*.8;
         const big = items.some(u=>BIG_SHIP.has(u.shipId)), shields = items.some(u=>SHIELD_SHIP.has(u.shipId));
@@ -1588,6 +1786,7 @@ function build(data){
         looks.push({kind:'fleet', col:c, row:r, kid:fo.kid, look:g.children[0]?.userData.look||null, moored:!!moor, tris:triCount(g)});   // stamped by drakkar/trireme/plain
       }
       labels.push([fo.f._foreign ? `${fo.type==='fleet'?'⚓':'⚔'} ${kName[fo.kid]||'?'}` : `${fo.type==='fleet'?'⚓':'⚔'} ${fo.f.num||'?'} · ${count}`, kc, V3(px, (moor ? SEA_Y : y)+.62, pz)]);
+      if (LK) labels[labels.length-1][0] += LK.labelExtra;   // ARMY-LOOKS: the stance (own) or the relation (foreign)
       addTag('crest', V3(px, (fo.type==='fleet' ? SEA_Y+.44 : y+.4), pz), {src: kById[fo.kid] ? kingdomCrestSrc(kById[fo.kid], data.kingdoms) : drawnCrest(kc, kRace[fo.kid]), kid:fo.kid, color:kc, race:kRace[fo.kid]});
     };
     const onHex = standing(list,h);
@@ -1604,11 +1803,41 @@ function build(data){
     labels.forEach(([text,color,pos],i)=>{ pos.y += i*.24; addTag('label', pos, {text, color}); });   // stacked on a crowded hex
   }
   for (const b of Object.values(F)) b.emit(world);
+  // ARMY-LOOKS (5): an own army's queued march — red dashes along the ground from the hex it left, a dot on each hex it passes, an arrowhead into
+  // the hex it is drawn on. A hop across a wrapped seam (hexes far apart in the scene) is not drawn — the flat map splits its trail the same way.
+  { const red = mat('lkTrail', ()=>std({color:TRAIL_RED, emissive:TRAIL_RED, emissiveIntensity:.35, roughness:.6}));
+    for (const {trail, x:x1, y:y1, z:z1} of trails){
+      const pts = trail.map(p=>{ const q = hexXZ(p.col,p.row); return [q.x, top(byKey.get(p.col+','+p.row)), q.z]; });
+      pts[pts.length-1] = [x1, y1, z1];
+      for (let k=1;k<pts.length;k++){
+        const [ax,ay,az] = pts[k-1], [bx,by,bz] = pts[k], dx = bx-ax, dz = bz-az, len = Math.hypot(dx,dz), ry = Math.atan2(dx,dz), last = k===pts.length-1;
+        if (len > 2.5 || len < .01) continue;   // a seam hop, or no move at all
+        const end = last ? len-.42 : len;
+        for (let t=.3; t<end; t+=.14){ const f = t/len, hy = Math.abs(by-ay) > .05 ? (f<.5 ? ay : by) : ay+(by-ay)*f;
+          const d = new THREE.Mesh(G.box, red); d.applyMatrix4(M(ax+dx*f, hy+.012, az+dz*f, ry, .028, .01, .07)); d.receiveShadow = true; world.add(d); }
+        if (!last){ const dot = new THREE.Mesh(G.cyl, red); dot.applyMatrix4(M(bx,by+.005,bz,0,.05,.012,.05)); world.add(dot); }
+        else { const tip = new THREE.Mesh(G.lkArrow, red); tip.applyMatrix4(M(bx-dx/len*.42, by+.015, bz-dz/len*.42, ry)); world.add(tip); }
+      }
+    }
+  }
 
   // hover ring
   const hov = new THREE.Mesh(G.ring, new THREE.MeshBasicMaterial({color:0xffffff, transparent:true, opacity:.9, depthTest:false}));
   hov.visible = false; hov.renderOrder = 5; hov.userData.keep = true; world.add(hov); world.userData = {hov, kCol, kName, perHex, top};
   optimise(world); renderer.shadowMap.needsUpdate = true; hoverDirty = true; forceDraw = true;
+  // GRATICULE-3D (owner 2026-10-15, the 2D map's chart lines): dashed sepia lines through the hex centres of every GRAT_STEP-th
+  // column and row, plus the map's rim, laid just above the fog slabs — every known hex stands taller and hides them, so they
+  // show only on unexplored ground (a GM view has none). WebGL lines are one pixel at any distance, like the flat map's.
+  { const c1 = data.cols-1, r1 = data.rows-1, x0 = hexXZ(0,0).x-1, x1 = hexXZ(c1,1).x+1, z0 = hexXZ(0,0).z-1, z1 = hexXZ(0,r1).z+1, y = HEIGHT.fog+.006, p = [];
+    for (let c=0;c<data.cols;c+=GRAT_STEP){ const x = hexXZ(c,0).x; p.push(x,y,z0, x,y,z1); }
+    for (let r=0;r<data.rows;r+=GRAT_STEP){ const z = hexXZ(0,r).z; p.push(x0,y,z, x1,y,z); }
+    // the rim only where the map really ends — a wrapped axis has no edge (the host sends data.wrap; none = both edges real)
+    const wc = !!data.wrap?.cols, wr = !!data.wrap?.rows;
+    if (!wr) p.push(x0,y,z0, x1,y,z0, x0,y,z1, x1,y,z1);
+    if (!wc) p.push(x0,y,z0, x0,y,z1, x1,y,z0, x1,y,z1);
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(p,3));
+    const grat = new THREE.LineSegments(g, new THREE.LineDashedMaterial({color:0xbe9664, transparent:true, opacity:.34, dashSize:.35, gapSize:.3, depthWrite:false}));
+    grat.computeLineDistances(); grat.userData.keep = true; grat.raycast = ()=>{}; world.add(grat); }
 
   // camera + sun framed on the land
   if (box.isEmpty()) box.setFromCenterAndSize(V3(SQ3*data.cols/2,0,.75*data.rows), V3(20,0,20));
@@ -1633,13 +1862,20 @@ function build(data){
   }).join('');
   document.getElementById('drop').style.display = 'none';
 }
-function resetView(){ camera.position.copy(home.pos); controls.target.copy(home.target); controls.update(); }
+function resetView(){ camera.position.copy(home.pos); controls.target.copy(home.target); controls.update(); turnRose(); }
+// ROSE-3D: the rose's N follows the map's north (−z: row 0 is the top of the map) as the camera turns — from the screen
+// direction of a step north from the point the camera looks at, so a tilt never fools it
+const roseSvg = document.getElementById('rose3d-svg'), _rA = V3(), _rB = V3();
+function turnRose(){ if (!roseSvg) return;
+  _rA.copy(controls.target).project(camera); _rB.copy(controls.target).add(V3(0,0,-1)).project(camera);
+  const a = Math.atan2(_rB.x-_rA.x, (_rB.y-_rA.y)*innerHeight/innerWidth);
+  if (isFinite(a)) roseSvg.style.transform = `rotate(${(a*180/Math.PI).toFixed(1)}deg)`; }
 
 // ── hover tooltip ─────────────────────────────────────────────────────
 const ray = new THREE.Raycaster(), ptr = new THREE.Vector2(); let ptrPx = null, hoverDirty = true, touchTip = null;   // touchTip: camera position when a TAP opened the details
 // REVIEW-1006: a tapped hex's details stay on THAT hex — a moving camera never re-raycasts the lifted finger's spot (that named a hex nobody tapped);
 // once the view has really moved (the pad, a flick, a pinch — not the camera settling) they close.
-controls.addEventListener('change', ()=>{ tagsDirty = true; lastActive = performance.now()/1000;
+controls.addEventListener('change', ()=>{ tagsDirty = true; lastActive = performance.now()/1000; turnRose();
   if (!touchTip){ hoverDirty = true; return; }
   if (camera.position.distanceTo(touchTip) > 0.3){ touchTip = null; ptrPx = null; hoverDirty = true; } });
 // MOBILE-3D (2026-10-06): a touchscreen has no hover — a TAP (a touch that barely moves, released quickly) shows that hex's details at the finger;
@@ -1750,7 +1986,7 @@ const ctxMsg = document.getElementById('ctxmsg');
 renderer.domElement.addEventListener('webglcontextlost', e=>{ e.preventDefault(); ctxLost = true; renderer.setAnimationLoop(null);
   ctxMsg.textContent = '3D paused — your device reclaimed its graphics memory. The view comes back on its own when the device allows; if it does not, close and reopen the 3D view.'; ctxMsg.hidden = false; });
 renderer.domElement.addEventListener('webglcontextrestored', ()=>{ ctxLost = false; ctxMsg.hidden = true; if (lastData) window.show3D(lastData, true); if (!paused) renderer.setAnimationLoop(frame); forceDraw = true; });
-addEventListener('resize', ()=>{ tagsDirty = true; forceDraw = true; camera.aspect = innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); });
+addEventListener('resize', ()=>{ tagsDirty = true; forceDraw = true; camera.aspect = innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); turnRose(); });   // ROSE-3D: its angle reads the aspect
 
 // ── loading ───────────────────────────────────────────────────────────
 makeTextures(); makeGeos();
