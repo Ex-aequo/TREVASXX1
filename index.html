@@ -261,7 +261,7 @@ button.act.secondary{background:transparent;border:1px solid var(--gold-dim);col
 <section class="tab" id="tab-advisor">
   <div class="card">
     <h2>⭐ Advisor — As 5 Melhores Ações Agora</h2>
-    <p class="small">Calculado a cada carregamento de relatório a partir de todas as regras, fórmulas e tabelas do manual v767. As ações são convertidas para um valor comum em ouro-equivalente (usando os preços de venda do mercado) para poderem ser comparadas entre si, depois ordenadas por retorno por ouro investido — ações grátis (atribuições, imposto) sobem sempre ao topo quando têm valor positivo. Nº 1 é a mais eficaz.</p>
+    <p class="small">Calculado a cada carregamento de relatório a partir de todas as regras, fórmulas e tabelas do manual v786. As ações são convertidas para um valor comum em ouro-equivalente (usando os preços de venda do mercado) para poderem ser comparadas entre si, depois ordenadas por retorno por ouro investido — ações grátis (atribuições, imposto) sobem sempre ao topo quando têm valor positivo. Nº 1 é a mais eficaz.</p>
     <div id="advisorList"></div>
   </div>
 </section>
@@ -790,7 +790,7 @@ button.act.secondary{background:transparent;border:1px solid var(--gold-dim);col
   <div class="card">
     <h3>O que esta ferramenta faz — e o que não faz</h3>
     <ul class="small">
-      <li>Calcula rendimentos, custos de construção/melhoria, recrutamento e cenários de imposto usando as fórmulas exatas do manual v767 e da Página do Jogador V381.</li>
+      <li>Calcula rendimentos, custos de construção/melhoria, recrutamento e cenários de imposto usando as fórmulas exatas do manual v786 e da Página do Jogador V442.</li>
       <li><b>Não</b> gera nem assina um ficheiro de ordens — continua a emitir as tuas ordens na Página do Jogador oficial. Esta ferramenta é só para decidir o que ordenar.</li>
       <li>Os valores de produção variável (quintas, portos) mostram sempre o valor garantido e o máximo possível — nunca uma previsão exata, porque o motor rola de novo a cada turno.</li>
     </ul>
@@ -801,7 +801,7 @@ button.act.secondary{background:transparent;border:1px solid var(--gold-dim);col
 </div>
 
 <script>
-/* ============================== DADOS DO MOTOR (sincronizados com o manual v767 / player_page V381) ============================== */
+/* ============================== DADOS DO MOTOR (sincronizados com o manual v786 / player_page V442) ============================== */
 const SITE_COSTS={farm:1000,mine:1000,port:5000,lumbermill:1000,quarry:1000};
 const C_MINE_FIND_CHANCE={mountain:0.25,hills:0.15,desert:0.07,plains:0.07,forest:0.05};
 const C_MINE_MAX_LEVEL={mountain:3,hills:2,desert:2,plains:1,forest:1};
@@ -818,7 +818,7 @@ const C_FARM_UPGRADE_COST={2:2000,3:3000};
 const C_PORT_UPGRADE_COST={2:10000,3:15000};
 const C_LUMBERMILL_UPGRADE_COST={2:2000,3:3000};
 const C_QUARRY_UPGRADE_COST={2:2000,3:3000};
-const C_TAX_PENALTY_BANDS=[[10,90],[20,60],[30,30],[40,10],[50,5]]; // [até opinião, penalização% do imposto bruto] (§2.9.6, v767)
+const C_TAX_PENALTY_BANDS=[[10,90],[20,60],[30,30],[40,10],[50,5]]; // [até opinião, penalização% do imposto bruto] (§2.9.6, v786)
 const C_TAX_OPINION_TOP=[[9,10],[10,15]]; // taxa 9% custa −10 e 10% custa −15 de opinião por turno (§2.9.13)
 const C_EMIGRATION_BANDS=[[10,10],[20,5],[30,2.5],[40,1]]; // [até opinião, % da população de cada povoação que emigra por turno] (§2.9.1)
 const FOUND_BLUEPRINT_COST=500, FOUND_SETTLERS=100, FOUND_CAPITAL_RESERVE_MULT=2;
@@ -1124,7 +1124,7 @@ let STATE = null;
 // APP_VERSION: sobe isto (e o CACHE_NAME correspondente em sw.js) sempre que publicares uma versão nova no GitHub.
 // É o que aparece no canto superior direito da app — se não mudar depois de um deploy, o browser ainda está
 // a servir a cache antiga do service worker.
-const APP_VERSION = 'v4.3 · 2026-10-28';
+const APP_VERSION = 'v4.4 · 2026-11-10';
 document.getElementById('appVersionBadge').textContent = APP_VERSION.split(' · ')[0];
 document.getElementById('appVersionBadge').title = 'Versão do painel: '+APP_VERSION;
 
@@ -1547,7 +1547,7 @@ function renderVisaoGeral(){
     recs.push(`<div class="recommend"><b>Tens personagem(ns) sem atribuição.</b> ${STATE.characters.filter(c=>c.assignment==='none').map(c=>c.name+` (Gestão ${c.management})`).join(', ')} — atribui como Tesoureiro/Mestre (ou Mestre dos Cavalos) para começar a ganhar o bónus de rendimento já no próximo turno (§2.9.7).</div>`);
   }
   if(STATE.outdatedPP){
-    recs.push(`<div class="recommend warn"><b>Página do Jogador desatualizada:</b> o motor avisou que as ordens do último turno vieram de uma versão antiga. Usa a <b>Página do Jogador V381 ou superior</b> (regras do manual v767: nova penalização fiscal, emigração, imposto de 9%/10%) — senão as ordens podem ser rejeitadas.</div>`);
+    recs.push(`<div class="recommend warn"><b>Página do Jogador desatualizada:</b> o motor avisou que as ordens do último turno vieram de uma versão antiga. Usa a <b>Página do Jogador V442 ou superior</b> (regras do manual v786: nova penalização fiscal, emigração, imposto de 9%/10%) — senão as ordens podem ser rejeitadas.</div>`);
   }
   if(taxRate>=9){
     recs.push(`<div class="recommend warn"><b>Taxa ${taxRate}% é perigosa:</b> custa ${taxOpinionDelta(taxRate)} de opinião <i>por turno</i> (a 8% custa −6). Com Opinião ${STATE.opinion} entras na penalização fiscal (≤50) em ${turnsToBand(STATE.opinion,taxRate).t50??'—'} turno(s) e na emigração (≤40) em ${turnsToBand(STATE.opinion,taxRate).t40??'—'}. Considera ficar nos 8% ou menos (§2.9.13).</div>`);
